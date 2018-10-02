@@ -27,9 +27,7 @@ _start:
 	mrs r0, CPSR										;@ Fetch the cpsr register
 	orr r0, r0, #(ARM_I_BIT | ARM_F_BIT)				;@ Disable Irq/Fiq
 	and r11, r0, #ARM_MODE_MASK							;@ Clear all but CPU mode bits in register r11
-;@"========================================================================="
-@#      If the cpu is in HYP_MODE(EL2) we will bring it SVC_MODE (EL1).
-;@"========================================================================="                        
+
  	cmp r11, #ARM_MODE_HYP								;@ Check we are in HYP_MODE											
 	bne .NotInHypMode									;@ Branch if not equal meaning was not in HYP_MODE  
 	bic r0, r0, #ARM_MODE_MASK							;@ Clear the CPU mode bits in register r0							
@@ -39,15 +37,7 @@ _start:
 
 	msr ELR_hyp, lr
 	eret
-	/*# I borrowed this trick from Ultibo because ARM6 code running on an ARM7/8 needs this opcode. */
-	/*# The ARM6 compiler does not know these instructions as it is not on an ARM6 cpu but we need  */
-    /*# the opcode so our ARM6 code can drop an ARM7/ARM8 cpu out of HYP mode. An ARM6 cpu will go  */
-	/*# around the code becuase of the initial test for HYP mode. This allow us to write Pi ARM6    */
-	/*# code that can run on a Pi with ARM7/ARM8 CPU. Native ARM7/8 compilers already understand    */
-	/*# the OPCODE but do not mind that it is entered thise way they just execute the opcode. 	    */        
-	/*.long 0xE12EF30E									;@ "msr ELR_hyp, lr" Set the address to ELR_hyp
-	.long 0xE160006E									;@ "eret" Elevated return which will exit at .NotInHypMode in SVC_MODE
-	*/
+
 .NotInHypMode:
     ldr pc, _reset_h
     ldr pc, _undefined_instruction_vector_h
@@ -98,24 +88,6 @@ _reset_:
 	// halt
 _inf_loop:
     b       _inf_loop
-
-undefined_instruction_vector:
-	b undefined_instruction_vector
-
-software_interrupt_vector:
-	b software_interrupt_vector
-
-prefetch_abort_vector:
-	b prefetch_abort_vector
-
-data_abort_vector:
-	b data_abort_vector
-
-interrupt_vector:
-	b interrupt_vector
-
-fast_interrupt_vector:
-	b fast_interrupt_vector
 
 _get_stack_pointer:
     // Return the stack pointer value

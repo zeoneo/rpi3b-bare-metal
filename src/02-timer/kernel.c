@@ -2,9 +2,9 @@
 #include <stdint.h>
 
 #include "uart0.h"
-// #include "rpi-armtimer.h"
-// #include "rpi-systimer.h"
-// #include "rpi-interrupts.h"
+#include "rpi-armtimer.h"
+#include "rpi-systimer.h"
+#include "rpi-interrupts.h"
 
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
