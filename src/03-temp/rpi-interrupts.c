@@ -29,7 +29,7 @@ rpi_irq_controller_t* RPI_GetIrqController( void )
 */
 void __attribute__((interrupt("ABORT"))) reset_vector(void)
 {
-    // uart_puts("ABORT INTERRUPT OCCURRED");
+    uart_puts("ABORT INTERRUPT OCCURRED");
     // while(1);
 }
 
@@ -41,7 +41,7 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
 */
 void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
-    // uart_puts("Undef Interrupt Occurred");
+    uart_puts("Undef Interrupt Occurred");
     // while(1);
 }
 
@@ -54,20 +54,20 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 */
 void __attribute__((interrupt("SWI"))) software_interrupt_vector(void)
 {
-    // uart_puts("Software Interrupt Occurred");
+    uart_puts("Software Interrupt Occurred");
 }
 
 
 
 void __attribute__((interrupt("ABORT"))) prefetch_abort_vector(void)
 {
-    // uart_puts("prefetch_abort_vector Interrupt Occurred");
+    uart_puts("prefetch_abort_vector Interrupt Occurred");
     // while(1);
 }
 
 void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 {
-    // uart_puts("data_abort_vector Interrupt Occurred");
+    uart_puts("data_abort_vector Interrupt Occurred");
     // while(1);
 }
 

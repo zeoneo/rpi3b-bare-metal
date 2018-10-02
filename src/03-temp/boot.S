@@ -22,7 +22,26 @@
 .balign 4
 
 _start:
+    ldr pc, _reset_h
+    ldr pc, _undefined_instruction_vector_h
+    ldr pc, _software_interrupt_vector_h
+    ldr pc, _prefetch_abort_vector_h
+    ldr pc, _data_abort_vector_h
+    ldr pc, _unused_handler_h
+    ldr pc, _interrupt_vector_h
+    ldr pc, _fast_interrupt_vector_h
 
+	_reset_h:                           .word   _reset_
+	_undefined_instruction_vector_h:    .word   irq
+	_software_interrupt_vector_h:       .word   irq
+	_prefetch_abort_vector_h:           .word   irq
+	_data_abort_vector_h:               .word   irq
+	_unused_handler_h:                  .word   _reset_
+	_interrupt_vector_h:                .word   irq
+	_fast_interrupt_vector_h:           .word   irq
+
+
+_reset_:
 	mov r12, pc											;@ Hold boot address in high register R12
 	mrs r0, CPSR										;@ Fetch the cpsr register
 	orr r0, r0, #(ARM_I_BIT | ARM_F_BIT)				;@ Disable Irq/Fiq
@@ -39,26 +58,6 @@ _start:
 	eret
 
 .NotInHypMode:
-    ldr pc, _reset_h
-    ldr pc, _undefined_instruction_vector_h
-    ldr pc, _software_interrupt_vector_h
-    ldr pc, _prefetch_abort_vector_h
-    ldr pc, _data_abort_vector_h
-    ldr pc, _unused_handler_h
-    ldr pc, _interrupt_vector_h
-    ldr pc, _fast_interrupt_vector_h
-
-_reset_h:                           .word   _reset_
-_undefined_instruction_vector_h:    .word   undefined_instruction_vector
-_software_interrupt_vector_h:       .word   software_interrupt_vector
-_prefetch_abort_vector_h:           .word   prefetch_abort_vector
-_data_abort_vector_h:               .word   data_abort_vector
-_unused_handler_h:                  .word   _reset_
-_interrupt_vector_h:                .word   interrupt_vector
-_fast_interrupt_vector_h:           .word   fast_interrupt_vector
-
-
-_reset_:
     mov     r0, #0x8000
     mov     r1, #0x0000
     ldmia   r0!,{r2, r3, r4, r5, r6, r7, r8, r9}
@@ -88,6 +87,34 @@ _reset_:
 	// halt
 _inf_loop:
     b       _inf_loop
+
+.globl PUT32
+PUT32:
+    str r1,[r0]
+    bx lr
+
+.globl GET32
+GET32:
+    ldr r0,[r0]
+    bx lr
+
+.globl dummy
+dummy:
+    bx lr
+
+.globl enable_irq
+enable_irq:
+    mrs r0,cpsr
+    bic r0,r0,#0x80
+    msr cpsr_c,r0
+    bx lr
+
+irq:
+    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    bl c_irq_handler
+    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    subs pc,lr,#4
+
 
 _get_stack_pointer:
     // Return the stack pointer value
