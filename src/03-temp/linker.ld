@@ -30,13 +30,13 @@ SECTIONS
     . = ALIGN(4096); /* align to page size */
     __data_end = .;
  
-    __bss_start = .; __bss_start__ = .;
+    __bss_start = .;
     .bss :
     {
         bss = .;
         *(.bss)
     }
     . = ALIGN(4096); /* align to page size */
-    __bss_end = .;     _bss_end__ = . ; __bss_end__ = . ;
+    __bss_end = .;
     __end = .;
 }
