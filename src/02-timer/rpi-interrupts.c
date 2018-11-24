@@ -1,8 +1,9 @@
 
 #include <stdint.h>
 
-#include "rpi-armtimer.h"
+// #include "rpi-armtimer.h"
 #include "rpi-base.h"
+#include "rpi-armtimer.h"
 #include "rpi-interrupts.h"
 #include "uart0.h"
 
@@ -10,7 +11,7 @@
 static rpi_irq_controller_t* rpiIRQController =
         (rpi_irq_controller_t*)RPI_INTERRUPT_CONTROLLER_BASE;
 
-volatile int calculate_frame_count = 0;
+volatile int count_irqs = 0;
 
 /**
     @brief Return the IRQ Controller register set
@@ -76,7 +77,11 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 
 void __attribute__((interrupt("IRQ"))) interrupt_vector(void) {
     RPI_GetArmTimer()->IRQClear = 1;
-    uart_puts("RPI timer interrupt_vector Interrupt Occurred");
+    uart_puts("interrupt_vector Interrupt Occurred");
+    count_irqs++;
+    if(count_irqs >= 13) {
+        asm(".word 0x34432434fe5");
+    }
 }
 
 
