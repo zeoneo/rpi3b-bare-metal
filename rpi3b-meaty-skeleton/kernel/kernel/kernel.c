@@ -1,20 +1,19 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <kernel/uart0.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 
-
-extern void PUT32 ( unsigned int, unsigned int );
-extern unsigned int GET32 ( unsigned int );
-extern void dummy ( unsigned int );
-extern void enable_irq ( void );
-
+extern void PUT32(unsigned int, unsigned int);
+extern unsigned int GET32(unsigned int);
+extern void dummy(unsigned int);
+extern void enable_irq(void);
 
 #define GPFSEL2 0x3F200008
-#define GPSET0  0x3F20001C
-#define GPCLR0  0x3F200028
+#define GPSET0 0x3F20001C
+#define GPCLR0 0x3F200028
 
 #define ARM_TIMER_LOD 0x3F00B400
 #define ARM_TIMER_VAL 0x3F00B404
@@ -28,12 +27,12 @@ extern void enable_irq ( void );
 
 #define SYSTIMERCLO 0x3F003004
 #define GPFSEL1 0x3F200004
-#define GPSET0  0x3F20001C
-#define GPCLR0  0x3F200028
+#define GPSET0 0x3F20001C
+#define GPCLR0 0x3F200028
 #define GPFSEL3 0x3F20000C
 #define GPFSEL4 0x3F200010
-#define GPSET1  0x3F200020
-#define GPCLR1  0x3F20002C
+#define GPSET1 0x3F200020
+#define GPCLR1 0x3F20002C
 
 #define IRQ_BASIC 0x3F00B200
 #define IRQ_PEND1 0x3F00B204
@@ -42,33 +41,33 @@ extern void enable_irq ( void );
 #define IRQ_ENABLE_BASIC 0x3F00B218
 #define IRQ_DISABLE_BASIC 0x3F00B224
 
-
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	// Declare as unused
-	(void) r0;
-	(void) r1;
-	(void) atags;
- 
+	(void)r0;
+	(void)r1;
+	(void)atags;
+
 	uart_init();
-	
+
 	uart_puts("Hello, Prakash It's me ur kernel!\r\n");
 
+	printf("Hello, Prakash It's me ur kernel! %f \r\n", 340.12345);
 
-    RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
-	uart_puts("Enabled basic Timer IRQ \r\n"); 
+	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
+	uart_puts("Enabled basic Timer IRQ \r\n");
 
-    RPI_GetArmTimer()->Load = 0x400;
-    RPI_GetArmTimer()->Control =
-            RPI_ARMTIMER_CTRL_23BIT |
-            RPI_ARMTIMER_CTRL_ENABLE |
-            RPI_ARMTIMER_CTRL_INT_ENABLE |
-            RPI_ARMTIMER_CTRL_PRESCALE_256;
+	RPI_GetArmTimer()->Load = 0x400;
+	RPI_GetArmTimer()->Control =
+		RPI_ARMTIMER_CTRL_23BIT |
+		RPI_ARMTIMER_CTRL_ENABLE |
+		RPI_ARMTIMER_CTRL_INT_ENABLE |
+		RPI_ARMTIMER_CTRL_PRESCALE_256;
 
-	uart_puts("Enabling CPU Interrupts \r\n"); 
+	uart_puts("Enabling CPU Interrupts \r\n");
 	/* Defined in boot.S */
-    _enable_interrupts();
-	uart_puts("Enabled CPU Interrupts \r\n"); 
-	while (1);
-
+	_enable_interrupts();
+	uart_puts("Enabled CPU Interrupts \r\n");
+	while (1)
+		;
 }

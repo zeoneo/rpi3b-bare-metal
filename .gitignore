@@ -58,3 +58,5 @@ Disk Image/\.DS_Store
 *.o
 
 *.elf
+
+\.vscode/
