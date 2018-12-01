@@ -5,6 +5,8 @@
 #include <kernel/uart0.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
+#include <kernel/rpi-mailbox.h>
+#include <kernel/rpi-mailbox-interface.h>
 
 extern void PUT32(unsigned int, unsigned int);
 extern unsigned int GET32(unsigned int);
@@ -41,6 +43,28 @@ extern void enable_irq(void);
 #define IRQ_ENABLE_BASIC 0x3F00B218
 #define IRQ_DISABLE_BASIC 0x3F00B224
 
+void hexstrings(unsigned int d)
+{
+	//unsigned int ra;
+	unsigned int rb;
+	unsigned int rc;
+
+	rb = 32;
+	while (1)
+	{
+		rb -= 4;
+		rc = (d >> rb) & 0xF;
+		if (rc > 9)
+			rc += 0x37;
+		else
+			rc += 0x30;
+		uart_putc(rc);
+		if (rb == 0)
+			break;
+	}
+	uart_putc(0x20);
+}
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	// Declare as unused
@@ -50,12 +74,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_init();
 
-	uart_puts("Hello, Prakash It's me ur kernel!\r\n");
-
-	printf("Hello, Prakash It's me ur kernel! %f \r\n", 340.12345);
+	printf("Hello, kernel World!\r\n");
+	uart_puts("Hello, kernel World!\r\n");
+	uart_puts("Hello, kernel World!\r\n");
+	uart_puts("Hello, kernel World!\r\n");
 
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
-	uart_puts("Enabled basic Timer IRQ \r\n");
+	printf("Enabled basic Timer IRQ :%d  %f  %s \r\n", 123132213, 345.345345, "Some string");
 
 	RPI_GetArmTimer()->Load = 0x400;
 	RPI_GetArmTimer()->Control =
@@ -66,8 +91,32 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_puts("Enabling CPU Interrupts \r\n");
 	/* Defined in boot.S */
+
+	hexstrings(0x2342434234);
+
+	RPI_PropertyInit();
+	RPI_PropertyAddTag(TAG_GET_BOARD_MODEL);
+	RPI_PropertyAddTag(TAG_GET_BOARD_REVISION);
+	RPI_PropertyAddTag(TAG_GET_FIRMWARE_VERSION);
+	RPI_PropertyAddTag(TAG_GET_BOARD_MAC_ADDRESS);
+	RPI_PropertyAddTag(TAG_GET_BOARD_SERIAL);
+	RPI_PropertyAddTag(TAG_GET_MAX_CLOCK_RATE, TAG_CLOCK_ARM);
+	RPI_PropertyProcess();
+
+	rpi_mailbox_property_t *mp;
+	mp = RPI_PropertyGet(TAG_GET_MAX_CLOCK_RATE);
+
+	uart_puts("MAX CLOCK Version: ");
+
+	if (mp)
+		hexstrings(mp->data.buffer_32[1]);
+	else
+		uart_puts(" NULL\r\n");
+
 	_enable_interrupts();
-	uart_puts("Enabled CPU Interrupts \r\n");
+	uart_puts("Enabled CPU Interrupts ");
+	uart_puts("Enabled CPU Interrupts ");
+
 	while (1)
 		;
 }

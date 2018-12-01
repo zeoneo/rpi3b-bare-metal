@@ -12,7 +12,7 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lc -lgcc
+LIBS:=$(LIBS) -nostdlib -lk -lc -lgcc
 
 ARCHDIR=arch/$(HOSTARCH)
 
@@ -43,6 +43,8 @@ kernel8-32.img:kernel8-32.elf
 	arm-none-eabi-objcopy kernel8-32.elf -O binary kernel8-32.img
 
 kernel8-32.elf: $(OBJS) $(ARCHDIR)/linker.ld
+	echo $(LIBS)
+	echo $(LIBK_OBJS)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	
 
