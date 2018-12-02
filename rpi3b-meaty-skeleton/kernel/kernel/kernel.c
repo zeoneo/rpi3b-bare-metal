@@ -7,6 +7,7 @@
 #include <kernel/rpi-interrupts.h>
 #include <kernel/rpi-mailbox.h>
 #include <kernel/rpi-mailbox-interface.h>
+#include <kernel/systimer.h>
 
 extern void PUT32(unsigned int, unsigned int);
 extern unsigned int GET32(unsigned int);
@@ -74,13 +75,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_init();
 
-	printf("Hello, kernel World!\r\n");
-	uart_puts("Hello, kernel World!\r\n");
-	uart_puts("Hello, kernel World!\r\n");
-	uart_puts("Hello, kernel World!\r\n");
+	printf("Hello, kernel World!\n");
+	uart_puts("Hello, kernel World!\n");
+	uart_puts("Hello, kernel World!\n");
+	uart_puts("Hello, kernel World!\n");
 
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
-	printf("Enabled basic Timer IRQ :%d  %f  %s \r\n", 123132213, 345.345345, "Some string");
+	printf("Enabled basic Timer IRQ :%d  %f  %s \n", 123132213, 345.345345, "Some string");
 
 	RPI_GetArmTimer()->Load = 0x400;
 	RPI_GetArmTimer()->Control =
@@ -92,8 +93,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_puts("Enabling CPU Interrupts \r\n");
 	/* Defined in boot.S */
 
-	hexstrings(0x2342434234);
-
 	RPI_PropertyInit();
 	RPI_PropertyAddTag(TAG_GET_BOARD_MODEL);
 	RPI_PropertyAddTag(TAG_GET_BOARD_REVISION);
@@ -104,18 +103,29 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	RPI_PropertyProcess();
 
 	rpi_mailbox_property_t *mp;
-	mp = RPI_PropertyGet(TAG_GET_MAX_CLOCK_RATE);
+	mp = RPI_PropertyGet(TAG_GET_FIRMWARE_VERSION);
 
 	uart_puts("MAX CLOCK Version: ");
 
 	if (mp)
-		hexstrings(mp->data.buffer_32[1]);
+	{
+		uart_puts(" CLOCK NOW: ");
+		hexstrings(mp->data.value_32);
+		printf("Clokc: %d", (int)(mp->data.value_32));
+	}
 	else
 		uart_puts(" NULL\r\n");
 
-	_enable_interrupts();
-	uart_puts("Enabled CPU Interrupts ");
-	uart_puts("Enabled CPU Interrupts ");
+	interrupts_init();
+	timer_init();
+
+	uart_puts("Enabled CPU Interrupts \n");
+	udelay(3000000);
+	uart_puts("Enabled CPU Interrupts \n");
+	timer_set(3000000);
+	timer_set(10000000);
+	timer_set(10000000);
+	timer_set(10000000);
 
 	while (1)
 		;

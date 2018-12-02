@@ -55,7 +55,7 @@ _start:
 	_prefetch_abort_vector_h:           .word   prefetch_abort_vector
 	_data_abort_vector_h:               .word   data_abort_vector
 	_unused_handler_h:                  .word   _reset_
-	_interrupt_vector_h:                .word   interrupt_vector
+	_interrupt_vector_h:                .word   irq_handler_asm_wrapper
 	_fast_interrupt_vector_h:           .word   fast_interrupt_vector
 
 
@@ -173,3 +173,17 @@ _enable_interrupts:
     bic     r0, r0, #0x80
     msr     cpsr_c, r0
     mov     pc, lr
+
+irq_handler_asm_wrapper:
+    sub     lr, lr, #4
+    srsdb   sp!, #0x13
+    cpsid   if, #0x13
+    push    {r0-r3, r12, lr}
+    and     r1, sp, #4
+    sub     sp, sp, r1
+    push    {r1}
+    bl      irq_handler
+    pop     {r1}
+    add     sp, sp, r1
+    pop     {r0-r3, r12, lr}
+    rfeia   sp!
