@@ -8,6 +8,7 @@
 #include <kernel/rpi-mailbox.h>
 #include <kernel/rpi-mailbox-interface.h>
 #include <kernel/systimer.h>
+#include <mem/physmem.h>
 
 extern void PUT32(unsigned int, unsigned int);
 extern unsigned int GET32(unsigned int);
@@ -66,6 +67,22 @@ void hexstrings(unsigned int d)
 	uart_putc(0x20);
 }
 
+uint32_t get_mem_size(atag_t *tag)
+{
+	printf("Printing number : %d %x \n", 12345, 0x12345);
+	printf("tag %d \n", tag->tag);
+	while (tag->tag != NONE)
+	{
+		printf("tag: %x", tag->tag);
+		if (tag->tag == MEM)
+		{
+			return tag->mem.size;
+		}
+		tag = (atag_t *)(((uint32_t *)tag) + tag->tag_size);
+	}
+	return 0;
+}
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	// Declare as unused
@@ -74,12 +91,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void)atags;
 
 	uart_init();
-
-	printf("Hello, kernel World!\n");
-	uart_puts("Hello, kernel World!\n");
-	uart_puts("Hello, kernel World!\n");
-	uart_puts("Hello, kernel World!\n");
-
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 	printf("Enabled basic Timer IRQ :%d  %f  %s \n", 123132213, 345.345345, "Some string");
 
@@ -99,19 +110,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	RPI_PropertyAddTag(TAG_GET_FIRMWARE_VERSION);
 	RPI_PropertyAddTag(TAG_GET_BOARD_MAC_ADDRESS);
 	RPI_PropertyAddTag(TAG_GET_BOARD_SERIAL);
+	RPI_PropertyAddTag(TAG_GET_ARM_MEMORY);
 	RPI_PropertyAddTag(TAG_GET_MAX_CLOCK_RATE, TAG_CLOCK_ARM);
 	RPI_PropertyProcess();
 
 	rpi_mailbox_property_t *mp;
-	mp = RPI_PropertyGet(TAG_GET_FIRMWARE_VERSION);
-
-	uart_puts("MAX CLOCK Version: ");
+	mp = RPI_PropertyGet(TAG_GET_ARM_MEMORY);
 
 	if (mp)
 	{
-		uart_puts(" CLOCK NOW: ");
-		hexstrings(mp->data.value_32);
-		printf("Clokc: %d", (int)(mp->data.value_32));
+		printf("Mem base: %x, size:%d \n", (char *)(mp->data.buffer_32[0]), (u_int32_t)(mp->data.buffer_32[1]));
 	}
 	else
 		uart_puts(" NULL\r\n");

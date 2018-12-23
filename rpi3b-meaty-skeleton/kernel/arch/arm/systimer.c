@@ -7,7 +7,7 @@ static timer_registers_t *timer_regs;
 static void timer_irq_handler(void)
 {
     uart_puts("\n *** timer irq handler called");
-    timer_set(300);
+    timer_set(34500000);
 }
 
 static void timer_irq_clearer(void)

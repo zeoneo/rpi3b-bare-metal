@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 #include <kernel/rpi-base.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
@@ -188,4 +189,22 @@ void unregister_irq_handler(irq_number_t irq_num)
     {
         printf("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
+}
+
+void *memset(void *s, int c, size_t n)
+{
+    unsigned char *p = s;
+    unsigned char byte = c;
+    size_t i;
+
+    for (i = 0; i < n; i++)
+    {
+        p[i] = byte;
+    }
+    return s;
+}
+
+void bzero(void *s, size_t n)
+{
+    memset(s, 0, n);
 }
