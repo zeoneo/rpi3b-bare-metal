@@ -23,11 +23,17 @@
  *      On success, returns the number of characters written.  On write error,
  *      returns a negative value.
  */
-int fputc(unsigned int c, unsigned int dev)
+#define UNUSED(x) (void)(x)
+
+int fputc(int c, int dev)
 {
+    UNUSED(dev);
     uart_putc(c);
     return 1;
 }
+
+extern int _doprnt(const char *fmt, va_list ap,
+                   int (*putc_func)(int, int), int putc_arg);
 
 int printf(const char *format, ...)
 {

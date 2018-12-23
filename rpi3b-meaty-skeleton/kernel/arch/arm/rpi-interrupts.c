@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel/rpi-base.h>
@@ -10,8 +11,7 @@
 #define IRQ_IS_BASIC(x) ((x >= 64))
 #define IRQ_IS_GPU2(x) ((x >= 32 && x < 64))
 #define IRQ_IS_GPU1(x) ((x < 32))
-#define IRQ_IS_PENDING(regs, num) ((IRQ_IS_BASIC(num) && ((1 << (num - 64)) & regs->IRQ_basic_pending)) \ 
-|| (IRQ_IS_GPU2(num) && ((1 << (num - 32)) & regs->IRQ_pending_2)) || \
+#define IRQ_IS_PENDING(regs, num) ((IRQ_IS_BASIC(num) && ((1 << (num - 64)) & regs->IRQ_basic_pending)) || (IRQ_IS_GPU2(num) && ((1 << (num - 32)) & regs->IRQ_pending_2)) || \
                                    (IRQ_IS_GPU1(num) && ((1 << (num)) & regs->IRQ_pending_1)))
 
 #define NUM_IRQS 72
@@ -24,6 +24,8 @@ static interrupt_handler_f handlers[NUM_IRQS];
 static interrupt_clearer_f clearers[NUM_IRQS];
 
 volatile int count_irqs = 0;
+
+void bzero(void *s, size_t n);
 
 /**
     @brief Return the IRQ Controller register set
@@ -106,8 +108,6 @@ void interrupts_init(void)
     rpiIRQController->Disable_IRQs_1 = 0xffffffff;
     rpiIRQController->Disable_IRQs_2 = 0xffffffff;
     ENABLE_INTERRUPTS();
-
-    uart_puts("Enable INTERRUPTS");
 }
 
 /**
@@ -116,7 +116,6 @@ void interrupts_init(void)
 void irq_handler(void)
 {
     int j;
-    uart_puts("In IRQ handler");
     for (j = 0; j < NUM_IRQS; j++)
     {
         // If the interrupt is pending and there is a handler, run the handler

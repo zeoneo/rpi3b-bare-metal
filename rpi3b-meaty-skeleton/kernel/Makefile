@@ -43,8 +43,6 @@ kernel8-32.img:kernel8-32.elf
 	arm-none-eabi-objcopy kernel8-32.elf -O binary kernel8-32.img
 
 kernel8-32.elf: $(OBJS) $(ARCHDIR)/linker.ld
-	echo $(LIBS)
-	echo $(LIBK_OBJS)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	
 

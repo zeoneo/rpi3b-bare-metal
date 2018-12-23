@@ -10,6 +10,13 @@
 typedef void (*interrupt_handler_f)(void);
 typedef void (*interrupt_clearer_f)(void);
 
+#define IRQ_BASIC 0x3F00B200
+#define IRQ_PEND1 0x3F00B204
+#define IRQ_PEND2 0x3F00B208
+#define IRQ_FIQ_CONTROL 0x3F00B210
+#define IRQ_ENABLE_BASIC 0x3F00B218
+#define IRQ_DISABLE_BASIC 0x3F00B224
+
 typedef enum
 {
     RPI_BASIC_ARM_TIMER_IRQ = (1 << 0),
@@ -51,7 +58,6 @@ __inline__ void ENABLE_INTERRUPTS(void)
 {
     if (!INTERRUPTS_ENABLED())
     {
-        uart_puts("\n int not enabled. enabling");
         __asm__ __volatile__("cpsie i");
         // _enable_interrupts();
         // __asm__ __volatile__("cpsie i");
@@ -62,7 +68,6 @@ __inline__ void DISABLE_INTERRUPTS(void)
 {
     if (INTERRUPTS_ENABLED())
     {
-        uart_puts("\n int  enabled. disabling");
         __asm__ __volatile__("cpsid i");
     }
 }
