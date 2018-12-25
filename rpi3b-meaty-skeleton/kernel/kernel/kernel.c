@@ -26,7 +26,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	interrupts_init();
 	// arm_timer_init();
 	timer_init();
+	mem_init();
+
 	printf("Arm Memory :%ld MB \n", get_mem_size() / (1024 * 1024));
+	printf("Number of Free Pages: %d \n", get_num_of_free_pages());
+
+	int *new_page_base = (int *)alloc_page();
+	printf("Number of Free Pages: %d \n", get_num_of_free_pages());
+	free_page(new_page_base);
+	printf("Number of Free Pages: %d \n", get_num_of_free_pages());
 	while (1)
 	{
 	}
