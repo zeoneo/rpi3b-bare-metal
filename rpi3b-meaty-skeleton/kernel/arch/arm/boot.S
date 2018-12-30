@@ -60,6 +60,17 @@ _start:
 
 
 _reset_:
+    mrc p15, 0, r6,c0,c0,5
+    and     r6, r6, #3
+    mov r7, #0
+    cmp     r6, r7
+    beq 2f
+    // cpu id > 0, stop
+1:  wfe
+    b       1b
+2:  // cpu id == 0
+
+
 	mov r12, pc											;@ Hold boot address in high register R12
 	mrs r0, CPSR										;@ Fetch the cpsr register
 	orr r0, r0, #(ARM_I_BIT | ARM_F_BIT)				;@ Disable Irq/Fiq
@@ -86,31 +97,22 @@ _reset_:
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD2
     msr cpsr_c,r0
-    mov sp,#0x8000
+    mov sp,#0x3000
 
     ;@ (PSR_FIQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
-    mov r0,#0xD1
-    msr cpsr_c,r0
-    mov sp,#0x4000
+    ;@mov r0,#0xD1
+    ;@msr cpsr_c,r0
+    ;@mov sp,#0x000
 
     ;@ (PSR_SVC_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD3
     msr cpsr_c,r0
     mov sp,#0x8000000
 
-    // Enable L1 Cache -------------------------------------------------------
-    // R0 = System Control Register
-    mrc p15,0,r0,c1,c0,0
-	
-    // Enable caches and branch prediction
-    orr r0,#SCTLR_ENABLE_BRANCH_PREDICTION
-    orr r0,#SCTLR_ENABLE_DATA_CACHE
-    orr r0,#SCTLR_ENABLE_INSTRUCTION_CACHE
-
-	
-    // System Control Register = R0
-    mcr p15,0,r0,c1,c0,0
-
+    // enable unaligned address access
+	mrc p15, 0, r0, c1, c0, 0
+	orr r0, #1 << 22
+	mcr p15, 0, r0, c1, c0, 0
 
     // Enable VFP ------------------------------------------------------------
 
@@ -187,3 +189,50 @@ irq_handler_asm_wrapper:
     add     sp, sp, r1
     pop     {r0-r3, r12, lr}
     rfeia   sp!
+
+.globl start_mmu
+start_mmu:
+    mov r2,#0
+    ;@mcr p15,0,r2,c7,c7,0 ;@ invalidate caches   //Check cache enabled previously.
+    mcr p15,0,r2,c8,c7,0 ;@ invalidate tlb
+    mcr p15,0,r2,c7,c10,4 ;@ DSB ??
+
+     ;@ Domain 0 Manager access. No permissions checked for access
+    ;@mrc p15, 0, r2, c3, c0, 0 ;@ write into DACR domain control register
+
+    MRC p15, 0, r2, c3, c0, 0 ;@ Read DACR into Rt
+    ORR r2, #3
+    MCR p15, 0, r2, c3, c0, 0 ;@ Write Rt to DACR
+
+    MCR p15,0,r0,c2,c0,0 ;@ Write Rt to TTBR0
+    MCR p15, 0, r0, c2, c0, 1 ;@ Write Rt to TTBR1
+
+    MRC p15, 0, r2, c1, c0, 0 ;@ Read SCTLR into Rt
+    ;@ orr r2, #1 ;@ eable mmu
+    orr r2,r2,r1
+    MCR p15, 0, r2, c1, c0, 0 ;@ Write Rt to SCTLR.
+
+    bx lr
+
+.globl stop_mmu
+stop_mmu:
+    mrc p15,0,r2,c1,c0,0
+    bic r2,#0x1000
+    bic r2,#0x0004
+    bic r2,#0x0001
+    mcr p15,0,r2,c1,c0,0
+    bx lr
+
+.globl invalidate_tlbs
+invalidate_tlbs:
+    mov r2,#0
+    mcr p15,0,r2,c8,c7,0  ;@ invalidate tlb
+    mcr p15,0,r2,c7,c10,4 ;@ DSB ??
+    bx lr
+
+.globl read_cpu_id
+read_cpu_id:
+    // read cpu id, stop slave cores
+    // mrc p15, 0, r0, c0, c0, 0
+    mrc p15, 0, r0,c0,c0,5
+    bx lr

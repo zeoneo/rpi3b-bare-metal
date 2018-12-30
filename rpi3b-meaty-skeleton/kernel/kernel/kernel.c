@@ -7,11 +7,14 @@
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
 #include <kernel/physmem.h>
+#include <kernel/virtmem.h>
 
 extern void PUT32(unsigned int, unsigned int);
 extern unsigned int GET32(unsigned int);
 extern void dummy(unsigned int);
 extern void enable_irq(void);
+extern uint32_t read_cpu_id(void);
+
 void init_arm_timer();
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
@@ -35,6 +38,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printf("Number of Free Pages: %d \n", get_num_of_free_pages());
 	free_page(new_page_base);
 	printf("Number of Free Pages: %d \n", get_num_of_free_pages());
+
+	unsigned int ra;
+
+	printf("\nCpu Id :0x%x\n", read_cpu_id());
+	initialize_virtual_memory();
+
+	uart_puts("\n after virtual memory 1234 \n ");
+	printf("Hellow World agian.");
 	while (1)
 	{
 	}
