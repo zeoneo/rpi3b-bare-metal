@@ -1,15 +1,15 @@
-#include <kernel/virtmem.h>
-#include <kernel/uart0.h>
+#include "virtmem.h"
+#include "uart0.h"
 
 void initialize_virtual_memory(void)
 {
-    // unsigned int ra;
-    // for (ra = 0;; ra += 0x00100000)
-    // {
-    //     mmu_section(ra, ra, 0x0000);
-    //     if (ra == 0xFFF00000)
-    //         break;
-    // }
+    unsigned int ra;
+    for (ra = 0;; ra += 0x00100000)
+    {
+        mmu_section(ra, ra, 0x0000);
+        if (ra == 0xFFF00000)
+            break;
+    }
 
     // Mapping first 1MB should be sufficient
     mmu_section(0x00000000, 0x00000000, 0x0000);
@@ -19,7 +19,7 @@ void initialize_virtual_memory(void)
     mmu_section(0x3f000000, 0x3f000000, 0x0000); //NOT CACHED!
     mmu_section(0x3f200000, 0x3f200000, 0x0000); //NOT CACHED!
 
-    printf("Enabling MMU \n ");
+    uart_puts("Enabling MMU \n ");
     start_mmu(MMUTABLEBASE, 0x00000005);
 }
 

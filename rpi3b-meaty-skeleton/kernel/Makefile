@@ -40,6 +40,7 @@ $(LIBS) \
 all: kernel8-32.img
 
 kernel8-32.img:kernel8-32.elf
+	arm-none-eabi-objdump -D kernel8-32.elf > kernel8-32.list
 	arm-none-eabi-objcopy kernel8-32.elf -O binary kernel8-32.img
 
 kernel8-32.elf: $(OBJS) $(ARCHDIR)/linker.ld
@@ -56,6 +57,7 @@ clean:
 	rm -f kernel8-32.elf kernel8-32.img
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+	rm -f *.list
 
 install: install-headers install-kernel
 

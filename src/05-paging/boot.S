@@ -56,7 +56,7 @@ _start:
 	_data_abort_vector_h:               .word   data_abort_vector_asm
 	_unused_handler_h:                  .word   _reset_
 	_interrupt_vector_h:                .word   irq_handler_asm_wrapper
-	_fast_interrupt_vector_h:           .word   fast_interrupt_vector
+	_fast_interrupt_vector_h:           .word   _reset_
 
 
 _reset_:

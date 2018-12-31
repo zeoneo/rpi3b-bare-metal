@@ -87,12 +87,6 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
         ;
 }
 
-// void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
-// {
-//     RPI_GetArmTimer()->IRQClear = 1;
-//     count_irqs++;
-// }
-
 void __attribute__((interrupt("FIQ"))) fast_interrupt_vector(void)
 {
     uart_puts("fast_interrupt_vector Interrupt Occurred");
