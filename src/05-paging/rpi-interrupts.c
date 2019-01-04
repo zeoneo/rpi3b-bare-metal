@@ -41,7 +41,7 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
     If an undefined intstruction is encountered, the CPU will start
     executing this function. Just trap here as a debug solution.
 */
-void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
+void undefined_instruction_vector(void)
 {
     uart_puts("Undef Interrupt Occurred");
     while (1)

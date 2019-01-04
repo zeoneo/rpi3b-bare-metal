@@ -50,7 +50,7 @@ _start:
     ldr pc, _fast_interrupt_vector_h
 
 	_reset_h:                           .word   _reset_
-	_undefined_instruction_vector_h:    .word   undefined_instruction_vector
+	_undefined_instruction_vector_h:    .word   _undefined_instruction_vector_asm
 	_software_interrupt_vector_h:       .word   software_interrupt_vector
 	_prefetch_abort_vector_h:           .word   prefetch_abort_vector
 	_data_abort_vector_h:               .word   data_abort_vector_asm
@@ -108,11 +108,6 @@ _reset_:
     mov r0,#0xD3
     msr cpsr_c,r0
     mov sp,#0x8000000
-
-    // enable unaligned address access
-	mrc p15, 0, r0, c1, c0, 0
-	orr r0, #1 << 22
-	mcr p15, 0, r0, c1, c0, 0
 
     // Enable VFP ------------------------------------------------------------
 
@@ -193,6 +188,7 @@ irq_handler_asm_wrapper:
 .globl start_mmu
 start_mmu:
     mov r2,#0
+    ;@mcr p15,0,r2,c7,c7,0 ;@ invalidate caches
     mcr p15,0,r2,c8,c7,0 ;@ invalidate tlb
     mcr p15,0,r2,c7,c10,4 ;@ DSB ??
 
@@ -227,6 +223,11 @@ data_abort_vector_asm:
     bl hexstrings
     mov r0,r7
     bl hexstrings
+123:
+    b 123b
+
+_undefined_instruction_vector_asm:
+    bl undefined_instruction_vector
 123:
     b 123b
 

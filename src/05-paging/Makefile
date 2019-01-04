@@ -1,4 +1,4 @@
-COPTS := -march=armv8-a+crc -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding
+COPTS := -march=armv8-a+crc -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding -Wextra -g
 all:
 	arm-none-eabi-gcc $(COPTS) -c boot.S -o boot.o
 	arm-none-eabi-gcc $(COPTS) -c kernel.c -o kernel.o -O2 -Wall -Wextra
@@ -15,7 +15,7 @@ all:
 qemu-wait:
 	qemu-system-aarch64 -s -S -m 1024M -M raspi2 -serial stdio -kernel kernel8-32.elf
 
-qemu-run:
+run: all
 	qemu-system-aarch64 -m 1024M -M raspi2 -serial stdio -kernel kernel8-32.elf
 
 debug:

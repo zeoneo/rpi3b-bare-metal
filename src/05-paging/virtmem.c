@@ -3,17 +3,18 @@
 
 void initialize_virtual_memory(void)
 {
-    unsigned int ra;
-    for (ra = 0;; ra += 0x00100000)
-    {
-        mmu_section(ra, ra, 0x0000);
-        if (ra == 0xFFF00000)
-            break;
-    }
+    // unsigned int ra;
+    // for (ra = 0x00000000;; ra += 0x00100000)
+    // {
+    //     mmu_section(ra, ra, 0x0000);
+    //     if (ra == 0xFFF00000)
+    //         break;
+    // }
 
     // Mapping first 1MB should be sufficient
     mmu_section(0x00000000, 0x00000000, 0x0000);
     mmu_section(0x00100000, 0x00000000, 0x0000);
+    mmu_section(0x07f00000, 0x07f00000, 0x0000);
 
     //peripherals
     mmu_section(0x3f000000, 0x3f000000, 0x0000); //NOT CACHED!
@@ -21,6 +22,7 @@ void initialize_virtual_memory(void)
 
     uart_puts("Enabling MMU \n ");
     start_mmu(MMUTABLEBASE, 0x00000005);
+    uart_puts("After paging \n ");
 }
 
 unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags)

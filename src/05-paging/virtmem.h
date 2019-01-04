@@ -1,7 +1,7 @@
 #ifndef _VIRT_MEM_H
 #define _VIRT_MEM_H
 
-#define MMUTABLEBASE 0x00004000
+#define MMUTABLEBASE 0x00ff4000
 
 extern void PUT32(unsigned int addr, unsigned int value);
 extern unsigned int GET32(unsigned int addr);
