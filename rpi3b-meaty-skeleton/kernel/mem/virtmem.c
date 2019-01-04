@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <plibc/stdio.h>
-#include <kernel/virtmem.h>
+#include <mem/virtmem.h>
 #include <kernel/uart0.h>
 
 extern uint32_t __kernel_end;

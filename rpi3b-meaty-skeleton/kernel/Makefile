@@ -15,8 +15,10 @@ LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
 
 ARCHDIR=arch/$(HOSTARCH)
+MEMDIR=mem
 
 include $(ARCHDIR)/make.config
+include $(MEMDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -25,6 +27,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
+$(KERNEL_MEM_OBJS) \
 kernel/kernel.o \
 
 OBJS= $(KERNEL_OBJS)
@@ -58,7 +61,7 @@ clean:
 	rm -f kernel8-32.elf kernel8-32.img
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
-	rm -f *.list *.map
+	rm -f *.list *.map *.txt
 
 install: install-headers install-kernel
 

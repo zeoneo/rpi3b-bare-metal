@@ -6,8 +6,8 @@
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
-#include <kernel/physmem.h>
-#include <kernel/virtmem.h>
+#include <mem/physmem.h>
+#include <mem/virtmem.h>
 
 extern uint32_t __kernel_end;
 
@@ -22,8 +22,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_init();
 	interrupts_init();
 
-	initialize_virtual_memory();
+	mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
+	initialize_virtual_memory();
+	
 
 	uart_puts("\n Hello virtual memory world 123 \n ");
 	while (1)
