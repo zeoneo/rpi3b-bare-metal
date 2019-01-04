@@ -4,7 +4,7 @@
 #include <kernel/rpi-base.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 
 #define INTERRUPTS_PENDING (RPI_INTERRUPT_CONTROLLER_BASE + 0x200)
 

@@ -2,7 +2,7 @@
 #define RPI_INTERRUPTS_H
 
 #include <stdint.h>
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 #include "rpi-base.h"
 
 #define RPI_INTERRUPT_CONTROLLER_BASE (PERIPHERAL_BASE + 0xB200)

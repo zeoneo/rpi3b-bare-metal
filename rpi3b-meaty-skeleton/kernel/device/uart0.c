@@ -1,4 +1,4 @@
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 #include <stdint.h>
 #include <stddef.h>
 

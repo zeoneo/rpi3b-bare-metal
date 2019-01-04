@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <plibc/stdio.h>
 
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>

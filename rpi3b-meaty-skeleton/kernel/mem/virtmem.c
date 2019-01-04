@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <plibc/stdio.h>
 #include <mem/virtmem.h>
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 
 extern uint32_t __kernel_end;
 extern uint32_t __first_lvl_tbl_base;

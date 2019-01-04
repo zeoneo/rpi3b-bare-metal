@@ -1,6 +1,6 @@
 #include <kernel/systimer.h>
 #include <kernel/rpi-interrupts.h>
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 
 static timer_registers_t *timer_regs;
 

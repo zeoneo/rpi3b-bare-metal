@@ -16,9 +16,11 @@ LIBS:=$(LIBS) -nostdlib -lk -lgcc
 
 ARCHDIR=arch/$(HOSTARCH)
 MEMDIR=mem
+DEVICEDIR=device
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
+include $(DEVICEDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -28,6 +30,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 $(KERNEL_MEM_OBJS) \
+$(KERNEL_DEVICE_OBJS) \
 kernel/kernel.o \
 
 OBJS= $(KERNEL_OBJS)

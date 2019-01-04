@@ -5,7 +5,7 @@
 
 #include <plibc/stdio.h>
 #include <stdarg.h>
-#include <kernel/uart0.h>
+#include <device/uart0.h>
 
 /**
  * @ingroup libxc
