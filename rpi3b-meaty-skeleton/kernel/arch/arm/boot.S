@@ -97,17 +97,13 @@ _reset_:
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD2
     msr cpsr_c,r0
-    mov sp,#0x3000
+    ldr sp, =__irq_stack_base
 
-    ;@ (PSR_FIQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
-    ;@mov r0,#0xD1
-    ;@msr cpsr_c,r0
-    ;@mov sp,#0x000
 
     ;@ (PSR_SVC_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD3
     msr cpsr_c,r0
-    mov sp,#0x8000000
+    ldr sp, =__svc_stack_base
 
     // enable unaligned address access
 	mrc p15, 0, r0, c1, c0, 0

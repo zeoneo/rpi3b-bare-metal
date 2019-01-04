@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <plibc/stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel/rpi-base.h>
@@ -23,7 +23,7 @@ static rpi_irq_controller_t *rpiIRQController =
 static interrupt_handler_f handlers[NUM_IRQS];
 static interrupt_clearer_f clearers[NUM_IRQS];
 
-volatile int count_irqs = 0;
+volatile int32_t count_irqs = 0;
 
 void bzero(void *s, size_t n);
 
@@ -109,7 +109,7 @@ void interrupts_init(void)
  */
 void irq_handler(void)
 {
-    int j;
+    int32_t j;
     for (j = 0; j < NUM_IRQS; j++)
     {
         // If the interrupt is pending and there is a handler, run the handler
@@ -184,10 +184,10 @@ void unregister_irq_handler(irq_number_t irq_num)
     }
 }
 
-void *memset(void *s, int c, size_t n)
+void *memset(void *s, int32_t c, size_t n)
 {
-    unsigned char *p = s;
-    unsigned char byte = c;
+    uint8_t *p = s;
+    uint8_t byte = c;
     size_t i;
 
     for (i = 0; i < n; i++)

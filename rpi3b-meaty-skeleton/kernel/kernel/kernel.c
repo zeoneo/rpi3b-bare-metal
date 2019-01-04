@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
+#include <plibc/stdio.h>
 
 #include <kernel/uart0.h>
 #include <kernel/rpi-armtimer.h>
@@ -9,15 +9,7 @@
 #include <kernel/physmem.h>
 #include <kernel/virtmem.h>
 
-extern void PUT32(unsigned int, unsigned int);
-extern unsigned int GET32(unsigned int);
-extern void dummy(unsigned int);
-extern void enable_irq(void);
-extern uint32_t read_cpu_id(void);
-
-extern uint32_t __end;
-
-void init_arm_timer();
+extern uint32_t __kernel_end;
 
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
@@ -30,10 +22,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_init();
 	interrupts_init();
 
-	printf("\n Kernel End: 0x%x \n", &__end);
 	initialize_virtual_memory();
+	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 
-	uart_puts("\n Hello virtual memory \n ");
+	uart_puts("\n Hello virtual memory world 123 \n ");
 	while (1)
 	{
 	}

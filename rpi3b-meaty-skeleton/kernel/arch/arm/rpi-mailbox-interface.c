@@ -1,5 +1,6 @@
 
 #include <stdarg.h>
+#include <stdint.h>
 
 #include <kernel/rpi-mailbox.h>
 #include <kernel/rpi-mailbox-interface.h>
@@ -8,8 +9,8 @@
 /* Make sure the property tag buffer is aligned to a 16-byte boundary because
    we only have 28-bits available in the property interface protocol to pass
    the address of the buffer to the VC. */
-static int pt[8192] __attribute__((aligned(16)));
-static int pt_index = 0;
+static int32_t pt[8192] __attribute__((aligned(16)));
+static int32_t pt_index = 0;
 
 // void *memcpy(void *restrict dstptr, const void *restrict srcptr, size_t size)
 // {
@@ -167,15 +168,15 @@ void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...)
     va_end(vl);
 }
 
-int RPI_PropertyProcess(void)
+int32_t RPI_PropertyProcess(void)
 {
-    int result;
+    int32_t result;
 
     /* Fill in the size of the buffer */
     pt[PT_OSIZE] = (pt_index + 1) << 2;
     pt[PT_OREQUEST_OR_RESPONSE] = 0;
 
-    RPI_Mailbox0Write(MB0_TAGS_ARM_TO_VC, (unsigned int)pt);
+    RPI_Mailbox0Write(MB0_TAGS_ARM_TO_VC, (uint32_t)pt);
     result = RPI_Mailbox0Read(MB0_TAGS_ARM_TO_VC);
     return result;
 }
@@ -183,17 +184,17 @@ int RPI_PropertyProcess(void)
 rpi_mailbox_property_t *RPI_PropertyGet(rpi_mailbox_tag_t tag)
 {
     static rpi_mailbox_property_t property;
-    int *tag_buffer = 0;
+    int32_t *tag_buffer = 0;
 
     property.tag = tag;
 
     /* Get the tag from the buffer. Start at the first tag position  */
-    int index = 2;
+    int32_t index = 2;
 
     while (index < (pt[PT_OSIZE] >> 2))
     {
         /* printf( "Test Tag: [%d] %8.8X\r\n", index, pt[index] ); */
-        if (pt[index] == tag)
+        if (pt[index] == (int32_t)tag)
         {
             tag_buffer = &pt[index];
             break;

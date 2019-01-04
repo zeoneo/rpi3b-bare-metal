@@ -97,11 +97,11 @@ void uart_puts(const char *str)
 		uart_putc((unsigned char)str[i]);
 }
 
-void hexstrings(unsigned int d)
+void hexstrings(uint32_t d)
 {
-	//unsigned int ra;
-	unsigned int rb;
-	unsigned int rc;
+	//uint32_t ra;
+	uint32_t rb;
+	uint32_t rc;
 
 	rb = 32;
 	while (1)

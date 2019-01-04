@@ -17,7 +17,7 @@ void initialize_virtual_memory(void)
     mmu_section(0x00000000, 0x00000000, 0x0000);
 
     // Still need to figure out why I need to map following
-    mmu_section(0x07f00000, 0x07f00000, 0x0000);
+    // mmu_small(0x07fff000, 0x07fff000, 0x0000, MMUTABLEBASE);
 
     //peripherals
     mmu_section(0x3f000000, 0x3f000000, 0x0000); //NOT CACHED!
@@ -52,5 +52,24 @@ unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flag
     //hexstrings(rb); hexstring(rc);
     // printf("\n entryAddr: 0x%x, entry value:0x%x \n", table1EntryAddress, tableEntry);
     PUT32(table1EntryAddress, tableEntry);
+    return (0);
+}
+
+unsigned int mmu_small(unsigned int vadd, unsigned int padd, unsigned int flags, unsigned int mmubase)
+{
+    unsigned int ra;
+    unsigned int rb;
+    unsigned int rc;
+
+    ra = vadd >> 20;
+    rb = MMUTABLEBASE | (ra << 2);
+    rc = (mmubase & 0xFFFFFC00) /*|(domain<<5)*/ | 1;
+    //hexstrings(rb); hexstring(rc);
+    PUT32(rb, rc); //first level descriptor
+    ra = (vadd >> 12) & 0xFF;
+    rb = (mmubase & 0xFFFFFC00) | (ra << 2);
+    rc = (padd & 0xFFFFF000) | (0xFF0) | flags | 2;
+    //hexstrings(rb); hexstring(rc);
+    PUT32(rb, rc); //second level descriptor
     return (0);
 }

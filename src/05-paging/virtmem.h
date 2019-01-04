@@ -12,4 +12,5 @@ extern void invalidate_tlbs(void);
 
 void initialize_virtual_memory(void);
 unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags);
+unsigned int mmu_small(unsigned int vadd, unsigned int padd, unsigned int flags, unsigned int mmubase);
 #endif

@@ -38,5 +38,23 @@ SECTIONS
     }
     . = ALIGN(4096); /* align to page size */
     __bss_end = .;
-    __end = .;
+
+    . = . + 32768; /* 32KB for svc stack */
+    __svc_stack_base = .;
+
+    . = . + 1024; /* 1024 Bytes for irq stack */
+    __irq_stack_base = .;
+
+    . = ALIGN(16384); /* align 16KB for page tables */
+    __first_lvl_tbl_base = .;
+    . = . + 4096; /* First level page table size */
+    __first_lvl_tbl_end = .;
+
+    . = ALIGN(1024); /* Align address here on 1KB boundary for 2nd level page table */
+    /* 1KB for each 2nd lvl page table = 4 Bytes * 256 */
+    /* How many 2nd lvl tables ? */
+    __second_lvl_tbl_base = .;
+    . = . + 1048576; /* 1MB space for 2nd lvl tables. */
+    __second_lvl_tbl_end = .;
+    __kernel_end = .;
 }

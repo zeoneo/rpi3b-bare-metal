@@ -9,7 +9,7 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
@@ -41,6 +41,7 @@ all: kernel8-32.img
 
 kernel8-32.img:kernel8-32.elf
 	arm-none-eabi-objdump -D kernel8-32.elf > kernel8-32.list
+	arm-none-eabi-nm  kernel8-32.elf  > kernel8-32.map
 	arm-none-eabi-objcopy kernel8-32.elf -O binary kernel8-32.img
 
 kernel8-32.elf: $(OBJS) $(ARCHDIR)/linker.ld
@@ -57,7 +58,7 @@ clean:
 	rm -f kernel8-32.elf kernel8-32.img
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
-	rm -f *.list
+	rm -f *.list *.map
 
 install: install-headers install-kernel
 

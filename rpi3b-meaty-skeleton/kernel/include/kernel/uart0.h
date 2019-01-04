@@ -1,6 +1,6 @@
 #ifndef _UART0_H
 #define _UART0_H
-
+#include <stdint.h>
 enum
 {
     // The GPIO registers base address.
@@ -42,6 +42,6 @@ void uart_init();
 void uart_putc(unsigned char c);
 unsigned char uart_getc();
 void uart_puts(const char *str);
-void hexstrings(unsigned int d);
+void hexstrings(uint32_t d);
 
 #endif

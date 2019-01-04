@@ -6,169 +6,152 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
-#include <stdio.h>
+#include <plibc/stdio.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/times.h>
 #include <errno.h>
 #include <reent.h>
 
-void uart_putc ( unsigned int c );
+void uart_putc(uint32_t c);
 
-unsigned int heap_end=0x0020000;
-unsigned int prev_heap_end;
+uint32_t heap_end = 0x0020000;
+uint32_t prev_heap_end;
 
 /* Forward prototypes.  */
-int     _system     _PARAMS ((const char *));
-int     _rename     _PARAMS ((const char *, const char *));
-int     isatty      _PARAMS ((int));
-clock_t _times      _PARAMS ((struct tms *));
-int     _gettimeofday   _PARAMS ((struct timeval *, struct timezone *));
-void    _raise      _PARAMS ((void));
-int     _unlink     _PARAMS ((void));
-int     _link       _PARAMS ((void));
-int     _stat       _PARAMS ((const char *, struct stat *));
-int     _fstat      _PARAMS ((int, struct stat *));
-caddr_t _sbrk       _PARAMS ((int));
-int     _getpid     _PARAMS ((int));
-int     _kill       _PARAMS ((int, int));
-void    _exit       _PARAMS ((int));
-int     _close      _PARAMS ((int));
-int     _open       _PARAMS ((const char *, int, ...));
-int     _write      _PARAMS ((int, char *, int));
-int     _lseek      _PARAMS ((int, int, int));
-int     _read       _PARAMS ((int, char *, int));
-void    initialise_monitor_handles _PARAMS ((void));
+int32_t_system _PARAMS((const char *));
+int32_t_rename _PARAMS((const char *, const char *));
+int32_tisatty _PARAMS((int));
+clock_t _times _PARAMS((struct tms *));
+int32_t_gettimeofday _PARAMS((struct timeval *, struct timezone *));
+void _raise _PARAMS((void));
+int32_t_unlink _PARAMS((void));
+int32_t_link _PARAMS((void));
+int32_t_stat _PARAMS((const char *, struct stat *));
+int32_t_fstat _PARAMS((int, struct stat *));
+caddr_t _sbrk _PARAMS((int));
+int32_t_getpid _PARAMS((int));
+int32_t_kill _PARAMS((int, int));
+void _exit _PARAMS((int));
+int32_t_close _PARAMS((int));
+int32_t_open _PARAMS((const char *, int, ...));
+int32_t_write _PARAMS((int, char *, int));
+int32_t_lseek _PARAMS((int, int, int));
+int32_t_read _PARAMS((int, char *, int));
+void initialise_monitor_handles _PARAMS((void));
 
 //static int
-//remap_handle (int fh)
+//remap_handle (int32_tfh)
 //{
-    //return 0;
+//return 0;
 //}
 
-void
-initialise_monitor_handles (void)
+void initialise_monitor_handles(void)
 {
 }
 
 //static int
 //get_errno (void)
 //{
-    //return(0);
+//return(0);
 //}
 
 //static int
-//error (int result)
+//error (int32_tresult)
 //{
-  //errno = get_errno ();
-  //return result;
+//errno = get_errno ();
+//return result;
 //}
 
-
-int
-_read (int file,
-       char * ptr,
-       int len)
+int32_t_read(int32_tfile,
+             char *ptr,
+             int32_tlen)
 {
-  return len;
-}
-
-
-int
-_lseek (int file,
-    int ptr,
-    int dir)
-{
-    return 0;
-}
-
-
-int
-_write (int    file,
-    char * ptr,
-    int    len)
-{
-    int r;
-    for(r=0;r<len;r++) uart_putc(ptr[r]);
     return len;
 }
 
-int
-_open (const char * path,
-       int          flags,
-       ...)
+int32_t_lseek(int32_tfile,
+              int32_tptr,
+              int32_tdir)
 {
     return 0;
 }
 
+int32_t_write(int32_tfile,
+              char *ptr,
+              int32_tlen)
+{
+    int32_tr;
+    for (r = 0; r < len; r++)
+        uart_putc(ptr[r]);
+    return len;
+}
 
-int
-_close (int file)
+int32_t_open(const char *path,
+             int32_tflags,
+             ...)
 {
     return 0;
 }
 
-void
-_exit (int n)
+int32_t_close(int32_tfile)
 {
-    while(1);
+    return 0;
 }
 
-int
-_kill (int n, int m)
+void _exit(int32_tn)
 {
-    return(0);
+    while (1)
+        ;
 }
 
-int
-_getpid (int n)
+int32_t_kill(int32_tn, int32_tm)
 {
-  return 1;
-  n = n;
+    return (0);
 }
 
+int32_t_getpid(int32_tn)
+{
+    return 1;
+    n = n;
+}
 
 caddr_t
-_sbrk (int incr)
+    _sbrk(int32_tincr)
 {
     prev_heap_end = heap_end;
     heap_end += incr;
-    return (caddr_t) prev_heap_end;
+    return (caddr_t)prev_heap_end;
 }
 
-int
-_fstat (int file, struct stat * st)
+int32_t_fstat(int32_tfile, struct stat *st)
 {
-  return 0;
+    return 0;
 }
 
-int _stat (const char *fname, struct stat *st)
+int32_t_stat(const char *fname, struct stat *st)
 {
-  return 0;
+    return 0;
 }
 
-int
-_link (void)
+int32_t_link(void)
 {
-  return -1;
+    return -1;
 }
 
-int
-_unlink (void)
+int32_t_unlink(void)
 {
-  return -1;
+    return -1;
 }
 
-void
-_raise (void)
+void _raise(void)
 {
-  return;
+    return;
 }
 
-int
-_gettimeofday (struct timeval * tp, struct timezone * tzp)
+int32_t_gettimeofday(struct timeval *tp, struct timezone *tzp)
 {
-    if(tp)
+    if (tp)
     {
         tp->tv_sec = 10;
         tp->tv_usec = 0;
@@ -182,41 +165,37 @@ _gettimeofday (struct timeval * tp, struct timezone * tzp)
 }
 
 clock_t
-_times (struct tms * tp)
+_times(struct tms *tp)
 {
     clock_t timeval;
 
     timeval = 10;
     if (tp)
     {
-        tp->tms_utime  = timeval;   /* user time */
-        tp->tms_stime  = 0; /* system time */
-        tp->tms_cutime = 0; /* user time, children */
-        tp->tms_cstime = 0; /* system time, children */
+        tp->tms_utime = timeval; /* user time */
+        tp->tms_stime = 0;       /* system time */
+        tp->tms_cutime = 0;      /* user time, children */
+        tp->tms_cstime = 0;      /* system time, children */
     }
     return timeval;
 };
 
-
-int
-_isatty (int fd)
+int32_t_isatty(int32_tfd)
 {
-  return 1;
-  fd = fd;
+    return 1;
+    fd = fd;
 }
 
-int
-_system (const char *s)
+int32_t_system(const char *s)
 {
-  if (s == NULL)
-    return 0;
-  errno = ENOSYS;
-  return -1;
+    if (s == NULL)
+        return 0;
+    errno = ENOSYS;
+    return -1;
 }
 
-int
-_rename (const char * oldpath, const char * newpath)
+int32_t_rename(const char *oldpath, const char *newpath)
 {
-  errno = ENOSYS;
-  return -1;
+    errno = ENOSYS;
+    return -1;
 }

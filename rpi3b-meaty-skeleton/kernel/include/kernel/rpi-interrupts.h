@@ -46,9 +46,9 @@ typedef struct
 extern rpi_irq_controller_t *RPI_GetIrqController(void);
 extern void _enable_interrupts();
 
-__inline__ int INTERRUPTS_ENABLED(void)
+__inline__ int32_t INTERRUPTS_ENABLED(void)
 {
-    int res;
+    int32_t res;
     __asm__ __volatile__("mrs %[res], CPSR"
                          : [res] "=r"(res)::);
     return ((res >> 7) & 1) == 0;

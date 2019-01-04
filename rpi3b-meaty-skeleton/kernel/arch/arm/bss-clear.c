@@ -1,16 +1,18 @@
-extern int __bss_start;
-extern int __bss_end;
+#include <stdint.h>
+extern int32_t __bss_start;
+extern int32_t __bss_end;
 
-extern void kernel_main( unsigned int r0, unsigned int r1, unsigned int atags );
+extern void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags);
 
-void _clear_bss( unsigned int r0, unsigned int r1, unsigned int r2 )
+void _clear_bss(uint32_t r0, uint32_t r1, uint32_t r2)
 {
-    int* bss = &__bss_start;
-    int* bss_end = &__bss_end;
+    int32_t *bss = &__bss_start;
+    int32_t *bss_end = &__bss_end;
 
-    while( bss < bss_end )
+    while (bss < bss_end)
         *bss++ = 0;
 
-    kernel_main( r0, r1, r2 );
-    while(1);
+    kernel_main(r0, r1, r2);
+    while (1)
+        ;
 }

@@ -51,12 +51,12 @@ _start:
 
 	_reset_h:                           .word   _reset_
 	_undefined_instruction_vector_h:    .word   _undefined_instruction_vector_asm
-	_software_interrupt_vector_h:       .word   software_interrupt_vector
-	_prefetch_abort_vector_h:           .word   prefetch_abort_vector
+	_software_interrupt_vector_h:       .word   _inf_loop
+	_prefetch_abort_vector_h:           .word   _inf_loop
 	_data_abort_vector_h:               .word   data_abort_vector_asm
 	_unused_handler_h:                  .word   _reset_
 	_interrupt_vector_h:                .word   irq_handler_asm_wrapper
-	_fast_interrupt_vector_h:           .word   _reset_
+	_fast_interrupt_vector_h:           .word   _inf_loop
 
 
 _reset_:
@@ -107,7 +107,7 @@ _reset_:
     ;@ (PSR_SVC_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD3
     msr cpsr_c,r0
-    mov sp,#0x8000000
+    mov sp,#0x4000
 
     // Enable VFP ------------------------------------------------------------
 
@@ -227,7 +227,7 @@ data_abort_vector_asm:
     b 123b
 
 _undefined_instruction_vector_asm:
-    bl undefined_instruction_vector
+
 123:
     b 123b
 

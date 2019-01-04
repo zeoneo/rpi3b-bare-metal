@@ -1,14 +1,14 @@
 #ifndef _VIRT_MEM_H
 #define _VIRT_MEM_H
+#include <stdint.h>
 
-#define MMUTABLEBASE 0x00004000
-
-extern void start_mmu(unsigned int, unsigned int);
+extern void PUT32(uint32_t addr, uint32_t value);
+extern void start_mmu(uint32_t, uint32_t);
 extern void stop_mmu(void);
 extern void invalidate_tlbs(void);
 extern void invalidate_caches(void);
 
 void initialize_virtual_memory(void);
-unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags);
+uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags);
 
 #endif

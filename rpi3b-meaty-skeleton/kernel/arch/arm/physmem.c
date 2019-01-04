@@ -1,11 +1,12 @@
+#include <plibc/stdio.h>
+#include <stdint.h>
 #include <kernel/physmem.h>
 #include <kernel/rpi-mailbox-interface.h>
 #include <kernel/list.h>
-#include <stdio.h>
 
 static uint32_t arm_mem_size = 0;
 
-extern uint8_t __end;
+extern uint8_t __kernel_end;
 extern void bzero(void *, uint32_t);
 
 static uint32_t num_pages;
@@ -33,13 +34,13 @@ void mem_init()
 
     // Allocate space for all those pages' metadata.  Start this block just after the kernel image is finished
     page_array_len = sizeof(page_t) * num_pages;
-    all_pages_array = (page_t *)&__end;
+    all_pages_array = (page_t *)&__kernel_end;
     bzero(all_pages_array, page_array_len);
     INITIALIZE_LIST(free_pages);
 
     // Iterate over all pages and mark them with the appropriate flags
     // Start with kernel pages
-    kernel_pages = ((uint32_t)&__end) / PAGE_SIZE;
+    kernel_pages = ((uint32_t)&__kernel_end) / PAGE_SIZE;
     for (i = 0; i < kernel_pages; i++)
     {
         all_pages_array[i].vaddr_mapped = i * PAGE_SIZE; // Identity map the kernel pages
@@ -104,7 +105,7 @@ uint32_t get_mem_size()
 
     if (mp)
     {
-        arm_mem_size = (int)(mp->data.buffer_32[1]);
+        arm_mem_size = (int32_t)(mp->data.buffer_32[1]);
         return arm_mem_size;
     }
     return -1;

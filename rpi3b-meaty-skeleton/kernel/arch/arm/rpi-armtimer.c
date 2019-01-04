@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>

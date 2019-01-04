@@ -1,19 +1,24 @@
+#include <stdint.h>
+#include <plibc/stdio.h>
 #include <kernel/virtmem.h>
 #include <kernel/uart0.h>
 
-void initialize_virtual_memory(void)
+extern uint32_t __kernel_end;
+extern uint32_t __first_lvl_tbl_base;
+static uint32_t MMUTABLEBASE;
+extern void initialize_virtual_memory(void)
 {
-    // unsigned int ra;
-    // for (ra = 0;; ra += 0x00100000)
-    // {
-    //     mmu_section(ra, ra, 0x0000);
-    //     if (ra == 0xFFF00000)
-    //         break;
-    // }
-
-    // Mapping first 1MB should be sufficient
-    mmu_section(0x00000000, 0x00000000, 0x0000);
-    mmu_section(0x00100000, 0x00000000, 0x0000);
+    MMUTABLEBASE = (uint32_t)&__first_lvl_tbl_base;
+    // Identity Map whole kernel area upto __kernel_end in linker.ld
+    uint32_t ra;
+    for (ra = 0;; ra += 0x00100000)
+    {
+        mmu_section(ra, ra, 0x0000);
+        if (ra >= (uint32_t)&__kernel_end)
+        {
+            break;
+        }
+    }
 
     //peripherals
     mmu_section(0x3f000000, 0x3f000000, 0x0000); //NOT CACHED!
@@ -23,11 +28,11 @@ void initialize_virtual_memory(void)
     start_mmu(MMUTABLEBASE, 0x00000005);
 }
 
-unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags)
+uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags)
 {
-    unsigned int table1EntryOffset;
-    unsigned int table1EntryAddress;
-    unsigned int tableEntry;
+    uint32_t table1EntryOffset;
+    uint32_t table1EntryAddress;
+    uint32_t tableEntry;
 
     table1EntryOffset = (vadd >> 20) << 2; // get only most significant 12 bits
     //and multiply it by 4 as each entry is 4 Bytes 32bits
@@ -43,6 +48,9 @@ unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flag
 
     // Access permissions should be 11 for full access entry [11:10] = 0b11
     tableEntry = tableEntry | 0xC00;
+
+    // Add flags
+    tableEntry = tableEntry | flags;
 
     //hexstrings(rb); hexstring(rc);
     // printf("\n entryAddr: 0x%x, entry value:0x%x \n", table1EntryAddress, tableEntry);

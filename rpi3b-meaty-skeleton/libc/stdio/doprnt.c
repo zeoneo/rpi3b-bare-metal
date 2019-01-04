@@ -3,7 +3,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
-#include <stdio.h>
+#include <plibc/stdio.h>
 #include <string.h>
 #include <stdarg.h>
 

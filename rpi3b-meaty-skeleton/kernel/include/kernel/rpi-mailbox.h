@@ -4,12 +4,13 @@
 
 #include "rpi-base.h"
 
-#define RPI_MAILBOX0_BASE    ( PERIPHERAL_BASE + 0xB880 )
+#define RPI_MAILBOX0_BASE (PERIPHERAL_BASE + 0xB880)
 
 /* The available mailbox channels in the BCM2835 Mailbox interface.
    See https://github.com/raspberrypi/firmware/wiki/Mailboxes for
    information */
-typedef enum {
+typedef enum
+{
     MB0_POWER_MANAGEMENT = 0,
     MB0_FRAMEBUFFER,
     MB0_VIRTUAL_UART,
@@ -24,25 +25,27 @@ typedef enum {
 
 /* These defines come from the Broadcom Videocode driver source code, see:
    brcm_usrlib/dag/vmcsx/vcinclude/bcm2708_chip/arm_control.h */
-enum mailbox_status_reg_bits {
-    ARM_MS_FULL  = 0x80000000,
+enum mailbox_status_reg_bits
+{
+    ARM_MS_FULL = 0x80000000,
     ARM_MS_EMPTY = 0x40000000,
     ARM_MS_LEVEL = 0x400000FF,
 };
 
 /* Define a structure which defines the register access to a mailbox.
    Not all mailboxes support the full register set! */
-typedef struct {
-    volatile unsigned int Read;
-    volatile unsigned int reserved1[((0x90 - 0x80) / 4) - 1];
-    volatile unsigned int Poll;
-    volatile unsigned int Sender;
-    volatile unsigned int Status;
-    volatile unsigned int Configuration;
-    volatile unsigned int Write;
-    } mailbox_t;
+typedef struct
+{
+    volatile uint32_t Read;
+    volatile uint32_t reserved1[((0x90 - 0x80) / 4) - 1];
+    volatile uint32_t Poll;
+    volatile uint32_t Sender;
+    volatile uint32_t Status;
+    volatile uint32_t Configuration;
+    volatile uint32_t Write;
+} mailbox_t;
 
-extern void RPI_Mailbox0Write( mailbox0_channel_t channel, int value );
-extern int RPI_Mailbox0Read( mailbox0_channel_t channel );
+extern void RPI_Mailbox0Write(mailbox0_channel_t channel, int32_t value);
+extern int32_t RPI_Mailbox0Read(mailbox0_channel_t channel);
 
 #endif
