@@ -3,17 +3,20 @@
 
 void initialize_virtual_memory(void)
 {
-    // unsigned int ra;
-    // for (ra = 0x00000000;; ra += 0x00100000)
-    // {
-    //     mmu_section(ra, ra, 0x0000);
-    //     if (ra == 0xFFF00000)
-    //         break;
-    // }
+    /* Not needed now 
+    unsigned int ra;
+    for (ra = 0;; ra += 0x00100000)
+    {
+        mmu_section(ra, ra, 0x0000);
+        if (ra == 0x08000000)
+            break;
+    }
+    */
 
-    // Mapping first 1MB should be sufficient
+    // This mapping works.
     mmu_section(0x00000000, 0x00000000, 0x0000);
-    mmu_section(0x00100000, 0x00000000, 0x0000);
+
+    // Still need to figure out why I need to map following
     mmu_section(0x07f00000, 0x07f00000, 0x0000);
 
     //peripherals

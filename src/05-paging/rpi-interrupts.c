@@ -3,7 +3,6 @@
 
 // #include "rpi-armtimer.h"
 #include "rpi-base.h"
-#include "rpi-armtimer.h"
 #include "rpi-interrupts.h"
 #include "uart0.h"
 
@@ -75,6 +74,5 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 
 void irq_handler(void)
 {
-    RPI_GetArmTimer()->IRQClear = 1;
     uart_puts("interrupt_vector Interrupt Occurred");
 }
