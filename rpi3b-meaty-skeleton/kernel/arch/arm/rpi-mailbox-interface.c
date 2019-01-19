@@ -71,6 +71,7 @@ void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...)
         pt_index += 256 >> 2;
         break;
 
+    case TAG_GET_POWER_STATE:
     case TAG_ALLOCATE_BUFFER:
     case TAG_GET_MAX_CLOCK_RATE:
     case TAG_GET_MIN_CLOCK_RATE:
@@ -154,6 +155,13 @@ void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...)
         {
             pt_index += 4;
         }
+        break;
+
+    case TAG_SET_POWER_STATE:
+        pt[pt_index++] = 8;
+        pt[pt_index++] = 0;
+        pt[pt_index++] = va_arg(vl, unsigned int); //device id
+        pt[pt_index++] = va_arg(vl, unsigned int); //state
         break;
 
     default:

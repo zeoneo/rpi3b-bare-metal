@@ -4,6 +4,7 @@
 
 #include <device/uart0.h>
 #include <device/dma.h>
+#include <device/usb.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
@@ -21,14 +22,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	printf("\n-----------------Kernel Started Dude........................\n");
 	uart_init();
-	interrupts_init();
+	// interrupts_init();
 
 	// mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 	// initialize_virtual_memory();
 	// uart_puts("\n Hello virtual memory world 123 \n ");
 
-	show_dma_demo();
+	// show_dma_demo();
+
+	usb_initialise();
 
 	while (1)
 	{
