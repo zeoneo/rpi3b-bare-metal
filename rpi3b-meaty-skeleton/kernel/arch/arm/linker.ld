@@ -56,5 +56,23 @@ SECTIONS
     __second_lvl_tbl_base = .;
     . = . + 1048576; /* 1MB space for 2nd lvl tables. */
     __second_lvl_tbl_end = .;
+
+    /* DMA demo starts here */
+        . = ALIGN(4096);
+    dma_cb_page = .;
+    . = . + 4096; /* 4 KB for DMA control blocks */
+
+    dma_src_page_1 = . ;
+    . = . + 65536; /* 64 Kb of data */
+
+    dma_src_page_2 = . ;
+    . = . + 65536; /* 64 Kb of data */
+
+    dma_dest_page_1 = . ;
+    . = . + 65536; /* 64 Kb of data */
+
+    dma_dest_page_2 = . ;
+    . = . + 65536; /* 64 Kb of data */
+
     __kernel_end = .;
 }
