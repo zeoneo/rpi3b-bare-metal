@@ -1,10 +1,16 @@
 #include <device/dma.h>
 #include <device/uart0.h>
 #include <plibc/stdio.h>
+#include <kernel/rpi-interrupts.h>
 
 extern int dma_src_page_1;
 extern int dma_dest_page_1;
+extern int dma_dest_page_2;
 extern int dma_cb_page;
+
+extern void PUT32(uint32_t addr, uint32_t value);
+
+int dmaChNum = 4;
 
 void print_area(char *src_addr, int length)
 {
@@ -35,8 +41,23 @@ void writeBitmasked(volatile uint32_t *dest, uint32_t mask, uint32_t value)
     *dest = new; //added safety for when crossing memory barriers.
 }
 
+static void dma_0_irq_handler(void)
+{
+    printf("\nDMA irq handler called. This should be called after clearer. \n");
+}
+
+static void dma_0_irq_clearer(void)
+{
+    uint32_t *dmaBaseMem = (void *)DMA_BASE;
+    volatile struct DmaChannelHeader *dmaHeader = (volatile struct DmaChannelHeader *)(dmaBaseMem + (DMACH(dmaChNum)) / 4);
+    dmaHeader->CS = BCM2835_DMA_INT;
+    printf("\nDMA irq clearer called. Should be called before handler \n");
+}
+
 void show_dma_demo()
 {
+
+    register_irq_handler(INTERRUPT_DMA4, dma_0_irq_handler, dma_0_irq_clearer);
 
     char data_array[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'Z', 'I', 'J', 'K', '\0'};
 
@@ -55,20 +76,31 @@ void show_dma_demo()
     uart_puts("Before copying destination lookslike \n");
     print_area((char *)&dma_dest_page_1, data_length);
 
+    uart_puts("Before copying destination lookslike \n");
+    print_area((char *)&dma_dest_page_2, data_length);
+
     struct bcm2835_dma_cb *cb1 = (struct bcm2835_dma_cb *)&dma_cb_page;
+
+    struct bcm2835_dma_cb *cb2 = cb1 + 1; /// 32 Byte aligned control block address
 
     cb1->info = BCM2835_DMA_S_INC | BCM2835_DMA_D_INC;
     cb1->src = (uint32_t)&dma_src_page_1;
     cb1->dst = (uint32_t)&dma_dest_page_1;
     cb1->length = data_length;
     cb1->stride = 0x0;
-    cb1->next = 0x0;
+    cb1->next = (uint32_t)cb2;
 
-    int dmaChNum = 0;
+    cb2->info = BCM2835_DMA_S_INC | BCM2835_DMA_D_INC | BCM2835_DMA_INT_EN;
+    cb2->src = (uint32_t)&dma_src_page_1;
+    cb2->dst = (uint32_t)&dma_dest_page_2;
+    cb2->length = data_length;
+    cb2->stride = 0x0;
+    cb2->next = 0x0; // last Control block
+
+    printf("\n cb1: %x", cb1);
+    printf("\n cb2: %x", cb2);
 
     uint32_t *dmaBaseMem = (void *)DMA_BASE;
-
-    printf("\n dmaBaseMem: %x", dmaBaseMem);
 
     writeBitmasked(dmaBaseMem + BCM2835_DMA_ENABLE / 4, 1 << dmaChNum, 1 << dmaChNum);
 
@@ -99,4 +131,7 @@ void show_dma_demo()
     uart_puts("After DMA ops \n");
     uart_puts("After DMA destination lookslike \n");
     print_area((char *)&dma_dest_page_1, data_length);
+
+    uart_puts("After DMA destination lookslike \n");
+    print_area((char *)&dma_dest_page_2, data_length);
 }

@@ -109,6 +109,7 @@ void interrupts_init(void)
  */
 void irq_handler(void)
 {
+    printf("IRQ triggered");
     int32_t j;
     for (j = 0; j < NUM_IRQS; j++)
     {

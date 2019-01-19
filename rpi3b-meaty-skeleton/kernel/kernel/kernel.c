@@ -21,7 +21,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	printf("\n-----------------Kernel Started Dude........................\n");
 	uart_init();
-	// interrupts_init();
+	interrupts_init();
 
 	// mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
