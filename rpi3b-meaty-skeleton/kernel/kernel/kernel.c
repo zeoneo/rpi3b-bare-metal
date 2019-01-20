@@ -24,12 +24,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_init();
 	// interrupts_init();
 
+	timer_init();
 	// mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 	// initialize_virtual_memory();
 	// uart_puts("\n Hello virtual memory world 123 \n ");
 
 	// show_dma_demo();
+	// udelay(4579 * 1000 * 10);
+	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
 	usb_initialise();
 

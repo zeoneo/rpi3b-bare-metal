@@ -11,6 +11,8 @@ void timer_init(void);
 void timer_set(uint32_t usecs);
 
 void udelay(uint32_t usecs);
+uint32_t timer_getTickCount32(void);
+uint64_t timer_getTickCount64(void);
 
 typedef struct
 {
@@ -21,7 +23,7 @@ typedef struct
     uint32_t reserved : 28;
 } timer_control_reg_t;
 
-typedef struct
+typedef struct __attribute__((__packed__, aligned(4)))
 {
     timer_control_reg_t control;
     uint32_t counter_low;

@@ -248,3 +248,9 @@ read_cpu_id:
     // mrc p15, 0, r0, c0, c0, 0
     mrc p15, 0, r0,c0,c0,5
     bx lr
+
+.globl dmb
+dmb:
+	mov	r12, #0
+	mcr	p15, 0, r12, c7, c10, 5
+    bx lr
