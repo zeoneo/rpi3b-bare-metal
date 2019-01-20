@@ -38,15 +38,6 @@ void print_usb_power_state()
 
 void power_on_host_controller()
 {
-    turn_off_usb();
-    print_usb_power_state();
-
-    turn_on_usb();
-    print_usb_power_state();
-
-    turn_off_usb();
-    print_usb_power_state();
-
     turn_on_usb();
     print_usb_power_state();
 }
@@ -54,4 +45,15 @@ void power_on_host_controller()
 void usb_initialise()
 {
     power_on_host_controller();
+    uint32_t *vendor_id = (void *)(USB_CORE_BASE + RegVendorId);
+    uint32_t *user_id = (void *)(USB_CORE_BASE + RegUserId);
+
+    if ((*vendor_id & 0xfffff000) == POWER_ON_VENDOR_ID)
+    {
+        printf("\n Host controller with expected vendor id found.");
+    }
+    if (*user_id == POWER_ON_USB_USER_ID)
+    {
+        printf("\n Host controller with expected user id found.");
+    }
 }
