@@ -1,5 +1,7 @@
 # rpi3b-bare-metal
 
+[![Build Status](https://travis-ci.com/zeoneo/rpi3b-bare-metal.svg?branch=master)](https://travis-ci.com/zeoneo/rpi3b-bare-metal)
+
 This tutorial supports only Raspberry Pi 3 B model and tutorial is target at 32 bits.
 
 I am going to attempt bare metal programming on Raspberry Pi 3 B.

@@ -1,5 +1,7 @@
 # RPI 3B (32 BIT) OS
 
+[![Build Status](https://travis-ci.com/zeoneo/rpi3b-bare-metal.svg?branch=master)](https://travis-ci.com/zeoneo/rpi3b-bare-metal)
+
 Initial setup taken from osdev meaty-skeleton
 
 I am trying to come up with RPI os. individual tutorials are in src folder.
