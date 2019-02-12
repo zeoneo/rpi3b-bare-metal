@@ -1,6 +1,4 @@
-# RPI 3B (32 BIT) OS
-
-[![Build Status](https://travis-ci.com/zeoneo/rpi3b-bare-metal.svg?branch=master)](https://travis-ci.com/zeoneo/rpi3b-bare-metal)
+# RPI 3B (32 BIT) OS [![Build Status](https://travis-ci.com/zeoneo/rpi3b-bare-metal.svg?branch=master)](https://travis-ci.com/zeoneo/rpi3b-bare-metal)
 
 Initial setup taken from osdev meaty-skeleton
 
