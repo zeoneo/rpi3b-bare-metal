@@ -6,7 +6,5 @@ services:
 before_install:
   docker pull zeoneo/rip-3b-32bit-build
 
-  docker run zeoneo/rip-3b-32bit-build
-
 script:
-  bundle exec rake test
+  docker run zeoneo/rip-3b-32bit-build
