@@ -1,4 +1,5 @@
-#include <device/usb.h>
+#include <device/hcd.h>
+#include <device/usb-mem.h>
 #include <plibc/stdio.h>
 #include <stdint.h>
 #include <kernel/rpi-mailbox-interface.h>
@@ -6,6 +7,12 @@
 
 extern void dmb(void);
 uint32_t usb_hcd_device_id = 0x3;
+
+volatile struct CoreGlobalRegs *CorePhysical, *Core = NULL;
+volatile struct HostGlobalRegs *HostPhysical, *Host = NULL;
+volatile struct PowerReg *PowerPhysical, *Power = NULL;
+bool PhyInitialised = false;
+uint8_t *databuffer = NULL;
 
 void turn_off_usb()
 {
@@ -68,56 +75,31 @@ uint64_t tick_difference(uint64_t us1, uint64_t us2)
     return us2 - us1; // Return difference between values
 }
 
-int hcd_reset(void)
-{
-    uint64_t original_tick;
-
-    struct CoreReset *core_reset = (void *)(USB_CORE_BASE + RegReset);
-    original_tick = timer_getTickCount64(); // Hold original tickcount
-    do
-    {
-        if (tick_difference(original_tick, timer_getTickCount64()) > 100000)
-        {
-            printf(" hcd reset timeout 1");
-            return -1; // Return timeout error
-        }
-    } while (core_reset->AhbMasterIdle == false); // Keep looping until idle or timeout
-
-    core_reset->CoreSoft = true; // Reset the soft core
-
-    volatile struct CoreReset *temp;
-    original_tick = timer_getTickCount64(); // Hold original tickcount
-    do
-    {
-        if (tick_difference(original_tick, timer_getTickCount64()) > 100000)
-        {
-            printf(" hcd reset timeout");
-            return -1; // Return timeout error
-        }
-        temp = core_reset;                                            // Read reset register
-    } while (temp->CoreSoft == true || temp->AhbMasterIdle == false); // Keep looping until soft reset low/idle high or timeout
-
-    printf("success hcd reset");
-    return 0; // Return success
-}
-
 int hcd_start()
 {
-    struct UsbControl *coreUsb = (void *)(USB_CORE_BASE + RegUsb);
-    coreUsb->UlpiDriveExternalVbus = 0;
-    coreUsb->TsDlinePulseEnable = 0;
-    if (hcd_reset() != 0)
-    {
-        printf("error while hcd reset");
-    }
-    else
-    {
-        printf("success hcd reset");
-    }
+    power_on_host_controller();
     return 0;
 }
-void usb_initialise()
+
+Result HcdStart()
 {
-    power_on_host_controller();
-    hcd_start();
+    if (hcd_start() == OK)
+    {
+        return OK;
+    }
+    return ErrorGeneral;
+}
+
+Result HcdInitialize()
+{
+    volatile Result result = OK;
+    if (sizeof(struct CoreGlobalRegs) != 0x400 || sizeof(struct HostGlobalRegs) != 0x400 || sizeof(struct PowerReg) != 0x4)
+    {
+        printf("HCD: Incorrectly compiled driver. HostGlobalRegs: %#x (0x400), CoreGlobalRegs: %#x (0x400), PowerReg: %#x (0x4).\n",
+               sizeof(struct HostGlobalRegs), sizeof(struct CoreGlobalRegs), sizeof(struct PowerReg));
+        result = ErrorCompiler; // Correct packing settings are required.
+    } else {
+        printf("\n HCD: registers allocated proper memory");
+    }
+    return result;
 }

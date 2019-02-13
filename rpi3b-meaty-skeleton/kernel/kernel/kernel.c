@@ -4,7 +4,7 @@
 
 #include <device/uart0.h>
 #include <device/dma.h>
-#include <device/usb.h>
+#include <device/usbd.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
@@ -34,7 +34,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// udelay(4579 * 1000 * 10);
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
-	usb_initialise();
+	UsbInitialise();
 
 	while (1)
 	{
