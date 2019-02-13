@@ -9,6 +9,7 @@
 void timer_init(void);
 
 void timer_set(uint32_t usecs);
+void MicroDelay(uint64_t delayInUs);
 
 void udelay(uint32_t usecs);
 uint32_t timer_getTickCount32(void);

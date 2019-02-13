@@ -68,3 +68,10 @@ uint64_t timer_getTickCount64(void)
     resVal = (uint64_t)(resVal << 32 | lowCount);           // Join the 32 bit values to a full 64 bit
     return (resVal);                                        // Return the uint64_t timer tick count
 }
+
+void MicroDelay(uint64_t delayInUs)
+{
+    uint64_t timer_tick = timer_getTickCount64();
+    while (timer_getTickCount64() < (timer_tick + delayInUs))
+        ;
+}

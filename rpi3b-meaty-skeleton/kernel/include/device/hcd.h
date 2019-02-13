@@ -3,6 +3,7 @@
 #include <kernel/rpi-base.h>
 #include <kernel/types.h>
 #include <stdbool.h>
+#include <device/usbd.h>
 
 #define POWER_ON_USB_USER_ID 0x2708A000 // from manual
 #define POWER_ON_VENDOR_ID 0x4f542000   // rpi3b 4f54280a
@@ -15,6 +16,8 @@
 #define RequestTimeout 5000
 
 #define USB_CORE_BASE PERIPHERAL_BASE + USB_CORE_OFFSET
+
+#define HCD_DESIGNWARE_BASE ((void *)USB_CORE_BASE)
 
 //Taken from CSUD https://github.com/Chadderz121/csud.git
 enum CoreRegisters
@@ -150,16 +153,34 @@ struct __attribute__((__packed__, aligned(4))) CoreReset
 	union {
 		struct __attribute__((__packed__, aligned(1)))
 		{
-			volatile bool CoreSoft : 1;					   // @0
-			volatile bool HclkSoft : 1;					   // @1
-			volatile bool HostFrameCounter : 1;			   // @2
-			volatile bool InTokenQueueFlush : 1;		   // @3
-			volatile bool ReceiveFifoFlush : 1;			   // @4
-			volatile bool TransmitFifoFlush : 1;		   // @5
-			volatile unsigned TransmitFifoFlushNumber : 5; // @6
-			volatile unsigned _reserved11_29 : 19;		   // @11
-			volatile bool DmaRequestSignal : 1;			   // @30
-			volatile bool AhbMasterIdle : 1;			   // @31
+			volatile bool CoreSoft : 1;			 // @0
+			volatile bool HclkSoft : 1;			 // @1
+			volatile bool HostFrameCounter : 1;  // @2
+			volatile bool InTokenQueueFlush : 1; // @3
+			volatile bool ReceiveFifoFlush : 1;  // @4
+			volatile bool TransmitFifoFlush : 1; // @5
+			volatile enum CoreFifoFlush {
+				FlushNonPeriodic = 0,
+				FlushPeriodic1 = 1,
+				FlushPeriodic2 = 2,
+				FlushPeriodic3 = 3,
+				FlushPeriodic4 = 4,
+				FlushPeriodic5 = 5,
+				FlushPeriodic6 = 6,
+				FlushPeriodic7 = 7,
+				FlushPeriodic8 = 8,
+				FlushPeriodic9 = 9,
+				FlushPeriodic10 = 10,
+				FlushPeriodic11 = 11,
+				FlushPeriodic12 = 12,
+				FlushPeriodic13 = 13,
+				FlushPeriodic14 = 14,
+				FlushPeriodic15 = 15,
+				FlushAll = 16,
+			} TransmitFifoFlushNumber : 5;		   // @6
+			volatile unsigned _reserved11_29 : 19; // @11
+			volatile bool DmaRequestSignal : 1;	// @30
+			volatile bool AhbMasterIdle : 1;	   // @31
 		};
 		volatile uint32_t Raw32; // Union to access all 32 bits as a uint32_t
 	};
@@ -621,8 +642,37 @@ extern volatile struct HostGlobalRegs
 	volatile uint8_t _reserved700_800[0x800 - 0x700];	// +0x700
 } __attribute__((__packed__)) * HostPhysical, *Host;
 
+void SetReg(volatile const void *reg);
+void ClearReg(volatile const void *reg);
+void ReadBackReg(volatile const void *reg);
+void WriteThroughRegMask(volatile const void *reg, uint32_t maskOr);
+void WriteThroughReg(volatile const void *reg);
+Result HcdReset();
+
+Result HcdReceiveFifoFlush();
+Result HcdTransmitFifoFlush(enum CoreFifoFlush fifo);
+
 Result HcdStart();
 
 Result HcdInitialize();
 
+void HcdTransmitChannel(uint8_t channel, void *buffer);
+
+Result HcdChannelInterruptToError(struct UsbDevice *device, struct ChannelInterrupts interrupts, bool isComplete);
+
+Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
+						 uint32_t length, enum PacketId type, struct UsbPipeAddress *pipe);
+
+Result HcdChannelSendWait(struct UsbDevice *device,
+						  struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
+						  struct UsbDeviceRequest *request, enum PacketId packetId);
+
+Result HcdSumbitControlMessage(struct UsbDevice *device,
+							   struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+							   struct UsbDeviceRequest *request);
+
+Result HcdChannelSendWaitOne(struct UsbDevice *device,
+							 struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
+							 uint32_t bufferOffset,
+							 struct UsbDeviceRequest *request);
 #endif
