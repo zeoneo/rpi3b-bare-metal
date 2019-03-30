@@ -60,10 +60,10 @@ void UsbShowTree(struct UsbDevice *root, const int level, const char tee)
 			TreeLevelInUse[level] = 0; // Clear level in use flag
 		}
 	}
-	else
-	{
-		printf("Descriptor is not hub. :%d \n", root->Descriptor.DescriptorType);
-	}
+	// else
+	// {
+	// 	printf("Descriptor is not hub. :%d \n", root->Descriptor.DescriptorType);
+	// }
 }
 
 Result UsbControlMessage(struct UsbDevice *device,
@@ -73,7 +73,7 @@ Result UsbControlMessage(struct UsbDevice *device,
 	Result result;
 
 	uint32_t *buffer = (uint32_t *)input_buffer;
-	printf("USBD_PRAKASH: Input buffer. address: %x buffer:%x \n", input_buffer, buffer);
+	// printf("USBD_PRAKASH: Input buffer. address: %x buffer:%x \n", input_buffer, buffer);
 	if (((uint32_t)buffer & 0x3) != 0)
 	{
 		printf("USBD: Warning message buffer not word aligned. address: %x \n", buffer);
@@ -86,10 +86,10 @@ Result UsbControlMessage(struct UsbDevice *device,
 		printf("USBD: Failed to send message to %s: %d.\n", UsbGetDescription(device), result);
 		return result;
 	}
-	else
-	{
-		printf("USBD_PRAKASH: HcdSubmit control message ok.\n");
-	}
+	// else
+	// {
+	// 	printf("USBD_PRAKASH: HcdSubmit control message ok.\n");
+	// }
 
 	while (timeout-- > 0 && (device->Error & Processing))
 	{
@@ -99,7 +99,7 @@ Result UsbControlMessage(struct UsbDevice *device,
 			;
 		// printf("Wating 10000 micros seconds completed .\n");
 	}
-	printf("USBD_PRAKASH: Wating complete.\n");
+	// printf("USBD_PRAKASH: Wating complete.\n");
 	if ((device->Error & Processing))
 	{
 		printf("USBD: Message to %s timeout reached.\n", UsbGetDescription(device));
@@ -126,7 +126,7 @@ Result UsbControlMessage(struct UsbDevice *device,
 		result = ErrorDevice;
 	}
 
-	printf("USBD_PRAKASH: Control message  exiting at end. result: %d \n", result);
+	// printf("USBD_PRAKASH: Control message  exiting at end. result: %d \n", result);
 	return result;
 }
 
@@ -222,7 +222,7 @@ const char *UsbGetDescription(struct UsbDevice *device)
 	else if (device->Status == Powered)
 		return "Unknown Device (Not Ready)\0";
 	else if (device == Devices[0])
-		return "USB Root Hub\0";
+		return "USB Fake Root Hub\0";
 
 	switch (device->Descriptor.Class)
 	{
@@ -563,6 +563,11 @@ Result UsbInitialise()
 
 	UsbCheckForChange();
 	UsbShowTree(UsbGetRootHub(), 1, '+');
+	// while (1)
+	// {
+	// 	UsbCheckForChange();
+	// 	MicroDelay(30000);
+	// }
 	return OK;
 }
 

@@ -9,6 +9,8 @@ extern "C"
 {
 #endif
 
+#define UNUSED(x) x
+
 	/**
 	\brief Result of a method call.
 

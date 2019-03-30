@@ -1,17 +1,17 @@
-####################
+HUB_PRAKASH: Hub port connection NOT changed for :�####################
 Inside Bootloader
 Boot Atags Addr: 2EFF9900 
 ####################
 Requesting kernel
-00001018 sending size in hex: b128 45352 
-### sending kernel kernel/kernel8-32.img [45352 byte]
-sending size: 28 ffffffb1 0 0 
+00001018 sending size in hex: b124 45348 
+### sending kernel kernel/kernel8-32.img [45348 byte]
+sending size: 24 ffffffb1 0 0 
 receiving size: 1 2 3 4 5 6 7 8
-receiving size: 0 0 0 0 B 1 2 8
+receiving size: 0 0 0 0 B 1 2 4
 ### finished sending
 Jumping token: JUMP��������������@�
 
-01018 -----------------Kernel Started Dude........................
+001018 -----------------Kernel Started Dude........................
 timer_regs:3f003000
  Kernel End: 0x16e000 
 CSUD: Hub driver version 0.1
@@ -59,51 +59,15 @@ Platform: malloc(420) = 1d000. (4136/16384)
 USBD: Allocating new device, address 1.
 USBD_PRAKASH: Calling USB Attach Device. 
 USBD: Scanning 1. 480 Mb/s.
-USBD_PRAKASH: Input buffer. address: 1d024 buffer:1d024 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAK: Found Fake root device.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAKASH: Address set successful.
-USBD_PRAKASH: Input buffer. address: 1d024 buffer:1d024 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD: Attach Device USB Root Hub. Address:1 Class:9 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
-USBD: Device Attached: USB Root Hub.
+USBD: Attach Device USB Fake Root Hub. Address:1 Class:9 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
+USBD: Device Attached: USB Fake Root Hub.
 Platform: malloc(100) = 1d420. (4392/16384)
-USBD_PRAKASH: Input buffer. address: 29f7c buffer:29f7c 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 29f7c buffer:29f7c 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d420 buffer:1d420 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d420 buffer:1d420 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD:  -Product:       USB 2.0 Root Hub Prakash.
+USBD:  -Product:       USB 2.0 Fake Root Hub.
 Platform: free(1d420) (4136/16384)
 USBD:  -VID:PID:       0:0 v1.0
-USBD_PRAKASH: Input buffer. address: 1d038 buffer:1d038 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 Platform: malloc(20) = 1d420. (4168/16384)
-USBD_PRAKASH: Input buffer. address: 1d420 buffer:1d420 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -114,23 +78,11 @@ USBD_PRAKASH: End point Descriptor type:
 USBD_PRAKASH: End point Descriptor type mmcopied: 
 USBD: Descriptor 5 length 7, interface 0.
 USBD_PRAKASH: Out of for loop: ---------------------************************
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD: USB Root Hub configuration 1. Class 9, subclass 0.
+USBD: USB Fake Root Hub configuration 1. Class 9, subclass 0.
 USBD_PRAK: returning usb configure success: 
 HUB_PRAKASH: Attaching HUB. 
 Platform: malloc(68) = 1d440. (4272/16384)
-USBD_PRAKASH: Input buffer. address: 29f64 buffer:29f64 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 730061 buffer:730061 
-USBD: Warning message buffer not word aligned. address: 730061 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+Platform: malloc(10) = 1d4a8. (4288/16384)
 HUB_PRAKASH: HUB port count: 1 
 HUB: Hub power: Global.
 HUB: Hub nature: Standalone.
@@ -140,118 +92,32 @@ HUB: Hub current required: 0mA.
 HUB: Hub ports: 1.
 HUB_PRAKASH: HUB data->MaxChildren: 1 
 HUB: Hub port 1 is removable.
-USBD_PRAKASH: Input buffer. address: 1d448 buffer:1d448 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USB Hub power: Good.
 USB Hub over current condition: No.
 HUB: Hub powering on.
-HUB: Powering on hub USB Root Hub.
+HUB: Powering on hub USB Fake Root Hub.
 HUB: Powering on hub data->MaxChildren 1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB Root Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 1d448 buffer:1d448 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+HUB: Success powered on USB Fake Root Hub.Port 1.
 USB Hub power: Good.
 USB Hub over current condition: No.
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :0.
 HUB_PRAKASH: Hub port connection changed for :0.
 
 ------------------_Connection changed-----------------
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Hub reset USB Root Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB_PRAK: Hub reset USB Root Hub.Port 1 Complete success.
-Platform: malloc(420) = 1d4a8. (5328/16384)
+HUB: Hub reset USB Fake Root Hub.Port1.
+HUB_PRAK: Hub reset USB Fake Root Hub.Port 1 Complete success.
+Platform: malloc(420) = 1d4b8. (5344/16384)
 USBD: Allocating new device, address 2.
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: Scanning 2. 480 Mb/s.
-USBD_PRAKASH: Input buffer. address: 1d4cc buffer:1d4cc 
-bufferLength1: 8 .
-bufferLength1: 18 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAK: Found real device.
-HUB: Hub reset USB Root Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB_PRAK: Hub reset USB Root Hub.Port 1 Complete success.
+HUB: Hub reset USB Fake Root Hub.Port1.
+HUB_PRAK: Hub reset USB Fake Root Hub.Port 1 Complete success.
 USBD_PRAK: DeviceChildReset Child reset successful.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAKASH: Address set successful.
-USBD_PRAKASH: Input buffer. address: 1d4cc buffer:1d4cc 
-bufferLength1: 8 .
-bufferLength1: 18 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: Attach Device USB 2.0 Hub. Address:2 Class:9 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: USB 2.0 Hub.
 USBD:  -VID:PID:       424:9514 v2.0
-USBD_PRAKASH: Input buffer. address: 1d4e0 buffer:1d4e0 
-bufferLength1: 8 .
-bufferLength1: 9 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-Platform: malloc(30) = 1d8c8. (5376/16384)
-USBD_PRAKASH: Input buffer. address: 1d8c8 buffer:1d8c8 
-bufferLength1: 8 .
-bufferLength1: 41 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+Platform: malloc(30) = 1d8d8. (5392/16384)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -268,31 +134,11 @@ USBD_PRAKASH: in for loop:
 USBD_PRAKASH: End point Descriptor type: 
 USBD: Descriptor 5 length 7, interface 0.
 USBD_PRAKASH: Out of for loop: ---------------------************************
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: USB 2.0 Hub configuration 1. Class 9, subclass 0.
 USBD_PRAK: returning usb configure success: 
 HUB_PRAKASH: Attaching HUB. 
-Platform: malloc(68) = 1d8f8. (5480/16384)
-USBD_PRAKASH: Input buffer. address: 29edc buffer:29edc 
-bufferLength1: 8 .
-bufferLength1: 2 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-Platform: malloc(10) = 1d960. (5496/16384)
-USBD_PRAKASH: Input buffer. address: 1d960 buffer:1d960 
-bufferLength1: 8 .
-bufferLength1: 9 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+Platform: malloc(68) = 1d908. (5496/16384)
+Platform: malloc(10) = 1d970. (5512/16384)
 HUB_PRAKASH: HUB port count: 5 
 HUB: Hub power: Individual.
 HUB: Hub nature: Compound.
@@ -306,179 +152,36 @@ HUB: Hub port 2 is removable.
 HUB: Hub port 3 is removable.
 HUB: Hub port 4 is removable.
 HUB: Hub port 5 is removable.
-USBD_PRAKASH: Input buffer. address: 1d900 buffer:1d900 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USB Hub power: Good.
 USB Hub over current condition: No.
 HUB: Hub powering on.
 HUB: Powering on hub USB 2.0 Hub.
 HUB: Powering on hub data->MaxChildren 5.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB 2.0 Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB 2.0 Hub.Port2.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB 2.0 Hub.Port3.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB 2.0 Hub.Port4.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB: Could not power USB 2.0 Hub.Port5.
-USBD_PRAKASH: Input buffer. address: 1d900 buffer:1d900 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+HUB: Success powered on USB 2.0 Hub.Port 1.
+HUB: Success powered on USB 2.0 Hub.Port 2.
+HUB: Success powered on USB 2.0 Hub.Port 3.
+HUB: Success powered on USB 2.0 Hub.Port 4.
+HUB: Success powered on USB 2.0 Hub.Port 5.
 USB Hub power: Good.
 USB Hub over current condition: No.
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :0.
 HUB_PRAKASH: Hub port connection changed for :0.
 
 ------------------_Connection changed-----------------
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB: Hub reset USB 2.0 Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAK: Hub reset USB 2.0 Hub.Port 1 Complete success.
-Platform: malloc(420) = 1d970. (6552/16384)
+Platform: malloc(420) = 1d980. (6568/16384)
 USBD: Allocating new device, address 3.
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: Scanning 3. 480 Mb/s.
-USBD_PRAKASH: Input buffer. address: 1d994 buffer:1d994 
-bufferLength1: 8 .
-bufferLength1: 18 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAK: Found real device.
 HUB: Hub reset USB 2.0 Hub.Port1.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAK: Hub reset USB 2.0 Hub.Port 1 Complete success.
 USBD_PRAK: DeviceChildReset Child reset successful.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD_PRAKASH: Address set successful.
-USBD_PRAKASH: Input buffer. address: 1d994 buffer:1d994 
-bufferLength1: 8 .
-bufferLength1: 18 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: Attach Device SMSC LAN9512. Address:3 Class:255 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: SMSC LAN9512.
 USBD:  -VID:PID:       424:ec00 v2.0
-USBD_PRAKASH: Input buffer. address: 1d9a8 buffer:1d9a8 
-bufferLength1: 8 .
-bufferLength1: 9 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-Platform: malloc(28) = 1dd90. (6592/16384)
-USBD_PRAKASH: Input buffer. address: 1dd90 buffer:1dd90 
-bufferLength1: 8 .
-bufferLength1: 39 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+Platform: malloc(28) = 1dda0. (6608/16384)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -497,138 +200,87 @@ USBD_PRAKASH: End point Descriptor type:
 USBD_PRAKASH: End point Descriptor type mmcopied: 
 USBD: Descriptor 5 length 7, interface 0.
 USBD_PRAKASH: Out of for loop: ---------------------************************
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 USBD: SMSC LAN9512 configuration 1. Class 255, subclass 0.
 USBD_PRAK: returning usb configure success: 
 USBD_PRAKASH:  No class found.
 USBD_PRAKASH:  Successfully allocated root hub.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-bufferLength1: 8 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: returning hub check connection :0.
-USBD_PRAKASH: Input buffer. address: 1d910 buffer:1d910 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :1.
 HUB_PRAKASH: Hub port connection NOT changed for :1.
 HUB_PRAKASH: returning hub check connection :1.
-USBD_PRAKASH: Input buffer. address: 1d914 buffer:1d914 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :2.
 HUB_PRAKASH: Hub port connection NOT changed for :2.
 HUB_PRAKASH: returning hub check connection :2.
-USBD_PRAKASH: Input buffer. address: 1d918 buffer:1d918 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :3.
 HUB_PRAKASH: Hub port connection NOT changed for :3.
 HUB_PRAKASH: returning hub check connection :3.
-USBD_PRAKASH: Input buffer. address: 1d91c buffer:1d91c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :4.
-HUB_PRAKASH: Hub port connection NOT changed for :4.
+HUB_PRAKASH: Hub port connection changed for :4.
+
+------------------_Connection changed-----------------
+HUB: Hub reset USB 2.0 Hub.Port5.
+HUB_PRAK: Hub reset USB 2.0 Hub.Port 5 Complete success.
+Platform: malloc(420) = 1ddc8. (7664/16384)
+USBD: Allocating new device, address 4.
+USBD: Scanning 4. 480 Mb/s.
+USBD_PRAK: Found real device.
+HUB: Hub reset USB 2.0 Hub.Port5.
+HUB_PRAK: Hub reset USB 2.0 Hub.Port 5 Complete success.
+USBD_PRAK: DeviceChildReset Child reset successful.
+USBD_PRAKASH: Address set successful.
+USBD: Attach Device Unconfigured Device. Address:4 Class:0 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
+USBD: Device Attached: Unconfigured Device.
+Platform: malloc(100) = 1e1e8. (7920/16384)
+USBD:  -Product:       USB Storage.
+USBD:  -Manufacturer:  USB Storage.
+Platform: free(1e1e8) (7664/16384)
+USBD:  -VID:PID:       5e3:751 v20.4
+Platform: malloc(20) = 1e1e8. (7696/16384)
+USBD: Configuration value: 1 
+USBD_PRAKASH: Entering for loop: ---------------------************************
+USBD_PRAKASH: in for loop: 
+USBD_PRAKASH: Interface Descriptor type: 
+USBD: Descriptor 4 length 9, interface 0.
+USBD_PRAKASH: in for loop: 
+USBD_PRAKASH: End point Descriptor type: 
+USBD_PRAKASH: End point Descriptor type mmcopied: 
+USBD: Descriptor 5 length 7, interface 0.
+USBD_PRAKASH: in for loop: 
+USBD_PRAKASH: End point Descriptor type: 
+USBD_PRAKASH: End point Descriptor type mmcopied: 
+USBD: Descriptor 5 length 7, interface 0.
+USBD_PRAKASH: Out of for loop: ---------------------************************
+USBD: USB Mass Storage Device configuration 1. Class 8, subclass 6.
+USBD_PRAK: returning usb configure success: 
+USBD_PRAKASH:  No class found.
+USBD_PRAKASH:  Successfully allocated root hub.
 HUB_PRAKASH: returning hub check connection :4.
 HUB_PRAKASH: Returning from HUB Attach fucntion. 
 USBD_PRAKASH:  Successfully allocated root hub.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: returning hub check connection :0.
 HUB_PRAKASH: Returning from HUB Attach fucntion. 
 USBD_PRAKASH:  Successfully allocated root hub.
-USBD_PRAKASH: Input buffer. address: 1d454 buffer:1d454 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB_PRAKASH: PORT STATUS OK for :0.
-HUB_PRAKASH: Hub port connection NOT changed for :0.
-USBD_PRAKASH: Input buffer. address: 0 buffer:0 
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
-HUB_PRAKASH: returning hub check connection :0.
-USBD_PRAKASH: Input buffer. address: 1d90c buffer:1d90c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :0.
 HUB_PRAKASH: Hub port connection NOT changed for :0.
 HUB_PRAKASH: returning hub check connection :0.
-USBD_PRAKASH: Input buffer. address: 1d910 buffer:1d910 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
+HUB_PRAKASH: PORT STATUS OK for :0.
+HUB_PRAKASH: Hub port connection NOT changed for :0.
+HUB_PRAKASH: returning hub check connection :0.
 HUB_PRAKASH: PORT STATUS OK for :1.
 HUB_PRAKASH: Hub port connection NOT changed for :1.
 HUB_PRAKASH: returning hub check connection :1.
-USBD_PRAKASH: Input buffer. address: 1d914 buffer:1d914 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :2.
 HUB_PRAKASH: Hub port connection NOT changed for :2.
 HUB_PRAKASH: returning hub check connection :2.
-USBD_PRAKASH: Input buffer. address: 1d918 buffer:1d918 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :3.
 HUB_PRAKASH: Hub port connection NOT changed for :3.
 HUB_PRAKASH: returning hub check connection :3.
-USBD_PRAKASH: Input buffer. address: 1d91c buffer:1d91c 
-bufferLength1: 8 .
-bufferLength1: 4 .
-bufferLength1: 0 .
-USBD_PRAKASH: HcdSubmit control message ok.
-USBD_PRAKASH: Wating complete.
-USBD_PRAKASH: Control message  exiting at end. result: 0 
 HUB_PRAKASH: PORT STATUS OK for :4.
 HUB_PRAKASH: Hub port connection NOT changed for :4.
 HUB_PRAKASH: returning hub check connection :4.
- + --USB Root Hub id: 0 port: -27 
+ + --USB Fake Root Hub id: 0 port: -27 
     � --USB 2.0 Hub id: 0 port: 0 
        � --SMSC LAN9512 id: 0 port: 0 
+Descriptor is not hub. :1 
+       � --USB Mass Storage Device id: 4 port: 0 
 Descriptor is not hub. :1 

@@ -173,8 +173,13 @@ Result HubPowerOn(struct UsbDevice *device)
     for (uint32_t i = 0; i < data->MaxChildren; i++)
     {
         if (HubChangePortFeature(device, FeaturePower, i, true) != OK)
-            printf("HUB: Could not power ");
-        printf("HUB: Could not power %s.Port%d.\n", UsbGetDescription(device), i + 1);
+        {
+            printf("HUB: Could not power %s.Port %d.\n", UsbGetDescription(device), i + 1);
+        }
+        else
+        {
+            printf("HUB: Success powered on %s.Port %d.\n", UsbGetDescription(device), i + 1);
+        }
     }
 
     MicroDelay(hubDescriptor->PowerGoodDelay * 2000);

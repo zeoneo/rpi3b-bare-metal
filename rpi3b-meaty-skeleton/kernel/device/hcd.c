@@ -833,13 +833,12 @@ Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
 }
 
 Result HcdChannelSendWaitOne(struct UsbDevice *device,
-                             struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength, uint32_t bufferOffset,
+                             struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,
                              struct UsbDeviceRequest *request)
 {
     Result result;
     uint32_t timeout, tries, globalTries, actualTries;
-    uint32_t bufferLength1 = bufferLength; //TODO remove it
-    printf("bufferLength1: %d .\n", bufferLength1);
+
     for (globalTries = 0, actualTries = 0; globalTries < 3 && actualTries < 10; globalTries++, actualTries++)
     {
         SetReg(&Host->Channel[channel].Interrupt);

@@ -88,9 +88,9 @@ struct UsbStringDescriptor String0 = {
 // const uint16_t result123[] = strtol(str, NULL, 16);
 
 struct UsbStringDescriptor String1 = {
-    .DescriptorLength = sizeof(L"USB 2.0 Root Hub") + 2,
+    .DescriptorLength = sizeof(L"USB 2.0 Fake Root Hub") + 2,
     .DescriptorType = String,
-    .Data = u"USB 2.0 Root Hub Prakash",
+    .Data = u"USB 2.0 Fake Root Hub",
 };
 
 struct HubDescriptor HubDescriptor = {
