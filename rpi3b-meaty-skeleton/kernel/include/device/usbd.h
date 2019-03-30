@@ -284,7 +284,7 @@ extern "C"
 		UsbSpeed Speed;
 		enum UsbDeviceStatus Status;
 		volatile uint8_t ConfigurationIndex;
-		int8_t PortNumber; //todo uint8_t PortNumber;
+		uint8_t PortNumber; //todo uint8_t PortNumber;
 		volatile enum UsbTransferError Error __attribute__((aligned(4)));
 
 		// Generic device handlers

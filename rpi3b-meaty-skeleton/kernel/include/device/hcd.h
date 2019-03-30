@@ -148,39 +148,42 @@ struct __attribute__((__packed__, aligned(4))) UsbControl
 	};
 };
 
+enum CoreFifoFlush
+{
+	FlushNonPeriodic = 0,
+	FlushPeriodic1 = 1,
+	FlushPeriodic2 = 2,
+	FlushPeriodic3 = 3,
+	FlushPeriodic4 = 4,
+	FlushPeriodic5 = 5,
+	FlushPeriodic6 = 6,
+	FlushPeriodic7 = 7,
+	FlushPeriodic8 = 8,
+	FlushPeriodic9 = 9,
+	FlushPeriodic10 = 10,
+	FlushPeriodic11 = 11,
+	FlushPeriodic12 = 12,
+	FlushPeriodic13 = 13,
+	FlushPeriodic14 = 14,
+	FlushPeriodic15 = 15,
+	FlushAll = 16,
+};
+
 struct __attribute__((__packed__, aligned(4))) CoreReset
 {
 	union {
 		struct __attribute__((__packed__, aligned(1)))
 		{
-			volatile bool CoreSoft : 1;			 // @0
-			volatile bool HclkSoft : 1;			 // @1
-			volatile bool HostFrameCounter : 1;  // @2
-			volatile bool InTokenQueueFlush : 1; // @3
-			volatile bool ReceiveFifoFlush : 1;  // @4
-			volatile bool TransmitFifoFlush : 1; // @5
-			volatile enum CoreFifoFlush {
-				FlushNonPeriodic = 0,
-				FlushPeriodic1 = 1,
-				FlushPeriodic2 = 2,
-				FlushPeriodic3 = 3,
-				FlushPeriodic4 = 4,
-				FlushPeriodic5 = 5,
-				FlushPeriodic6 = 6,
-				FlushPeriodic7 = 7,
-				FlushPeriodic8 = 8,
-				FlushPeriodic9 = 9,
-				FlushPeriodic10 = 10,
-				FlushPeriodic11 = 11,
-				FlushPeriodic12 = 12,
-				FlushPeriodic13 = 13,
-				FlushPeriodic14 = 14,
-				FlushPeriodic15 = 15,
-				FlushAll = 16,
-			} TransmitFifoFlushNumber : 5;		   // @6
-			volatile unsigned _reserved11_29 : 19; // @11
-			volatile bool DmaRequestSignal : 1;	// @30
-			volatile bool AhbMasterIdle : 1;	   // @31
+			volatile bool CoreSoft : 1;					   // @0
+			volatile bool HclkSoft : 1;					   // @1
+			volatile bool HostFrameCounter : 1;			   // @2
+			volatile bool InTokenQueueFlush : 1;		   // @3
+			volatile bool ReceiveFifoFlush : 1;			   // @4
+			volatile bool TransmitFifoFlush : 1;		   // @5
+			volatile unsigned TransmitFifoFlushNumber : 5; // @6
+			volatile unsigned _reserved11_29 : 19;		   // @11
+			volatile bool DmaRequestSignal : 1;			   // @30
+			volatile bool AhbMasterIdle : 1;			   // @31
 		};
 		volatile uint32_t Raw32; // Union to access all 32 bits as a uint32_t
 	};

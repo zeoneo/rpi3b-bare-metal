@@ -388,8 +388,8 @@ void HubChildDetached(struct UsbDevice *device, struct UsbDevice *child)
     struct HubDevice *data;
 
     data = (struct HubDevice *)device->DriverData;
-
-    if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    //  if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    if (child->Parent == device && child->PortNumber < data->MaxChildren &&
         data->Children[child->PortNumber] == child)
         data->Children[child->PortNumber] = NULL;
 }
@@ -400,7 +400,9 @@ Result HubChildReset(struct UsbDevice *device, struct UsbDevice *child)
 
     data = (struct HubDevice *)device->DriverData;
 
-    if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    //Before signed unsigned change for PortNumber
+    // if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    if (child->Parent == device && child->PortNumber < data->MaxChildren &&
         data->Children[child->PortNumber] == child)
     {
         return HubPortReset(device, child->PortNumber);
@@ -418,7 +420,8 @@ Result HubCheckConnectionDevice(struct UsbDevice *device, struct UsbDevice *chil
 
     data = (struct HubDevice *)device->DriverData;
 
-    if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    // if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
+    if (child->Parent == device && child->PortNumber < data->MaxChildren &&
         data->Children[child->PortNumber] == child)
     {
         if ((result = HubCheckConnection(device, child->PortNumber)) != OK)
@@ -455,10 +458,10 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
         printf("HUB_PRAKASH: Hub port connection changed for :%d.\n", port);
         HubPortConnectionChanged(device, port);
     }
-    else
-    {
-        printf("HUB_PRAKASH: Hub port connection NOT changed for :%d.\n", port);
-    }
+    // else
+    // {
+    //     printf("HUB_PRAKASH: Hub port connection NOT changed for :%d.\n", port);
+    // }
 
     if (portStatus->Change.EnabledChanged)
     {
@@ -497,7 +500,7 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
         }
     }
 
-    printf("HUB_PRAKASH: returning hub check connection :%d.\n", port);
+    // printf("HUB_PRAKASH: returning hub check connection :%d.\n", port);
     return OK;
 }
 
@@ -648,7 +651,7 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         HubCheckConnection(device, port);
     }
 
-    printf("HUB_PRAKASH: Returning from HUB Attach fucntion. \n");
+    // printf("HUB_PRAKASH: Returning from HUB Attach fucntion. \n");
 
     return OK;
 }
