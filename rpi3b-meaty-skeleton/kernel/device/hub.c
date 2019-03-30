@@ -10,6 +10,7 @@
 #define InterfaceClassAttachCount 16
 #define ControlMessageTimeout 10
 extern Result (*InterfaceClassAttach[InterfaceClassAttachCount])(struct UsbDevice *device, uint32_t interfaceNumber);
+
 void HubLoad()
 {
     printf("CSUD: Hub driver version 0.1\n");
@@ -26,6 +27,7 @@ Result HubReadDescriptor(struct UsbDevice *device)
         printf("HUB: Failed to read hub descriptor for %s.\n", UsbGetDescription(device));
         return result;
     }
+
     if (((struct HubDevice *)device->DriverData)->Descriptor == NULL &&
         (((struct HubDevice *)device->DriverData)->Descriptor = MemoryAllocate(header.DescriptorLength)) == NULL)
     {
@@ -167,12 +169,12 @@ Result HubPowerOn(struct UsbDevice *device)
     data = (struct HubDevice *)device->DriverData;
     hubDescriptor = data->Descriptor;
     printf("HUB: Powering on hub %s.\n", UsbGetDescription(device));
-
+    printf("HUB: Powering on hub data->MaxChildren %d.\n", data->MaxChildren);
     for (uint32_t i = 0; i < data->MaxChildren; i++)
     {
         if (HubChangePortFeature(device, FeaturePower, i, true) != OK)
             printf("HUB: Could not power ");
-        // printf("HUB: Could not power %s.Port%d.\n", UsbGetDescription(device), i + 1);
+        printf("HUB: Could not power %s.Port%d.\n", UsbGetDescription(device), i + 1);
     }
 
     MicroDelay(hubDescriptor->PowerGoodDelay * 2000);
@@ -232,11 +234,13 @@ Result HubPortReset(struct UsbDevice *device, uint8_t port)
     {
         printf("HUB: Failed to clear reset on %s.Port%d.\n", UsbGetDescription(device), port + 1);
     }
+    printf("HUB_PRAK: Hub reset %s.Port %d Complete success.\n", UsbGetDescription(device), port + 1);
     return OK;
 }
 
 Result HubPortConnectionChanged(struct UsbDevice *device, uint8_t port)
 {
+    printf("\n------------------_Connection changed-----------------\n");
     Result result;
     struct HubDevice *data;
     struct HubPortFullStatus *portStatus;
@@ -360,11 +364,13 @@ void HubCheckForChange(struct UsbDevice *device)
     struct HubDevice *data;
 
     data = (struct HubDevice *)device->DriverData;
-
     for (uint32_t i = 0; i < data->MaxChildren; i++)
     {
         if (HubCheckConnection(device, i) != OK)
+        {
+            printf("HUB_PRAKASH: In hub check connection not ok for child : %d. \n", i);
             continue;
+        }
 
         if (data->Children[i] != NULL &&
             data->Children[i]->DeviceCheckForChange != NULL)
@@ -391,9 +397,13 @@ Result HubChildReset(struct UsbDevice *device, struct UsbDevice *child)
 
     if (child->Parent == device && child->PortNumber >= 0 && child->PortNumber < data->MaxChildren &&
         data->Children[child->PortNumber] == child)
+    {
         return HubPortReset(device, child->PortNumber);
+    }
     else
+    {
         return ErrorDevice;
+    }
 }
 
 Result HubCheckConnectionDevice(struct UsbDevice *device, struct UsbDevice *child)
@@ -428,12 +438,23 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
             printf("HUB: Failed to get hub port status (1) for %s.Port%d.\n", UsbGetDescription(device), port + 1);
         return result;
     }
+    else
+    {
+        printf("HUB_PRAKASH: PORT STATUS OK for :%d.\n", port);
+    }
+
     portStatus = &data->PortStatus[port];
 
     if (portStatus->Change.ConnectedChanged)
     {
+        printf("HUB_PRAKASH: Hub port connection changed for :%d.\n", port);
         HubPortConnectionChanged(device, port);
     }
+    else
+    {
+        printf("HUB_PRAKASH: Hub port connection NOT changed for :%d.\n", port);
+    }
+
     if (portStatus->Change.EnabledChanged)
     {
         if (HubChangePortFeature(device, FeatureEnableChange, port, false) != OK)
@@ -471,6 +492,7 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
         }
     }
 
+    printf("HUB_PRAKASH: returning hub check connection :%d.\n", port);
     return OK;
 }
 
@@ -496,7 +518,7 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         printf("HUB: Cannot enumerate hub without interrupt endpoint.\n");
         return ErrorIncompatible;
     }
-
+    printf("HUB_PRAKASH: Attaching HUB. \n");
     device->DeviceDeallocate = HubDeallocate;
     device->DeviceDetached = HubDetached;
     device->DeviceCheckForChange = HubCheckForChange;
@@ -518,6 +540,8 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         return result;
 
     hubDescriptor = data->Descriptor;
+    printf("HUB_PRAKASH: HUB port count: %d \n", hubDescriptor->PortCount);
+
     if (hubDescriptor->PortCount > MaxChildrenPerDevice)
     {
         printf("HUB: Hub %s is too big for this driver to handle. Only the first %d ports will be used. Change MaxChildrenPerDevice in usbd/device.h.\n", UsbGetDescription(device), MaxChildrenPerDevice);
@@ -562,7 +586,8 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     printf("HUB: Hub power to good: %dms.\n", hubDescriptor->PowerGoodDelay * 2);
     printf("HUB: Hub current required: %dmA.\n", hubDescriptor->MaximumHubPower * 2);
     printf("HUB: Hub ports: %d.\n", hubDescriptor->PortCount);
-#if DEBUG
+
+    printf("HUB_PRAKASH: HUB data->MaxChildren: %d \n", data->MaxChildren);
     for (uint32_t i = 0; i < data->MaxChildren; i++)
     {
         if (hubDescriptor->Data[(i + 1) >> 3] & 1 << ((i + 1) & 0x7))
@@ -570,7 +595,6 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         else
             printf("HUB: Hub port %d is removable.\n", i + 1);
     }
-#endif
 
     if ((result = HubGetStatus(device)) != OK)
     {
@@ -618,6 +642,8 @@ Result HubAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     {
         HubCheckConnection(device, port);
     }
+
+    printf("HUB_PRAKASH: Returning from HUB Attach fucntion. \n");
 
     return OK;
 }

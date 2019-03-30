@@ -90,7 +90,7 @@ struct UsbStringDescriptor String0 = {
 struct UsbStringDescriptor String1 = {
     .DescriptorLength = sizeof(L"USB 2.0 Root Hub") + 2,
     .DescriptorType = String,
-    .Data = {'U', 'S', 'B', ' ', '2', '.', '0', ' ', 'R', 'o', 'o', 't', ' ', 'H', 'u', 'b', '\0'},
+    .Data = u"USB 2.0 Root Hub Prakash",
 };
 
 struct HubDescriptor HubDescriptor = {
@@ -112,7 +112,7 @@ struct HubDescriptor HubDescriptor = {
     },
 };
 
-extern uint32_t RootHubDeviceNumber;
+uint32_t RootHubDeviceNumber = 0;
 
 Result HcdProcessRootHubMessage(struct UsbDevice *device,
                                 struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,

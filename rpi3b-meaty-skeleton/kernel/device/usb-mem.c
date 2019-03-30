@@ -68,7 +68,7 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("Platform: malloc(%#x) = %#x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
 				return Next->Address;
 			}
 			else
@@ -91,13 +91,13 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("Platform: malloc(%#x) = %#x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
 				return Next->Address;
 			}
 			else
 			{
 				printf("Platform: Out of memory! We should've had more heap space in platform.c.\n");
-				printf("Platform: malloc(%#x) = %#x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
+				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
 				return NULL;
 			}
 		}
@@ -116,7 +116,7 @@ void *MemoryAllocate(uint32_t size)
 	else
 		FirstFreeAllocation = Next;
 	allocated += size;
-	printf("Platform: malloc(%#x) = %#x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
+	printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
 	return FirstAllocation->Address;
 }
 
@@ -135,7 +135,7 @@ void MemoryDeallocate(void *address)
 			*CurrentAddress = Current->Next;
 			Current->Next = FirstFreeAllocation;
 			FirstFreeAllocation = Current;
-			printf("Platform: free(%#x) (%d/%d)\n", address, allocated, sizeof(Heap));
+			printf("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
 			return;
 		}
 		else
@@ -145,7 +145,7 @@ void MemoryDeallocate(void *address)
 		}
 	}
 
-	printf("Platform: free(%#x) (%d/%d)\n", address, allocated, sizeof(Heap));
+	printf("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
 	printf("Platform: Deallocated memory that was never allocated. Ignored, but you should look into it.\n");
 }
 

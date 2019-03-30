@@ -341,7 +341,7 @@ extern "C"
 		uint16_t Length; // +0x6
 	};
 
-	struct UsbPipeAddress
+	struct __attribute__((__packed__)) UsbPipeAddress
 	{
 		UsbPacketSize MaxSize : 2;	// @0
 		UsbSpeed Speed : 2;			  // @2
@@ -350,10 +350,10 @@ extern "C"
 		UsbTransfer Type : 2;		  // @16
 		UsbDirection Direction : 1;   // @18
 		unsigned _reserved19_31 : 13; // @19
-	} __attribute__((__packed__));
+	};
 
 	Result UsbInitialise();
-
+	void UsbShowTree(struct UsbDevice *root, const int level, const char tee);
 	Result UsbAttachRootHub();
 	Result UsbAllocateDevice(struct UsbDevice **device);
 	Result UsbAttachDevice(struct UsbDevice *device);
@@ -371,6 +371,7 @@ extern "C"
 							 struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
 							 struct UsbDeviceRequest *request, uint32_t timeout);
 	Result UsbGetString(struct UsbDevice *device, uint8_t stringIndex, uint16_t langId, void *buffer, uint32_t length);
+	void UsbCheckForChange();
 #ifdef __cplusplus
 }
 #endif

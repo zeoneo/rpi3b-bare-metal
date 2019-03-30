@@ -221,7 +221,7 @@ int hcd_start()
     }
     WriteThroughReg(&Host->Config);
 
-    printf("HCD: FIFO configuration: Total=%#x Rx=%#x NPTx=%#x PTx=%#x.\n", ReceiveFifoSize + NonPeriodicFifoSize + PeriodicFifoSize, ReceiveFifoSize, NonPeriodicFifoSize, PeriodicFifoSize);
+    printf("HCD: FIFO configuration: Total=%x Rx=%x NPTx=%x PTx=%x.\n", ReceiveFifoSize + NonPeriodicFifoSize + PeriodicFifoSize, ReceiveFifoSize, NonPeriodicFifoSize, PeriodicFifoSize);
     ReadBackReg(&Core->Receive.Size);
     Core->Receive.Size = ReceiveFifoSize;
     WriteThroughReg(&Core->Receive.Size);
@@ -291,11 +291,10 @@ int hcd_start()
     ReadBackReg(&Host->Port);
     Host->Port.Reset = true;
     WriteThroughRegMask(&Host->Port, 0x100);
-    printf("HCD: Wating 50000 micros seconds.\n");
+
     uint64_t timer_tick = timer_getTickCount64();
     while (timer_getTickCount64() < (timer_tick + 50000))
         ;
-    printf("HCD: Wating 50000 micros seconds completed .\n");
     Host->Port.Reset = false;
     WriteThroughRegMask(&Host->Port, 0x100);
     ReadBackReg(&Host->Port);
@@ -340,7 +339,7 @@ Result HcdInitialize()
     volatile Result result = OK;
     if (sizeof(struct CoreGlobalRegs) != 0x400 || sizeof(struct HostGlobalRegs) != 0x400 || sizeof(struct PowerReg) != 0x4)
     {
-        printf("HCD: Incorrectly compiled driver. HostGlobalRegs: %#x (0x400), CoreGlobalRegs: %#x (0x400), PowerReg: %#x (0x4).\n",
+        printf("HCD: Incorrectly compiled driver. HostGlobalRegs: %x (0x400), CoreGlobalRegs: %x (0x400), PowerReg: %x (0x4).\n",
                sizeof(struct HostGlobalRegs), sizeof(struct CoreGlobalRegs), sizeof(struct PowerReg));
         result = ErrorCompiler; // Correct packing settings are required.
     }
@@ -634,7 +633,7 @@ Result HcdReceiveFifoFlush()
     return OK;
 }
 
-uint32_t RootHubDeviceNumber = 0;
+extern uint32_t RootHubDeviceNumber;
 
 Result HcdSumbitControlMessage(struct UsbDevice *device,
                                struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
@@ -840,7 +839,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
     Result result;
     uint32_t timeout, tries, globalTries, actualTries;
     uint32_t bufferLength1 = bufferLength; //TODO remove it
-    printf("bufferLength1: %d ", bufferLength1);
+    printf("bufferLength1: %d .\n", bufferLength1);
     for (globalTries = 0, actualTries = 0; globalTries < 3 && actualTries < 10; globalTries++, actualTries++)
     {
         SetReg(&Host->Channel[channel].Interrupt);
@@ -922,7 +921,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 
                 if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, false)) != OK)
                 {
-                    printf("HCD: Control message to %#x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                    printf("HCD: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                            ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                            ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
                     printf("HCD: Request split completion to %s failed.\n", UsbGetDescription(device));
@@ -945,7 +944,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
         {
             if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
             {
-                printf("HCD: Control message to %#x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                printf("HCD: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
                 printf("HCD: Request to %s failed.\n", UsbGetDescription(device));
@@ -961,7 +960,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
         printf("HCD: Request to %s has failed 3 times.\n", UsbGetDescription(device));
         if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
         {
-            printf("HCD: Control message to %#x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+            printf("HCD: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                    ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                    ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
             printf("HCD: Request to %s failed.\n", UsbGetDescription(device));
@@ -981,8 +980,9 @@ void HcdTransmitChannel(uint8_t channel, void *buffer)
     WriteThroughReg(&Host->Channel[channel].SplitControl);
 
     if (((uint32_t)buffer & 3) != 0)
-        printf("HCD: Transfer buffer %#x is not DWORD aligned. Ignored, but dangerous.\n", buffer);
-    Host->Channel[channel].DmaAddress = buffer;
+        printf("HCD: Transfer buffer %x is not DWORD aligned. Ignored, but dangerous.\n", buffer);
+
+    Host->Channel[channel].DmaAddress = (void *)((uint32_t)buffer | (uint32_t)0xC0000000);
     WriteThroughReg(&Host->Channel[channel].DmaAddress);
 
     ReadBackReg(&Host->Channel[channel].Characteristic);

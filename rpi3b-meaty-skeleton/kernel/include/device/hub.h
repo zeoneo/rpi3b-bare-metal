@@ -208,6 +208,8 @@ extern "C"
 */
     void HubRecursiveCheck(struct UsbDevice *device);
 
+    void HubLoad();
+
 #ifdef __cplusplus
 }
 #endif
