@@ -7,7 +7,6 @@
 #include <kernel/rpi-mailbox-interface.h>
 #include <kernel/systimer.h>
 #include <kernel/types.h>
-#define NULL ((void *)0)
 
 bool PhyInitialised = false;
 volatile struct CoreGlobalRegs *CorePhysical, *Core = NULL;

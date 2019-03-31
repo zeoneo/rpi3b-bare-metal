@@ -1,4 +1,4 @@
-CFLAGS?=-O2 -g -march=armv8-a+crc -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding
+CFLAGS?=-O2 -g -march=armv8-a+crc -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding 
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -9,7 +9,7 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall  -Wextra -Werror
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall  -Wextra -Werror -Wno-sign-compare
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc

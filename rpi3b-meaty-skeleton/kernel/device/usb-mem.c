@@ -11,8 +11,8 @@ struct HeapAllocation
 	struct HeapAllocation *Next;
 };
 
-uint8_t Heap[0x4000] __attribute__((aligned(8))); // Support a maximum of 16KiB of allocations
-struct HeapAllocation Allocations[0x100];		  // Support 256 allocations
+uint8_t Heap[0x8000] __attribute__((aligned(8))); // Support a maximum of 16KiB of allocations
+struct HeapAllocation Allocations[0x200];		  // Support 256 allocations
 struct HeapAllocation *FirstAllocation = HEAP_END, *FirstFreeAllocation = NULL;
 uint32_t allocated = 0;
 
@@ -68,7 +68,12 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				printf("1 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+
+				if ((uint32_t)(Next->Address) & 0x3)
+				{
+					printf("1 Platform: non-aligned memory returned. \n");
+				}
 				return Next->Address;
 			}
 			else
@@ -91,13 +96,18 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				printf("2 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+
+				if ((uint32_t)(Next->Address) & 0x3)
+				{
+					printf("2 Platform: non-aligned memory returned. \n");
+				}
 				return Next->Address;
 			}
 			else
 			{
 				printf("Platform: Out of memory! We should've had more heap space in platform.c.\n");
-				printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
+				printf("Platform: malloc(%d) = %x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
 				return NULL;
 			}
 		}
@@ -116,7 +126,11 @@ void *MemoryAllocate(uint32_t size)
 	else
 		FirstFreeAllocation = Next;
 	allocated += size;
-	printf("Platform: malloc(%x) = %x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
+	printf("3 Platform: malloc(%d) = %x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
+	if ((uint32_t)(FirstAllocation->Address) & 0x3)
+	{
+		printf(" 3 Platform: non-aligned memory returned. \n");
+	}
 	return FirstAllocation->Address;
 }
 

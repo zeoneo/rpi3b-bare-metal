@@ -10,7 +10,7 @@ extern "C"
 #endif
 
 #define UNUSED(x) x
-
+#define NULL ((void *)0)
 	/**
 	\brief Result of a method call.
 

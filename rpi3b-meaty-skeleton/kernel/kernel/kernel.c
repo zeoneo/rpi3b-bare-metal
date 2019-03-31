@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <plibc/stdio.h>
 
+#include <device/keyboard.h>
 #include <device/uart0.h>
 #include <device/dma.h>
 #include <device/usbd.h>
@@ -35,8 +36,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
 	UsbInitialise();
+	uint32_t address = KeyboardGetAddress(0);
+	printf("Keyboard address: %d", address);
 
 	while (1)
 	{
+		KeyboardPoll(address);
 	}
 }

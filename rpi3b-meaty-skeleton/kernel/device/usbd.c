@@ -1,7 +1,9 @@
 #include <kernel/systimer.h>
 #include <kernel/types.h>
 
+#include <device/keyboard.h>
 #include <device/hcd.h>
+#include <device/hid.h>
 #include <device/usb-mem.h>
 #include <plibc/stdio.h>
 #include <device/usbd.h>
@@ -35,8 +37,11 @@ void UsbShowTree(struct UsbDevice *root, const int level, const char tee)
 			printf(" %c ", '\xB3'); // Draw level lines if in use
 		}
 	}
+	int maxPacket = SizeFromNumber(root->Descriptor.MaxPacketSize0);
 	struct HubDevice *hubDev = (struct HubDevice *)root->DriverData;
-	printf(" %c --%s id: %d port: %d \n", tee, UsbGetDescription(root), root->PortNumber, root->Parent->PortNumber); // Print this entry
+
+	printf(" %c-%s id: %d port: %d speed: %s packetsize: %d \n", tee, UsbGetDescription(root), root->Number, root->PortNumber, SpeedToChar(root->Speed), maxPacket);
+	// printf(" %c --%s id: %d port: %d \n", tee, UsbGetDescription(root), root->PortNumber, root->Parent->PortNumber); // Print this entry
 	if (root->DriverData->DeviceDriver == DeviceDriverHub)
 	{
 
@@ -542,6 +547,9 @@ Result UsbInitialise()
 	// Init usb mem allocation
 	PlatformLoad();
 	HubLoad();
+	HidLoad();
+	KbdLoad();
+
 	if (sizeof(struct UsbDeviceRequest) != 0x8)
 	{
 		printf("USBD: Incorrectly compiled driver. UsbDeviceRequest: %x (0x8).\n",
@@ -561,7 +569,7 @@ Result UsbInitialise()
 
 	HcdStart();
 
-	UsbCheckForChange();
+	// UsbCheckForChange();
 	UsbShowTree(UsbGetRootHub(), 1, '+');
 	// while (1)
 	// {
