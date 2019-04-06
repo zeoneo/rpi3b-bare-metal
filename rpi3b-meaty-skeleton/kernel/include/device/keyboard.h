@@ -146,6 +146,12 @@ extern "C"
 */
     bool KeyboadGetKeyIsDown(uint32_t keyboardAddress, uint16_t key);
 
+    void KeyboardUpdate(uint32_t keyboardAddress);
+
+    bool KeyWasDown(uint16_t scanCode);
+
+    uint8_t KeyboardGetChar(uint32_t address);
+
     /**
 	\brief Returns the nth key that is held down.
 
@@ -161,7 +167,6 @@ extern "C"
 	retrieves the nth item from that array. Returns 0 on error.
 */
     uint32_t KeyboardGetAddress(uint32_t index);
-
 
     void KbdLoad();
 //-----------Declarations end here ---------------------

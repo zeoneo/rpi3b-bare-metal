@@ -39,8 +39,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint32_t address = KeyboardGetAddress(0);
 	printf("Keyboard address: %d", address);
 
+	// struct KeyboardLeds leds = {0};
 	while (1)
 	{
-		KeyboardPoll(address);
+		KeyboardUpdate(address);
+		uint8_t key = KeyboardGetChar(address);
+		if (key != 0)
+		{
+			printf("key pressed: > %c <\n", key);
+		}
 	}
 }

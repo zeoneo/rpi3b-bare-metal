@@ -9,7 +9,85 @@
 
 uint32_t keyboardCount __attribute__((aligned(4))) = 0;
 uint32_t keyboardAddresses[KeyboardMaxKeyboards] = {0, 0, 0, 0};
+uint32_t old_keys_down[6] = {0, 0, 0, 0, 0, 0};
 struct UsbDevice *keyboards[KeyboardMaxKeyboards];
+
+static const char keymap[256][2] __attribute__((aligned(4))) = {
+    [4] = {'a', 'A'},
+    [5] = {'b', 'B'},
+    [6] = {'c', 'C'},
+    [7] = {'d', 'D'},
+    [8] = {'e', 'E'},
+    [9] = {'f', 'F'},
+    [10] = {'g', 'G'},
+    [11] = {'h', 'H'},
+    [12] = {'i', 'I'},
+    [13] = {'j', 'J'},
+    [14] = {'k', 'K'},
+    [15] = {'l', 'L'},
+    [16] = {'m', 'M'},
+    [17] = {'n', 'N'},
+    [18] = {'o', 'O'},
+    [19] = {'p', 'P'},
+    [20] = {'q', 'Q'},
+    [21] = {'r', 'R'},
+    [22] = {'s', 'S'},
+    [23] = {'t', 'T'},
+    [24] = {'u', 'U'},
+    [25] = {'v', 'V'},
+    [26] = {'w', 'W'},
+    [27] = {'x', 'X'},
+    [28] = {'y', 'Y'},
+    [29] = {'z', 'Z'},
+    [30] = {'1', '!'},
+    [31] = {'2', '@'},
+    [32] = {'3', '#'},
+    [33] = {'4', '$'},
+    [34] = {'5', '%'},
+    [35] = {'6', '^'},
+    [36] = {'7', '&'},
+    [37] = {'8', '*'},
+    [38] = {'9', '('},
+    [39] = {'0', ')'},
+    [40] = {'\n', '\n'}, /* Enter      */
+    /* ... */
+    [42] = {'\b', '\b'}, /* Backspace  */
+    [43] = {'\t', '\t'}, /* Tab        */
+    [44] = {' ', ' '},   /* Space      */
+    [45] = {'-', '_'},
+    [46] = {'=', '+'},
+    [47] = {'[', '{'},
+    [48] = {']', '}'},
+    [49] = {'\\', '|'},
+    /* ... */
+    [51] = {';', ':'},
+    [52] = {'\'', '"'},
+    [53] = {'`', '~'},
+    [54] = {',', '<'},
+    [55] = {'.', '>'},
+    [56] = {'/', '?'},
+    [57] = {}, /* Caps lock  */
+    /* ... */
+    [76] = {'\x7f', '\x7f'}, /* Delete                    */
+    /* ... */
+    [84] = {'/'},  /* Keypad /                  */
+    [85] = {'*'},  /* Keypad *                  */
+    [86] = {'-'},  /* Keypad -                  */
+    [87] = {'+'},  /* Keypad +                  */
+    [88] = {'\n'}, /* Keypad Enter              */
+    [89] = {'1'},  /* Keypad 1 and End          */
+    [90] = {'2'},  /* Keypad 2 and Down Arrow   */
+    [91] = {'3'},  /* ...                       */
+    [92] = {'4'},
+    [93] = {'5'},
+    [94] = {'6'},
+    [95] = {'7'},
+    [96] = {'8'},
+    [97] = {'9'},
+    [98] = {'0'},
+    [99] = {'.', '\x7f'}, /* Keypad . and Delete       */
+    [103] = {'=', '='},   /* Keypad =                  */
+};
 
 void KbdLoad()
 {
@@ -33,6 +111,55 @@ uint32_t KeyboardIndex(uint32_t address)
             return i;
 
     return 0xffffffff;
+}
+
+void KeyboardUpdate(uint32_t address)
+{
+    KeyboardPoll(address);
+    for (uint32_t i = 0; i < 6; i++)
+    {
+        old_keys_down[i] = KeyboardGetKeyDown(address, i);
+    }
+}
+
+bool KeyWasDown(uint16_t scanCode)
+{
+    for (uint32_t i = 0; i < 6; i++)
+    {
+        if (scanCode == old_keys_down[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint8_t KeyboardGetChar(uint32_t address)
+{
+    for (uint32_t i = 0; i < 6; i++)
+    {
+        uint16_t scanCode = KeyboardGetKeyDown(address, i);
+        // printf("KeyboardGetKeyDown: %x", scanCode);
+        if (scanCode == 0)
+        {
+            return 0;
+        }
+        if (!KeyWasDown(scanCode) || scanCode == 104)
+        {
+            continue;
+        }
+        // printf("key was down: %d \n", scanCode);
+        struct KeyboardModifiers modifiers = KeyboardGetModifiers(address);
+        if (modifiers.LeftShift == 0b1 || modifiers.RightShift == 0b1)
+        {
+            return keymap[scanCode][1];
+        }
+        else
+        {
+            return keymap[scanCode][0];
+        }
+    }
+    return 0;
 }
 
 uint32_t KeyboardGetAddress(uint32_t index)
@@ -248,11 +375,6 @@ Result KeyboardAttach(struct UsbDevice *device, __attribute__((__unused__)) uint
     printf("KBD: New keyboard assigned %d!\n", device->Number);
 
     return OK;
-}
-
-uint32_t KeyboardCount()
-{
-    return keyboardCount;
 }
 
 Result KeyboardSetLeds(uint32_t keyboardAddress, struct KeyboardLeds leds)

@@ -1,6 +1,3 @@
-Prakashs-MacBook-Pro:rpi3b-meaty-skeleton prakashborkar$ raspbootcom /dev/cu.SLAB_USBtoUART kernel/kernel8-32.img 
-Raspbootcom V1.0
-### Listening on /dev/cu.SLAB_USBtoUART     
 ####################
 Inside Bootloader
 Boot Atags Addr: 2EFF9900 
@@ -14,21 +11,21 @@ receiving size: 0 0 0 0 F 1 5 8
 ### finished sending
 Jumping token: JUMP��������������@�
 
-18 -----------------Kernel Started Dude........................
+00001018 -----------------Kernel Started Dude........................
 timer_regs:3f003000
- Kernel End: 0x172000 
+ Kernel End: 0x176000 
 CSUD: Hub driver version 0.1
 CSUD: HID driver version 0.1
 USBD: Size of usb device request :8
  HCD: registers allocated proper memory
  Allocating 1024Platform: First memory allocation, reserving 16KiB of heap, 256 entries.
 
- Allocating 16384
- Allocating 3072Platform: malloc(400) = 20410. (1024/16384)
+ Allocating 32768
+ Allocating 6144Platform: malloc(400) = 20410. (1024/32768)
 
- Allocating 1024Platform: malloc(400) = 20810. (2048/16384)
+ Allocating 1024Platform: malloc(400) = 20810. (2048/32768)
 
- Allocating 4Platform: malloc(8) = 20c10. (2056/16384)
+ Allocating 4Platform: malloc(8) = 20c10. (2056/32768)
 HCD: Internal DMA mode.
 HCD: Disabling USB interrupts.
 HCD: Load completed.
@@ -37,7 +34,7 @@ HCD: Load completed.
 
  device id: 3
  device state: 1HCD: Start core.
-Platform: malloc(400) = 20c18. (3080/16384)
+Platform: malloc(400) = 20c18. (3080/32768)
 HCD: Master reset.
 HCD: One time phy initialisation.
 HCD: Interface: UTMI+.
@@ -59,7 +56,7 @@ HCD: Powering up port.
 HCD: Reset port.
 HCD: Successfully started.
 USBD_PRAKASH: Scanning for devices. 
-Platform: malloc(420) = 21018. (4136/16384)
+Platform: malloc(420) = 21018. (4136/32768)
 USBD: Allocating new device, address 1.
 USBD_PRAKASH: Calling USB Attach Device. 
 USBD: Scanning 1. 480 Mb/s.
@@ -67,11 +64,11 @@ USBD_PRAK: Found Fake root device.
 USBD_PRAKASH: Address set successful.
 USBD: Attach Device USB Fake Root Hub. Address:1 Class:9 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: USB Fake Root Hub.
-Platform: malloc(100) = 21438. (4392/16384)
+Platform: malloc(100) = 21438. (4392/32768)
 USBD:  -Product:       USB 2.0 Fake Root Hub.
-Platform: free(21438) (4136/16384)
+Platform: free(21438) (4136/32768)
 USBD:  -VID:PID:       0:0 v1.0
-Platform: malloc(20) = 21438. (4168/16384)
+Platform: malloc(20) = 21438. (4168/32768)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -85,8 +82,8 @@ USBD_PRAKASH: Out of for loop: ---------------------************************
 USBD: USB Fake Root Hub configuration 1. Class 9, subclass 0.
 USBD_PRAK: returning usb configure success: 
 HUB_PRAKASH: Attaching HUB. 
-Platform: malloc(68) = 21458. (4272/16384)
-Platform: malloc(10) = 214c0. (4288/16384)
+Platform: malloc(68) = 21458. (4272/32768)
+Platform: malloc(10) = 214c0. (4288/32768)
 HUB_PRAKASH: HUB port count: 1 
 HUB: Hub power: Global.
 HUB: Hub nature: Standalone.
@@ -110,7 +107,7 @@ HUB_PRAKASH: Hub port connection changed for :0.
 ------------------_Connection changed-----------------
 HUB: Hub reset USB Fake Root Hub.Port1.
 HUB_PRAK: Hub reset USB Fake Root Hub.Port 1 Complete success.
-Platform: malloc(420) = 214d0. (5344/16384)
+Platform: malloc(420) = 214d0. (5344/32768)
 USBD: Allocating new device, address 2.
 USBD: Scanning 2. 480 Mb/s.
 USBD_PRAK: Found real device.
@@ -121,7 +118,7 @@ USBD_PRAKASH: Address set successful.
 USBD: Attach Device USB 2.0 Hub. Address:2 Class:9 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: USB 2.0 Hub.
 USBD:  -VID:PID:       424:9514 v2.0
-Platform: malloc(30) = 218f0. (5392/16384)
+Platform: malloc(30) = 218f0. (5392/32768)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -141,8 +138,8 @@ USBD_PRAKASH: Out of for loop: ---------------------************************
 USBD: USB 2.0 Hub configuration 1. Class 9, subclass 0.
 USBD_PRAK: returning usb configure success: 
 HUB_PRAKASH: Attaching HUB. 
-Platform: malloc(68) = 21920. (5496/16384)
-Platform: malloc(10) = 21988. (5512/16384)
+Platform: malloc(68) = 21920. (5496/32768)
+Platform: malloc(10) = 21988. (5512/32768)
 HUB_PRAKASH: HUB port count: 5 
 HUB: Hub power: Individual.
 HUB: Hub nature: Compound.
@@ -174,7 +171,7 @@ HUB_PRAKASH: Hub port connection changed for :0.
 ------------------_Connection changed-----------------
 HUB: Hub reset USB 2.0 Hub.Port1.
 HUB_PRAK: Hub reset USB 2.0 Hub.Port 1 Complete success.
-Platform: malloc(420) = 21998. (6568/16384)
+Platform: malloc(420) = 21998. (6568/32768)
 USBD: Allocating new device, address 3.
 USBD: Scanning 3. 480 Mb/s.
 USBD_PRAK: Found real device.
@@ -185,7 +182,7 @@ USBD_PRAKASH: Address set successful.
 USBD: Attach Device SMSC LAN9512. Address:3 Class:255 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: SMSC LAN9512.
 USBD:  -VID:PID:       424:ec00 v2.0
-Platform: malloc(28) = 21db8. (6608/16384)
+Platform: malloc(28) = 21db8. (6608/32768)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -215,7 +212,7 @@ HUB_PRAKASH: Hub port connection changed for :2.
 ------------------_Connection changed-----------------
 HUB: Hub reset USB 2.0 Hub.Port3.
 HUB_PRAK: Hub reset USB 2.0 Hub.Port 3 Complete success.
-Platform: malloc(420) = 21de0. (7664/16384)
+Platform: malloc(420) = 21de0. (7664/32768)
 USBD: Allocating new device, address 4.
 USBD: Scanning 4. 480 Mb/s.
 USBD_PRAK: Found real device.
@@ -225,12 +222,12 @@ USBD_PRAK: DeviceChildReset Child reset successful.
 USBD_PRAKASH: Address set successful.
 USBD: Attach Device Unconfigured Device. Address:4 Class:0 Subclass:0 USB:2.0. 1 configurations, 0 interfaces.
 USBD: Device Attached: Unconfigured Device.
-Platform: malloc(100) = 22200. (7920/16384)
+Platform: malloc(100) = 22200. (7920/32768)
 USBD:  -Product:       USB Storage.
 USBD:  -Manufacturer:  USB Storage.
-Platform: free(22200) (7664/16384)
+Platform: free(22200) (7664/32768)
 USBD:  -VID:PID:       5e3:751 v20.4
-Platform: malloc(20) = 22200. (7696/16384)
+Platform: malloc(20) = 22200. (7696/32768)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -255,7 +252,7 @@ HUB_PRAKASH: Hub port connection changed for :3.
 ------------------_Connection changed-----------------
 HUB: Hub reset USB 2.0 Hub.Port4.
 HUB_PRAK: Hub reset USB 2.0 Hub.Port 4 Complete success.
-Platform: malloc(420) = 22220. (8752/16384)
+Platform: malloc(420) = 22220. (8752/32768)
 USBD: Allocating new device, address 5.
 USBD: Scanning 5. 1.5 Mb/s.
 USBD_PRAK: Found real device.
@@ -265,12 +262,12 @@ USBD_PRAK: DeviceChildReset Child reset successful.
 USBD_PRAKASH: Address set successful.
 USBD: Attach Device Unconfigured Device. Address:5 Class:0 Subclass:0 USB:1.1. 1 configurations, 0 interfaces.
 USBD: Device Attached: Unconfigured Device.
-Platform: malloc(100) = 22640. (9008/16384)
+Platform: malloc(100) = 22640. (9008/32768)
 USBD:  -Product:       USB Keyboard.
 USBD:  -Manufacturer:  SIGMACHIP.
-Platform: free(22640) (8752/16384)
+Platform: free(22640) (8752/32768)
 USBD:  -VID:PID:       1c4f:2 v1.10
-Platform: malloc(40) = 22640. (8816/16384)
+Platform: malloc(40) = 22640. (8816/32768)
 USBD: Configuration value: 1 
 USBD_PRAKASH: Entering for loop: ---------------------************************
 USBD_PRAKASH: in for loop: 
@@ -302,5 +299,5 @@ HID: Descriptor 2 length 9, interface 1.
 HID: Descriptor 4 length 9, interface 0.
 HID: Descriptor 33 length 9, interface 0.
 HID: Device version HID 1.10.
-Platform: malloc(20) = 22680. (8848/16384)
+Platform: malloc(20) = 22680. (8848/32768)
 00022680 00000001 00001629 00010584 E1D400B7 00022220 
