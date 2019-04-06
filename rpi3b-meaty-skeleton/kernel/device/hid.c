@@ -825,6 +825,8 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
     {
         return ErrorMemory;
     }
+
+    printf("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
     if ((result = HidGetReport(device, report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer)) != OK)
     {
         if (result != ErrorDisconnected)

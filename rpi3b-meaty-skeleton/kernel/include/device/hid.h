@@ -128,7 +128,7 @@ extern "C"
 	The application desktop usage of the interface is the index into this array
 	of methods. The array is populated by ConfigurationLoad().
 */
-    extern Result (*HidUsageAttach[HidUsageAttachCount])(struct UsbDevice *device, uint32_t interfaceNumber);
+extern Result (*HidUsageAttach[HidUsageAttachCount])(struct UsbDevice *device, uint32_t interfaceNumber);
 
     /**
 	\brief Retrieves a hid report.

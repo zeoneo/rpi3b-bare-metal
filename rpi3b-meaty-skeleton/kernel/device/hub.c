@@ -448,7 +448,7 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
     }
     else
     {
-        printf("HUB_PRAKASH: PORT STATUS OK for :%d.\n", port);
+        printf("HUB: PORT STATUS OK for :%d.\n", port);
     }
 
     portStatus = &data->PortStatus[port];

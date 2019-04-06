@@ -2,6 +2,7 @@
 #include <kernel/types.h>
 
 #include <device/keyboard.h>
+#include <device/mouse.h>
 #include <device/hcd.h>
 #include <device/hid.h>
 #include <device/usb-mem.h>
@@ -113,7 +114,7 @@ Result UsbControlMessage(struct UsbDevice *device,
 
 	if (device->Error & ~Processing)
 	{
-		printf("USBD_PRAKASH:device->Error & ~Processing.\n");
+		printf("USBD:device->Error & ~Processing.\n");
 		if (device->Parent != NULL && device->Parent->DeviceCheckConnection != NULL)
 		{
 			// Check we're still connected!
@@ -549,6 +550,7 @@ Result UsbInitialise()
 	HubLoad();
 	HidLoad();
 	KbdLoad();
+	MouseLoad();
 
 	if (sizeof(struct UsbDeviceRequest) != 0x8)
 	{
