@@ -364,6 +364,7 @@ extern "C"
 	const char *UsbGetDescription(struct UsbDevice *device);
 	Result UsbSetConfiguration(struct UsbDevice *device, uint8_t configuration);
 	Result UsbSetAddress(struct UsbDevice *device, uint8_t address);
+	Result UsbSetInterface(struct UsbDevice *device, uint8_t interface);
 	Result UsbReadString(struct UsbDevice *device, uint8_t stringIndex, char *buffer, uint32_t length);
 	Result UsbConfigure(struct UsbDevice *device, uint8_t configuration);
 	Result UsbSetConfiguration(struct UsbDevice *device, uint8_t configuration);

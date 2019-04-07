@@ -446,10 +446,10 @@ Result HubCheckConnection(struct UsbDevice *device, uint8_t port)
             printf("HUB: Failed to get hub port status (1) for %s.Port%d.\n", UsbGetDescription(device), port + 1);
         return result;
     }
-    else
-    {
-        printf("HUB: PORT STATUS OK for :%d.\n", port);
-    }
+    // else
+    // {
+    //     printf("HUB: PORT STATUS OK for :%d.\n", port);
+    // }
 
     portStatus = &data->PortStatus[port];
 

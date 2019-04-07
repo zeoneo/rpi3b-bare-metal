@@ -2,6 +2,15 @@
 #include <plibc/stdio.h>
 #include <stdarg.h>
 
+
+// #define DEBUG 1
+
+#ifdef DEBUG
+	#define LOG(f_, ...) printf((f_), ##__VA_ARGS__)
+#else
+	#define LOG(f_, ...) 
+#endif
+
 #define HEAP_END ((void *)0xFFFFFFFF)
 
 struct HeapAllocation
@@ -18,8 +27,8 @@ uint32_t allocated = 0;
 
 void *MemoryReserve(uint32_t length, void *physicalAddress)
 {
-	printf("\n Allocating %d", length);
-	return physicalAddress;
+	LOG("\n Allocating %d", length);
+	return physicalAddress + (length - length);
 }
 
 void *MemoryAllocate(uint32_t size)
@@ -27,7 +36,7 @@ void *MemoryAllocate(uint32_t size)
 	struct HeapAllocation *Current, *Next;
 	if (FirstFreeAllocation == NULL)
 	{
-		printf("Platform: First memory allocation, reserving 16KiB of heap, 256 entries.\n");
+		LOG("Platform: First memory allocation, reserving 16KiB of heap, 256 entries.\n");
 		MemoryReserve(sizeof(Heap), &Heap);
 		MemoryReserve(sizeof(Allocations), &Allocations);
 
@@ -38,13 +47,13 @@ void *MemoryAllocate(uint32_t size)
 
 	if (allocated + size > sizeof(Heap))
 	{
-		printf("Platform: Out of memory! We should've had more heap space in platform.c.\n");
+		LOG("Platform: Out of memory! We should've had more heap space in platform.c.\n");
 		return NULL;
 	}
 
 	if (FirstFreeAllocation == HEAP_END)
 	{
-		printf("Platform: Out of memory! We should've had more allocations in platform.c.\n");
+		LOG("Platform: Out of memory! We should've had more allocations in platform.c.\n");
 		return NULL;
 	}
 	Current = FirstAllocation;
@@ -68,11 +77,11 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("1 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				LOG("1 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
 
 				if ((uint32_t)(Next->Address) & 0x3)
 				{
-					printf("1 Platform: non-aligned memory returned. \n");
+					LOG("1 Platform: non-aligned memory returned. \n");
 				}
 				return Next->Address;
 			}
@@ -96,18 +105,18 @@ void *MemoryAllocate(uint32_t size)
 				Next->Next = Current->Next;
 				Current->Next = Next;
 				allocated += size;
-				printf("2 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
+				LOG("2 Platform: malloc(%d) = %x. (%d/%d)\n", size, Next->Address, allocated, sizeof(Heap));
 
 				if ((uint32_t)(Next->Address) & 0x3)
 				{
-					printf("2 Platform: non-aligned memory returned. \n");
+					LOG("2 Platform: non-aligned memory returned. \n");
 				}
 				return Next->Address;
 			}
 			else
 			{
-				printf("Platform: Out of memory! We should've had more heap space in platform.c.\n");
-				printf("Platform: malloc(%d) = %x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
+				LOG("Platform: Out of memory! We should've had more heap space in platform.c.\n");
+				LOG("Platform: malloc(%d) = %x. (%d/%d)\n", size, NULL, allocated, sizeof(Heap));
 				return NULL;
 			}
 		}
@@ -126,10 +135,10 @@ void *MemoryAllocate(uint32_t size)
 	else
 		FirstFreeAllocation = Next;
 	allocated += size;
-	printf("3 Platform: malloc(%d) = %x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
+	LOG("3 Platform: malloc(%d) = %x. (%d/%d)\n", size, FirstAllocation->Address, allocated, sizeof(Heap));
 	if ((uint32_t)(FirstAllocation->Address) & 0x3)
 	{
-		printf(" 3 Platform: non-aligned memory returned. \n");
+		LOG(" 3 Platform: non-aligned memory returned. \n");
 	}
 	return FirstAllocation->Address;
 }
@@ -149,7 +158,7 @@ void MemoryDeallocate(void *address)
 			*CurrentAddress = Current->Next;
 			Current->Next = FirstFreeAllocation;
 			FirstFreeAllocation = Current;
-			printf("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
+			LOG("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
 			return;
 		}
 		else
@@ -159,8 +168,8 @@ void MemoryDeallocate(void *address)
 		}
 	}
 
-	printf("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
-	printf("Platform: Deallocated memory that was never allocated. Ignored, but you should look into it.\n");
+	LOG("Platform: free(%x) (%d/%d)\n", address, allocated, sizeof(Heap));
+	LOG("Platform: Deallocated memory that was never allocated. Ignored, but you should look into it.\n");
 }
 
 void MemoryCopy(void *destination, void *source, uint32_t length)

@@ -353,23 +353,25 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 
 	device->ConfigurationIndex = configuration;
 	configuration = device->Configuration.ConfigurationValue;
-	printf("USBD: Configuration value: %d \n", device->Configuration.ConfigurationValue);
+	printf("USBD: Configuration device->Configuration.TotalLength: %d \n", device->Configuration.TotalLength);
+	printf("USBD_INTERFACE_COUNT: : %d \n", device->Configuration.InterfaceCount);
 	header = fullDescriptor;
 	lastInterface = MaxInterfacesPerDevice;
 	lastEndpoint = MaxEndpointsPerDevice;
 	isAlternate = false;
 
-	printf("USBD_PRAKASH: Entering for loop: ---------------------************************\n");
+	// printf("USBD_PRAKASH: Entering for loop: ---------------------************************\n");
 	for (header = (struct UsbDescriptorHeader *)((uint8_t *)header + header->DescriptorLength);
 		 (uint32_t)header - (uint32_t)fullDescriptor < device->Configuration.TotalLength;
 		 header = (struct UsbDescriptorHeader *)((uint8_t *)header + header->DescriptorLength))
 	{
-		printf("USBD_PRAKASH: in for loop: \n");
+		// printf("USBD_PRAKASH: in for loop: \n");
 		switch (header->DescriptorType)
 		{
 		case Interface:
-			printf("USBD_PRAKASH: Interface Descriptor type: \n");
+			// printf("USBD_PRAKASH: Interface Descriptor type: \n");
 			interface = (struct UsbInterfaceDescriptor *)header;
+			// printf("USBD_PRAKASH_ENDPOINT_COUNT: %d: \n", interface->EndpointCount);
 			if (lastInterface != interface->Number)
 			{
 				MemoryCopy((void *)&device->Interfaces[lastInterface = interface->Number], (void *)interface, sizeof(struct UsbInterfaceDescriptor));
@@ -380,7 +382,7 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 				isAlternate = true;
 			break;
 		case Endpoint:
-			printf("USBD_PRAKASH: End point Descriptor type: \n");
+			// printf("USBD_PRAKASH: End point Descriptor type: \n");
 			if (isAlternate)
 			{
 				break;
@@ -394,10 +396,10 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 			}
 			endpoint = (struct UsbEndpointDescriptor *)header;
 			MemoryCopy((void *)&device->Endpoints[lastInterface][lastEndpoint++], (void *)endpoint, sizeof(struct UsbEndpointDescriptor));
-			printf("USBD_PRAKASH: End point Descriptor type mmcopied: \n");
+			// printf("USBD_PRAKASH: End point Descriptor type mmcopied: \n");
 			break;
 		default:
-			printf("USBD_PRAKASH: DEFAULT Descriptor type: \n");
+			// printf("USBD_PRAKASH: DEFAULT Descriptor type: \n");
 			if (header->DescriptorLength == 0)
 			{
 				printf("USBD_PRAKASH: DEFAULT Descriptor type DEsc length 0. go to: \n");
@@ -407,9 +409,9 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 			break;
 		}
 
-		printf("USBD: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, lastInterface);
+		// printf("USBD: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, lastInterface);
 	}
-	printf("USBD_PRAKASH: Out of for loop: ---------------------************************\n");
+	// printf("USBD_PRAKASH: Out of for loop: ---------------------************************\n");
 headerLoopBreak:
 
 	if ((result = UsbSetConfiguration(device, configuration)) != OK)
@@ -500,6 +502,42 @@ Result UsbReadDeviceDescriptor(struct UsbDevice *device)
 		device->Descriptor.MaxPacketSize0 = 64;
 		return UsbGetDescriptor(device, Device, 0, 0, (void *)&device->Descriptor, sizeof(device->Descriptor), sizeof(device->Descriptor), 0);
 	}
+}
+
+Result UsbSetInterface(struct UsbDevice *device, uint8_t interface)
+{
+	Result result;
+
+	if (device->Status != Default)
+	{
+		printf("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
+		return ErrorDevice;
+	}
+
+	if ((result = UsbControlMessage(
+			 device,
+			 (struct UsbPipeAddress){
+				 .Type = Control,
+				 .Speed = device->Speed,
+				 .EndPoint = 0,
+				 .Device = 0,
+				 .Direction = Out,
+				 .MaxSize = SizeFromNumber(device->Descriptor.MaxPacketSize0),
+			 },
+			 NULL,
+			 0,
+			 &(struct UsbDeviceRequest){
+				 .Request = SetInterface,
+				 .Type = 0,
+				 .Value = interface,
+			 },
+			 ControlMessageTimeout)) != OK)
+		return result;
+
+	MicroDelay(10000);
+
+	printf("USBD_PRAKASH: Interface  set successful.\n");
+	return OK;
 }
 
 Result UsbSetAddress(struct UsbDevice *device, uint8_t address)
@@ -653,6 +691,9 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		device->Number = address;
 		return result;
 	}
+
+	printf("USBD_CONF_COUNT: %d \n", device->Descriptor.ConfigurationCount);
+
 	device->Status = Default;
 
 	if (device->Parent != NULL)
@@ -689,6 +730,7 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		device->Number = address;
 		return result;
 	}
+
 	device->Number = address;
 
 	MicroDelay(10000);

@@ -811,6 +811,7 @@ Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
     ClearReg(&Host->Channel[channel].SplitControl);
     if (pipe->Speed != High)
     {
+        // printf("HCD: Prepare channel enable split control. \n");
         Host->Channel[channel].SplitControl.SplitEnable = true;
         Host->Channel[channel].SplitControl.HubAddress = device->Parent->Number;
         Host->Channel[channel].SplitControl.PortAddress = device->PortNumber;
@@ -866,8 +867,12 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 
         if (Host->Channel[channel].SplitControl.SplitEnable)
         {
+            // printf("HCD: Pipe maxSize:%d speed:%d endpoint:%d device:%d transfer type:%d direction:%d \n",
+            //    pipe->MaxSize, pipe->Speed, pipe->EndPoint, pipe->Device, pipe->Type, pipe->Direction);
+            // printf("HCD: Working split enable %s.\n", UsbGetDescription(device));
             if (Host->Channel[channel].Interrupt.Acknowledgement)
             {
+                // printf("HCD: Working split enable. ACK  %s.\n", UsbGetDescription(device));
                 for (tries = 0; tries < 3; tries++)
                 {
                     SetReg(&Host->Channel[channel].Interrupt);
@@ -907,39 +912,48 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
                 }
                 else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
                 {
+                    printf("HCD: NAK got for split transactions. \n");
                     globalTries--;
                     MicroDelay(25000);
                     continue;
                 }
                 else if (Host->Channel[channel].Interrupt.TransactionError)
                 {
+                    printf("HCD: TransactionError error. \n");
                     MicroDelay(25000);
                     continue;
                 }
 
+                // printf("HCD: Working split enable checking interrupts.  %s.\n", UsbGetDescription(device));
                 if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, false)) != OK)
                 {
+
                     printf("HCD: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                            ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                            ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
+
                     printf("HCD: Request split completion to %s failed.\n", UsbGetDescription(device));
+
                     return result;
                 }
             }
             else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
             {
+                // printf("HCD: Working split enable %s NACK.\n", UsbGetDescription(device));
                 globalTries--;
                 MicroDelay(25000);
                 continue;
             }
             else if (Host->Channel[channel].Interrupt.TransactionError)
             {
+                // printf("HCD: Working split enable %s TRANsCA ERROR.\n", UsbGetDescription(device));
                 MicroDelay(25000);
                 continue;
             }
         }
         else
         {
+            // printf("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
             if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
             {
                 printf("HCD: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,

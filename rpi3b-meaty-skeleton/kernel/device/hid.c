@@ -67,7 +67,7 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
             printf("HID: Unknown boot device detected.\n");
 
         printf("HID: Reverting from boot to normal HID mode.\n");
-        if ((result = HidSetProtocol(device, interfaceNumber, 1)) != OK)
+        if ((result = HidSetProtocol(device, interfaceNumber, 1)) != OK)  // change protocol to 1 for report mode. 0 is boot mode
         {
             printf("HID: Could not revert to report mode from HID mode.\n");
             return result;
@@ -94,14 +94,14 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
             break;
         }
 
-        printf("HID: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, currentInterface);
+        // printf("HID: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, currentInterface);
 
         if (descriptor != NULL)
             break;
         header = (void *)((uint8_t *)header + header->DescriptorLength);
     } while (true);
 
-    printf("HID_PRAKASH descriptor address: %x \n", descriptor);
+    // printf("HID_PRAKASH descriptor address: %x \n", descriptor);
     if (descriptor == NULL)
     {
         printf("HID: No HID descriptor in %s.Interface%d. Cannot be a HID device.\n", UsbGetDescription(device), interfaceNumber + 1);
@@ -124,44 +124,44 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     }
 
     device->DriverData->DataSize = sizeof(struct HidDevice);
-    printf("HID_PRAKASH: debug 2. \n");
+    // printf("HID_PRAKASH: debug 2. \n");
     device->DriverData->DeviceDriver = DeviceDriverHid;
-    printf("HID_PRAKASH: debug 3. \n");
+    // printf("HID_PRAKASH: debug 3. \n");
     data = (struct HidDevice *)device->DriverData;
     data->Descriptor = descriptor;
     data->DriverData = NULL;
 
     uint16_t length_aligned = descriptor->LengthHi << 8 | descriptor->LengthLo;
     printf("HID_PRAKASH: Descriptor count :%d  \n", descriptor->DescriptorCount);
-    printf("HID_PRAKASH: debug 3.01. size:%x  \n", length_aligned);
+    // printf("HID_PRAKASH: debug 3.01. size:%x  \n", length_aligned);
     reportDescriptor = MemoryAllocate(length_aligned); //
     if (reportDescriptor == NULL)
     {
-        printf("HID_PRAKASH: debug 3.1. \n");
+        // printf("HID_PRAKASH: debug 3.1. \n");
         result = ErrorMemory;
         goto deallocate;
     }
-    printf("HID_PRAKASH: debug 4. \n");
+
     if ((result = UsbGetDescriptor(device, HidReport, 0, interfaceNumber, reportDescriptor, length_aligned, length_aligned, 1)) != OK)
     {
-        printf("HID_PRAKASH: debug 5. \n");
+        // printf("HID_PRAKASH: debug 5. \n");
         MemoryDeallocate(reportDescriptor);
-        printf("HID_PRAKASH: debug 6. \n");
+        // printf("HID_PRAKASH: debug 6. \n");
         printf("HID: Could not read report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
         goto deallocate;
     }
     if ((result = HidParseReportDescriptor(device, reportDescriptor, length_aligned)) != OK)
     {
-        printf("HID_PRAKASH: debug 7. \n");
+        // printf("HID_PRAKASH: debug 7. \n");
         MemoryDeallocate(reportDescriptor);
-        printf("HID_PRAKASH: debug 8. \n");
+        // printf("HID_PRAKASH: debug 8. \n");
         printf("HID: Invalid report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
         goto deallocate;
     }
 
-    printf("HID_PRAKASH: debug 9. \n");
+    // printf("HID_PRAKASH: debug 9. \n");
     MemoryDeallocate(reportDescriptor);
-    printf("HID_PRAKASH: debug     10. \n");
+    // printf("HID_PRAKASH: debug     10. \n");
     reportDescriptor = NULL;
 
     data->ParserResult->Interface = interfaceNumber;
@@ -303,7 +303,7 @@ Result HidParseReportDescriptor(struct UsbDevice *device, void *descriptor, uint
     data = (struct HidDevice *)device->DriverData;
 
     HidEnumerateReport(descriptor, length, HidEnumerateActionCountReport, &reports);
-    printf("HID: Found %d reports.", reports.reportCount);
+    printf("HID: Found %d reports. \n", reports.reportCount);
 
     if ((parse = MemoryAllocate(sizeof(struct HidParserResult) + 4 * reports.reportCount)) == NULL)
     {
