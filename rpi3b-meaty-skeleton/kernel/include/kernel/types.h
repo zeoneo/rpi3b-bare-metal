@@ -45,6 +45,7 @@ extern "C"
 		ErrorMemory = -7,
 		ErrorTimeout = -8,
 		ErrorDisconnected = -9,
+		ErrorNACK = -10
 	} Result;
 
 	/**

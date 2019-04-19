@@ -635,6 +635,7 @@ extern volatile struct HostGlobalRegs
 				Data2 = 1,
 				MData = 3,
 				Setup = 3,
+				InPid = 2
 			} PacketId : 2;								 // @29
 			volatile bool DoPing : 1;					 // @31
 		} __attribute__((__packed__)) TransferSize;		 // +0x10
@@ -678,4 +679,18 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 							 struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
 							 uint32_t bufferOffset,
 							 struct UsbDeviceRequest *request);
+
+Result HcdSumbitInterruptMessage(struct UsbDevice *device,
+								 struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+								 struct UsbDeviceRequest *request);
+
+Result HcdSumbitInterruptOutMessage(struct UsbDevice *device,
+									struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+									struct UsbDeviceRequest *request);
+
+
+
+Result HcdInterruptPoll(struct UsbDevice *device,
+                               struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+                               struct UsbDeviceRequest *request);
 #endif

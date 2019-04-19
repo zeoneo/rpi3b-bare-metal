@@ -178,6 +178,7 @@ Result MousePoll(uint32_t mouseAddress) {
 		data->mouseX += (int8_t)ReportBuffer[1];
 		data->mouseY += (int8_t)ReportBuffer[2];
 		data->wheel += (int8_t)ReportBuffer[3];
+		printf("buttonState :%d \n", data->buttonState);
 		if (data->mouseX < 0) {
 			data->mouseX = 0;
 		}

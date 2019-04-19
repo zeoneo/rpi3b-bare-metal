@@ -1,10 +1,12 @@
 #include <kernel/types.h>
 #include <device/hid.h>
+#include <device/hcd.h>
 #include <device/uart0.h>
 #include <device/usbd.h>
 #include <device/usb_report.h>
 #include <device/usb-mem.h>
 #include <plibc/stdio.h>
+#include <kernel/systimer.h>
 
 #define HidMessageTimeout 10
 
@@ -67,7 +69,7 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
             printf("HID: Unknown boot device detected.\n");
 
         printf("HID: Reverting from boot to normal HID mode.\n");
-        if ((result = HidSetProtocol(device, interfaceNumber, 1)) != OK)  // change protocol to 1 for report mode. 0 is boot mode
+        if ((result = HidSetProtocol(device, interfaceNumber, 1)) != OK) // change protocol to 1 for report mode. 0 is boot mode
         {
             printf("HID: Could not revert to report mode from HID mode.\n");
             return result;
@@ -826,7 +828,23 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
         return ErrorMemory;
     }
 
-    printf("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
+    // printf("Report buffer: size:%d ", size);
+    int i1 = 0;
+    uint8_t *temp_buf = (uint8_t *)report->ReportBuffer;
+    while (i1 < size)
+    {
+        *temp_buf = 0x0;
+        // printf("%x ", *temp_buf);
+        temp_buf++;
+        i1++;
+    }
+    // printf("\n");
+
+    // printf("HID_BEFORE: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
+	// 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3),
+	// 	*(report->ReportBuffer + 4), *(report->ReportBuffer + 5), *(report->ReportBuffer + 6), *(report->ReportBuffer + 7));
+
+    // printf("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
     if ((result = HidGetReport(device, report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer)) != OK)
     {
         if (result != ErrorDisconnected)
@@ -835,11 +853,11 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
     }
 
     // Uncomment this for a quick hack to view 8 bytes worth of report.
-    /*
-	printf("HID: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
-		*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3),
-		*(report->ReportBuffer + 4), *(report->ReportBuffer + 5), *(report->ReportBuffer + 6), *(report->ReportBuffer + 7));
-	*/
+    
+    // printf("HID_AFTER: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
+	// 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3));
+	
+	
 
     for (uint32_t i = 0; i < report->FieldCount; i++)
     {
@@ -969,33 +987,42 @@ void BitSet(void *buffer, uint32_t offset, uint32_t length, uint32_t value)
 }
 
 Result HidGetReport(struct UsbDevice *device, enum HidReportType reportType,
-                    uint8_t reportId, uint8_t interface, uint32_t bufferLength, void *buffer)
+                    uint8_t reportId, __attribute__((__unused__)) uint8_t interface, uint32_t bufferLength, void *buffer)
 {
     Result result;
 
-    if ((result = UsbControlMessage(
-             device,
-             (struct UsbPipeAddress){
-                 .Type = Control,
-                 .Speed = device->Speed,
-                 .EndPoint = 0,
-                 .Device = device->Number,
-                 .Direction = In,
-                 .MaxSize = SizeFromNumber(device->Descriptor.MaxPacketSize0),
-             },
-             buffer,
-             bufferLength,
-             &(struct UsbDeviceRequest){
-                 .Request = GetReport,
-                 .Type = 0xa1,
-                 .Index = interface,
-                 .Value = (uint16_t)reportType << 8 | reportId,
-                 .Length = bufferLength,
-             },
-             HidMessageTimeout)) != OK)
-        return result;
+    MicroDelay(8000);
 
-    return OK;
+    while (1)
+    {
+        if ((result = HcdInterruptPoll(
+                 device,
+                 (struct UsbPipeAddress){
+                     .Type = Interrupt,
+                     .Speed = device->Speed,
+                     .EndPoint = 1,
+                     .Device = device->Number,
+                     .Direction = In,
+                     .MaxSize = SizeFromNumber(device->Descriptor.MaxPacketSize0),
+                 },
+                 buffer,
+                 bufferLength,
+                 &(struct UsbDeviceRequest){
+                     .Request = GetReport,
+                     .Type = 0xa1,
+                     .Index = Endpoint,
+                     .Value = (uint16_t)reportType << 8 | reportId,
+                     .Length = bufferLength,
+                 })) == OK)
+        {
+            // printf("-------------_GOT ACK.-----------***** temp_interface:%d \n", interface);
+            return result;
+        }
+        // printf("Could not send IN packet.-----------***** \n");
+        MicroDelay(2000);
+    }
+
+    return result;
 }
 
 Result HidSetReport(struct UsbDevice *device, enum HidReportType reportType,
