@@ -60,3 +60,7 @@ Disk Image/\.DS_Store
 *.elf
 
 \.vscode/
+
+*.img
+
+rpi3b-meaty-skeleton/kernel/kernel8-32\.list

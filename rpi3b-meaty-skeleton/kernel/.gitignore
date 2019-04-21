@@ -1,3 +1,8 @@
 *.d
 *.kernel
 *.o
+*.out
+*.img
+*.list
+*.elf
+*.map
