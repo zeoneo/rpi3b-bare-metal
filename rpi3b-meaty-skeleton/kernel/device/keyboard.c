@@ -429,7 +429,6 @@ Result KeyboardPoll(uint32_t keyboardAddress)
     if (keyboardNumber == 0xffffffff)
         return ErrorDisconnected;
     data = (struct KeyboardDevice *)((struct HidDevice *)keyboards[keyboardNumber]->DriverData)->DriverData;
-    printf("KBD_PRAKASH: KEyboard report: %d \n" , data->KeyReport->Index);
     if ((result = HidReadDevice(keyboards[keyboardNumber], data->KeyReport->Index)) != OK)
     {
         if (result != ErrorDisconnected)

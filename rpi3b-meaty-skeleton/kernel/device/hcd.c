@@ -17,14 +17,12 @@ uint8_t *databuffer = NULL;
 extern void dmb(void);
 uint32_t usb_hcd_device_id = 0x3;
 
-
 Result HcdChannelSendInterruptPoll(struct UsbDevice *device,
-                          struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
-                          struct UsbDeviceRequest *request, enum PacketId packetId);
+                                   struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
+                                   struct UsbDeviceRequest *request, enum PacketId packetId);
 Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
-                             struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,
-                             struct UsbDeviceRequest *request);
-
+                                      struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,
+                                      struct UsbDeviceRequest *request);
 
 void turn_off_usb()
 {
@@ -719,85 +717,6 @@ Result HcdSumbitInterruptOutMessage(struct UsbDevice *device,
     return OK;
 }
 
-Result HcdSumbitInterruptMessage(struct UsbDevice *device,
-                                 struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
-                                 struct UsbDeviceRequest *request)
-{
-    printf("----------------Inside IN POLL--------------- \n");
-    Result result;
-    struct UsbPipeAddress tempPipe;
-    if (pipe.Device == RootHubDeviceNumber)
-    {
-        return HcdProcessRootHubMessage(device, pipe, buffer, bufferLength, request);
-    }
-
-    device->Error = Processing;
-    device->LastTransfer = 0;
-
-    // Data
-    if (buffer != NULL)
-    {
-        if (pipe.Direction == Out)
-        {
-            MemoryCopy(databuffer, buffer, bufferLength);
-        }
-        tempPipe.Speed = pipe.Speed;
-        tempPipe.Device = pipe.Device;
-        tempPipe.EndPoint = pipe.EndPoint;
-        tempPipe.MaxSize = pipe.MaxSize;
-        tempPipe.Type = Interrupt;
-        tempPipe.Direction = In;
-
-        if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, bufferLength, request, Data0)) != OK)
-        {
-            printf("HCD: Could not send DATA to %s.\n", UsbGetDescription(device));
-            return OK;
-        }
-
-        ReadBackReg(&Host->Channel[0].TransferSize);
-        if (Host->Channel[0].TransferSize.TransferSize <= bufferLength)
-        {
-            printf("Data transferred : %d \n ", Host->Channel[0].TransferSize.TransferSize);
-            device->LastTransfer = bufferLength - Host->Channel[0].TransferSize.TransferSize;
-        }
-        else
-        {
-            printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
-            printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
-                   ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
-                   ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
-                   ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
-                   ((uint8_t *)databuffer)[0xc], ((uint8_t *)databuffer)[0xd], ((uint8_t *)databuffer)[0xe], ((uint8_t *)databuffer)[0xf]);
-            device->LastTransfer = bufferLength;
-        }
-        MemoryCopy(buffer, databuffer, device->LastTransfer);
-    }
-
-    // Status
-    tempPipe.Speed = pipe.Speed;
-    tempPipe.Device = pipe.Device;
-    tempPipe.EndPoint = pipe.EndPoint;
-    tempPipe.MaxSize = pipe.MaxSize;
-    tempPipe.Type = Interrupt;
-    tempPipe.Direction = ((bufferLength == 0) || pipe.Direction == Out) ? In : Out;
-
-    if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, 0, request, Data1)) != OK)
-    {
-        printf("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
-        return OK;
-    }
-
-    ReadBackReg(&Host->Channel[0].TransferSize);
-    if (Host->Channel[0].TransferSize.TransferSize != 0)
-        printf("HCD: Warning non zero status transfer! %d.\n", Host->Channel[0].TransferSize.TransferSize);
-
-    device->Error = NoError;
-
-    return OK;
-}
-
-
-
 Result HcdSumbitControlMessage(struct UsbDevice *device,
                                struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
                                struct UsbDeviceRequest *request)
@@ -892,10 +811,9 @@ Result HcdSumbitControlMessage(struct UsbDevice *device,
     return OK;
 }
 
-
 Result HcdInterruptPoll(struct UsbDevice *device,
-                               struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
-                               struct UsbDeviceRequest *request)
+                        struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+                        struct UsbDeviceRequest *request)
 {
     Result result;
     struct UsbPipeAddress tempPipe = {0};
@@ -904,87 +822,55 @@ Result HcdInterruptPoll(struct UsbDevice *device,
     device->LastTransfer = 0;
 
     // Data stage
-        // 1. IN Token
-        // 2. Receive Data from device or Receive NAK/STALL status
-        // 3. If we receive data then send ACK to device
+    // 1. IN Token
+    // 2. Receive Data from device or Receive NAK/STALL status
+    // 3. If we receive data then send ACK to device
 
-    uint8_t *temp_buf = (uint8_t *) databuffer;
-    int i1  = 0;
-    while(i1 < 1024) {
+    uint8_t *temp_buf = (uint8_t *)databuffer;
+    int i1 = 0;
+    while (i1 < 1024)
+    {
         *temp_buf = 0x0;
         temp_buf++;
         i1++;
     }
 
-        tempPipe.Speed = pipe.Speed;
-        tempPipe.Device = pipe.Device;
-        tempPipe.EndPoint = pipe.EndPoint;
-        tempPipe.MaxSize = pipe.MaxSize;
-        tempPipe.Type = Interrupt;
-        tempPipe.Direction = In;
-
-
-        // printf("INT DATA BEFORE: %02x%02x%02x%02x.\n",
-		// *((uint8_t *)buffer + 0), *((uint8_t *)buffer + 1), *((uint8_t *)buffer + 2), *((uint8_t *)buffer + 3));
-
-
-        result =  HcdChannelSendInterruptPoll(device, &tempPipe, 0, databuffer, bufferLength, request, InPid);
-        if (result == ErrorNACK)
-        {
-            // printf("HCD: GOT NACK PID Interrupt transfer to %s. Returning\n", UsbGetDescription(device));
-            return result;
-        } else if (result == OK) {
-            // printf("Successfully Sent PID. May be we got data. \n");
-                
-        } else {
-            return result;
-        }
-
-
-        ReadBackReg(&Host->Channel[0].TransferSize);
-        if (Host->Channel[0].TransferSize.TransferSize <= bufferLength) {
-            // printf("Host->Channel[0].TransferSize.TransferSize : %d \n", Host->Channel[0].TransferSize.TransferSize);
-            device->LastTransfer = bufferLength - Host->Channel[0].TransferSize.TransferSize;
-        }
-        else
-        {
-            printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
-            printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
-                    ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
-                    ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
-                    ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
-                    ((uint8_t *)databuffer)[0xc], ((uint8_t *)databuffer)[0xd], ((uint8_t *)databuffer)[0xe], ((uint8_t *)databuffer)[0xf]);
-            device->LastTransfer = bufferLength;
-        }
-        MemoryCopy(buffer, databuffer, device->LastTransfer);
-
-        // printf("INT DATA: %02x%02x%02x%02x .\n",
-		// *((uint8_t *)buffer + 0), *((uint8_t *)buffer + 1), *((uint8_t *)buffer + 2), *((uint8_t *)buffer + 3));
-
-    return 0K;
-    // Data stage is complete.
-
-    // Status
     tempPipe.Speed = pipe.Speed;
     tempPipe.Device = pipe.Device;
     tempPipe.EndPoint = pipe.EndPoint;
     tempPipe.MaxSize = pipe.MaxSize;
     tempPipe.Type = Interrupt;
-    tempPipe.Direction = Out; //we send ACK out to device
+    tempPipe.Direction = In;
 
-    if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, 0, request, Data1)) != OK)
+    result = HcdChannelSendInterruptPoll(device, &tempPipe, 0, databuffer, bufferLength, request, InPid);
+    if (result == ErrorNACK || result == ErrorNYET)
     {
-        printf("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
+        // Either endpoint do not have data to send to host or we are polling interrupt endpoint to fast.
+        return result;
+    }
+    else if (result != OK)
+    {
         return result;
     }
 
     ReadBackReg(&Host->Channel[0].TransferSize);
-    if (Host->Channel[0].TransferSize.TransferSize != 0) {
-        printf("HCD: Warning non zero status transfer! %d. It status should not have any data transfers \n", Host->Channel[0].TransferSize.TransferSize);
+    if (Host->Channel[0].TransferSize.TransferSize <= bufferLength)
+    {
+        device->LastTransfer = bufferLength - Host->Channel[0].TransferSize.TransferSize;
     }
+    else
+    {
+        printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
+        printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
+               ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
+               ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
+               ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
+               ((uint8_t *)databuffer)[0xc], ((uint8_t *)databuffer)[0xd], ((uint8_t *)databuffer)[0xe], ((uint8_t *)databuffer)[0xf]);
+        device->LastTransfer = bufferLength;
+    }
+    MemoryCopy(buffer, databuffer, device->LastTransfer);
 
     device->Error = NoError;
-
     return OK;
 }
 
@@ -1016,7 +902,8 @@ retry:
         packets = Host->Channel[channel].TransferSize.PacketCount;
         if ((result = HcdChannelSendWaitOne(device, pipe, channel, buffer, bufferLength, transfer, request)) != OK)
         {
-            if (result == ErrorRetry) {
+            if (result == ErrorRetry)
+            {
                 printf("Need to retry the packet");
                 goto retry;
             }
@@ -1025,7 +912,8 @@ retry:
 
         ReadBackReg(&Host->Channel[channel].TransferSize);
         transfer = bufferLength - Host->Channel[channel].TransferSize.TransferSize;
-        if (packets == Host->Channel[channel].TransferSize.PacketCount) {
+        if (packets == Host->Channel[channel].TransferSize.PacketCount)
+        {
             break;
         }
     } while (Host->Channel[channel].TransferSize.PacketCount > 0);
@@ -1095,11 +983,11 @@ Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
     return OK;
 }
 
-//------------------------New Interrupt Send 
+//------------------------New Interrupt Send
 
 Result HcdChannelSendInterruptPoll(struct UsbDevice *device,
-                          struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
-                          struct UsbDeviceRequest *request, enum PacketId packetId)
+                                   struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, uint32_t bufferLength,
+                                   struct UsbDeviceRequest *request, enum PacketId packetId)
 {
     Result result;
     uint32_t packets, transfer, tries;
@@ -1125,7 +1013,8 @@ retry:
         packets = Host->Channel[channel].TransferSize.PacketCount;
         if ((result = HcdChannelSendInterruptPollOne(device, pipe, channel, buffer, bufferLength, transfer, request)) != OK)
         {
-            if (result == ErrorRetry) {
+            if (result == ErrorRetry)
+            {
                 printf("Need to retry the packet");
                 goto retry;
             }
@@ -1134,7 +1023,8 @@ retry:
 
         ReadBackReg(&Host->Channel[channel].TransferSize);
         transfer = bufferLength - Host->Channel[channel].TransferSize.TransferSize;
-        if (packets == Host->Channel[channel].TransferSize.PacketCount) {
+        if (packets == Host->Channel[channel].TransferSize.PacketCount)
+        {
             break;
         }
     } while (Host->Channel[channel].TransferSize.PacketCount > 0);
@@ -1155,8 +1045,8 @@ retry:
 }
 
 Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
-                             struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,
-                             struct UsbDeviceRequest *request)
+                                      struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,
+                                      struct UsbDeviceRequest *request)
 {
     Result result;
     uint32_t timeout, tries, globalTries, actualTries;
@@ -1234,8 +1124,13 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
                 }
                 else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
                 {
-                    // printf("HCD: NAK got for split transactions. Returning -1 Interrupt \n");
+                    // In interrupt polling we might get NACK at times. It means device has not interrupt data to send.
                     return ErrorNACK;
+                }
+                else if (Host->Channel[channel].Interrupt.NotYet)
+                {
+                    // In interrupt polling we might get NYET at times. It means we are polling interrupt endpoint mercilessly. Slow down.
+                    return ErrorNYET;
                 }
                 else if (Host->Channel[channel].Interrupt.TransactionError)
                 {
@@ -1248,11 +1143,11 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
                 if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, false)) != OK)
                 {
 
-                    printf("HCD1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                    printf("HCDI1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                            ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                            ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
 
-                    printf("HCD1: Request split completion to %s failed.\n", UsbGetDescription(device));
+                    printf("HCDI1: Request split completion to %s failed.\n", UsbGetDescription(device));
 
                     return result;
                 }
@@ -1276,10 +1171,10 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
             // printf("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
             if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
             {
-                printf("HCD2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                printf("HCDI2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-                printf("HCD2: Request to %s failed.\n", UsbGetDescription(device));
+                printf("HCDI2: Request to %s failed.\n", UsbGetDescription(device));
                 return ErrorRetry;
             }
         }
@@ -1289,13 +1184,16 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
 
     if (globalTries == 3 || actualTries == 10)
     {
-        printf("HCD3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
+        if(Host->Channel[channel].Interrupt.NotYet) {
+            return  ErrorNYET;
+        }
         if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
         {
-            printf("HCD3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
-                   ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
-                   ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-            printf("HCD3: Request to %s failed.\n", UsbGetDescription(device));
+            printf("HCDI3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
+            // printf("HCDI3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+            //        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
+            //        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
+            // printf("HCDI3: Request to %s failed.\n", UsbGetDescription(device));
             return result;
         }
         device->Error = ConnectionError;
@@ -1305,11 +1203,7 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
     return OK;
 }
 
-
 //-------------
-
-
-
 
 Result HcdChannelSendWaitOne(struct UsbDevice *device,
                              struct UsbPipeAddress *pipe, uint8_t channel, void *buffer, __attribute__((__unused__)) uint32_t bufferLength, uint32_t bufferOffset,

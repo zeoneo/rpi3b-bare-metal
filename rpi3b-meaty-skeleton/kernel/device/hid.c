@@ -29,6 +29,7 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     void *reportDescriptor = NULL;
     Result result;
     uint32_t currentInterface;
+    uint8_t pollingInterval = 0;
 
     if (device->Interfaces[interfaceNumber].Class != InterfaceClassHid)
     {
@@ -74,7 +75,9 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
             printf("HID: Could not revert to report mode from HID mode.\n");
             return result;
         }
+        pollingInterval = device->Endpoints[interfaceNumber][0].Interval;
     }
+
 
     header = (struct UsbDescriptorHeader *)device->FullConfiguration;
     descriptor = NULL;
@@ -95,9 +98,6 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         default:
             break;
         }
-
-        // printf("HID: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, currentInterface);
-
         if (descriptor != NULL)
             break;
         header = (void *)((uint8_t *)header + header->DescriptorLength);
@@ -130,6 +130,7 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     device->DriverData->DeviceDriver = DeviceDriverHid;
     // printf("HID_PRAKASH: debug 3. \n");
     data = (struct HidDevice *)device->DriverData;
+    data->pollingIntervalInMs = pollingInterval == 0 ? 4 : pollingInterval; //atleast 4ms of polling interval.
     data->Descriptor = descriptor;
     data->DriverData = NULL;
 
@@ -841,8 +842,8 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
     // printf("\n");
 
     // printf("HID_BEFORE: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
-	// 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3),
-	// 	*(report->ReportBuffer + 4), *(report->ReportBuffer + 5), *(report->ReportBuffer + 6), *(report->ReportBuffer + 7));
+    // 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3),
+    // 	*(report->ReportBuffer + 4), *(report->ReportBuffer + 5), *(report->ReportBuffer + 6), *(report->ReportBuffer + 7));
 
     // printf("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
     if ((result = HidGetReport(device, report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer)) != OK)
@@ -853,11 +854,9 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
     }
 
     // Uncomment this for a quick hack to view 8 bytes worth of report.
-    
+
     // printf("HID_AFTER: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
-	// 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3));
-	
-	
+    // 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3));
 
     for (uint32_t i = 0; i < report->FieldCount; i++)
     {
@@ -990,9 +989,7 @@ Result HidGetReport(struct UsbDevice *device, enum HidReportType reportType,
                     uint8_t reportId, __attribute__((__unused__)) uint8_t interface, uint32_t bufferLength, void *buffer)
 {
     Result result;
-
-    MicroDelay(8000);
-
+    struct HidDevice *  hidDevice = (struct HidDevice *)device->DriverData;
     while (1)
     {
         if ((result = HcdInterruptPoll(
@@ -1015,11 +1012,10 @@ Result HidGetReport(struct UsbDevice *device, enum HidReportType reportType,
                      .Length = bufferLength,
                  })) == OK)
         {
-            // printf("-------------_GOT ACK.-----------***** temp_interface:%d \n", interface);
+            // We received input report from device.
             return result;
         }
-        // printf("Could not send IN packet.-----------***** \n");
-        MicroDelay(2000);
+        MicroDelay((hidDevice->pollingIntervalInMs) * 1000);
     }
 
     return result;

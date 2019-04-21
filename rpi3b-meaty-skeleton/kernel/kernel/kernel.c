@@ -37,35 +37,34 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
 	UsbInitialise();
-	// uint32_t address = KeyboardGetAddress(0);
-	// printf("Keyboard address: %d", address);
+	uint32_t address = KeyboardGetAddress(0);
+	printf("Keyboard address: %d", address);
 
-	uint32_t count = MouseCount();
-	printf("\n Mouse count: %d \n", count);
-	if (count == 0)
-	{
-		while (1)
-		{
-			/* code */
-		}
-	}
-	uint32_t mouse_address = MouseGetAddress(0);
+	// uint32_t count = MouseCount();
+	// printf("\n Mouse count: %d \n", count);
+	// if (count == 0)
+	// {
+	// 	while (1)
+	// 	{
+	// 		/* code */
+	// 	}
+	// }
+	// uint32_t mouse_address = MouseGetAddress(0);
 	// struct KeyboardLeds leds = {0};
 	while (1)
 	{
 
-		// UsbCheckForChange();
 
-		MousePoll(mouse_address);
-		int16_t x = MouseGetPositionX(mouse_address);
-		int16_t y = MouseGetPositionY(mouse_address);
-		printf("Mouse X: %d  Y: %d \n", x, y);
+		// MousePoll(mouse_address);
+		// int16_t x = MouseGetPositionX(mouse_address);
+		// int16_t y = MouseGetPositionY(mouse_address);
+		// printf("Mouse X: %d  Y: %d \n", x, y);
 
-		// 	KeyboardUpdate(address);
-		// uint8_t key = KeyboardGetChar(address);
-		// if (key != 0)
-		// {
-		// 	printf("key pressed: > %c <\n", key);
-		// }
+		KeyboardUpdate(address);
+		uint8_t key = KeyboardGetChar(address);
+		if (key != 0)
+		{
+			printf("key pressed: > %c <\n", key);
+		}
 	}
 }

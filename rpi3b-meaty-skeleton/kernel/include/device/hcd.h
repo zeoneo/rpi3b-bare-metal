@@ -680,17 +680,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 							 uint32_t bufferOffset,
 							 struct UsbDeviceRequest *request);
 
-Result HcdSumbitInterruptMessage(struct UsbDevice *device,
-								 struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
-								 struct UsbDeviceRequest *request);
-
-Result HcdSumbitInterruptOutMessage(struct UsbDevice *device,
-									struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
-									struct UsbDeviceRequest *request);
-
-
-
 Result HcdInterruptPoll(struct UsbDevice *device,
-                               struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
-                               struct UsbDeviceRequest *request);
+						struct UsbPipeAddress pipe, void *buffer, uint32_t bufferLength,
+						struct UsbDeviceRequest *request);
 #endif
