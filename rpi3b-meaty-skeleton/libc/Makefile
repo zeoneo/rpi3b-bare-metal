@@ -1,4 +1,4 @@
-CFLAGS?=-O2 -g
+CFLAGS?=-O2 -g -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -9,7 +9,7 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror -std=c11
 CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk

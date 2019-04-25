@@ -1,4 +1,4 @@
-CFLAGS?=-O2 -g -march=armv8-a+crc -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding 
+CFLAGS?=-O2 -g -march=armv8-a+crc -mcpu=cortex-a53 -mfpu=crypto-neon-fp-armv8 -fpic -ffreestanding 
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -9,7 +9,7 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall  -Wextra -Werror -Wno-sign-compare
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror -Wno-sign-compare -std=c11  -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
@@ -17,10 +17,12 @@ LIBS:=$(LIBS) -nostdlib -lk -lgcc
 ARCHDIR=arch/$(HOSTARCH)
 MEMDIR=mem
 DEVICEDIR=device
+FSDIR=fs
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
 include $(DEVICEDIR)/make.config
+include $(FSDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -31,6 +33,7 @@ KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 $(KERNEL_MEM_OBJS) \
 $(KERNEL_DEVICE_OBJS) \
+$(KERNEL_FS_OBJS) \
 kernel/kernel.o \
 
 OBJS= $(KERNEL_OBJS)
