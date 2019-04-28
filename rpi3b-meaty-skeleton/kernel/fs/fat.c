@@ -46,7 +46,8 @@ typedef enum
     ATTR_DEVICE = 0x40,
     ATTR_NORMAL = 0x80,
     ATTR_FILE_DELETED = 0xE5,
-    ATTR_LONG_NAME = ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_FILE_LABEL
+    ATTR_LONG_NAME = ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_FILE_LABEL,
+    ATTR_LONG_NAME_MASK = ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_FILE_LABEL | ATTR_DIRECTORY | ATTR_ARCHIVE
 } FILE_ATTRIBUTE;
 
 static fat_type selected_fat_type = FAT_NULL;
@@ -70,8 +71,11 @@ struct __attribute__((packed, aligned(1))) dir_Structure
 
 void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t *fat_sector_num, uint32_t *fat_entry_offset);
 uint32_t getFirstSectorOfCluster(uint32_t cluster_number);
-void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer) ;
-
+void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer);
+void print_directory_cluster_contents(uint32_t directory_first_sector);
+void print_directory_contents(uint32_t directory_first_cluster);
+bool CopyUnAlignedString(char *Dest, const char *Src, uint32_t size);
+void print_fat_sector_content(uint32_t cluster_number);
 
 bool initialize_fat()
 {
@@ -163,61 +167,216 @@ bool initialize_fat()
            (unsigned long)current_sd_partition.firstDataSector, (unsigned long)current_sd_partition.dataSectors,
            (unsigned long)partition_totalClusters, (unsigned long)current_sd_partition.rootCluster);
 
+    printf("Reserved sectors :%lu Fat size : %d bytesPerSector: %d \n", current_sd_partition.reservedSectorCount, current_sd_partition.fatSize, current_sd_partition.bytesPerSector);
     return true;
 }
 
 void print_root_directory_info()
 {
     uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
+    print_directory_contents(root_directory_cluster_number);
+    // print_fat_sector_content(0xbd);
+}
+
+/*
+void readFat() {
+    	uint32_t fat_entry_sector  = current_sd_partition.unusedSectors + current_sd_partition.reservedSectorCount +
+		((2 * 4) / current_sd_partition.bytesPerSector);	// Get sector number of the cluster entry in the FAT
+	// FATEntryOffset = ((2 * 4) % current_sd_partition.bytesPerSector); // Get the offset address in that sector number
+
+    uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
+    printf("Reading fat sector %d \n", fat_entry_sector);
+    if (!sdcard_read(fat_entry_sector, 1, (uint8_t *)&fat_sector_buffer[0]))
+    {
+        printf("FAT: Could not read FAT sector :%d. \n", fat_entry_sector);
+        return;
+    }
+
+    printf("\n");
+    uint32_t count = 0;
+    while (count < 512)
+    {
+        printf("%x ", fat_sector_buffer[count]);
+        count++;
+    }
+
+    printf("\n");
+}
+*/
+void print_fat_sector_content(uint32_t cluster_number)
+{
     uint32_t fat_sector_num, fat_entry_offset;
+    getFatEntrySectorAndOffset(cluster_number, &fat_sector_num, &fat_entry_offset);
+    uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
+    printf("Reading fat sector %d \n", fat_sector_num);
+    if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
+    {
+        printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+        return;
+    }
 
-    getFatEntrySectorAndOffset(root_directory_cluster_number, &fat_sector_num, &fat_entry_offset);
+    uint32_t count = 0;
+    uint32_t max_number_of_fat_entries = 512 / sizeof(uint32_t);
+    uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[0];
+    while (count < max_number_of_fat_entries)
+    {
+        printf("Offset: %x Fat entry: %x \n ", count, *fat_entry_ptr);
+        fat_entry_ptr++;
+        count++;
+    }
+}
 
-    // printf("FAT sector for root directory : %d \n", fat_sector_num);
-    // printf("FAT entry offset of root directory : %d \n", fat_entry_offset);
-    // printf("First Sector of Root Directory : %d", first_root_dir_sector);
+void print_directory_contents(uint32_t directory_first_cluster)
+{
+    printf("--------------*****************----------------------\n");
+    uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
+    uint32_t cluster_number = directory_first_cluster;
 
-    
+    // Now it's time to check if we have multiple clusters for this directory using fat table.
+    uint32_t fat_sector_num, fat_entry_offset;
+    getFatEntrySectorAndOffset(cluster_number, &fat_sector_num, &fat_entry_offset);
+    printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+    if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
+    {
+        printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+        return;
+    }
 
-    uint32_t first_root_dir_sector = getFirstSectorOfCluster(root_directory_cluster_number);
+    uint32_t count = 0;
+    uint32_t max_number_of_fat_entries = 512 / sizeof(uint32_t);
+
+    // uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[0];
+    // while (count < max_number_of_fat_entries)
+    // {
+    //     uint32_t fat_entry = (*fat_entry_ptr) & 0x0fffffff;
+    //     printf("Offset:%x Fat entry: %x \n ", count, fat_entry);
+    //     fat_entry_ptr++;
+    //     count++;
+    // }
+    count = 0;
+    while (1)
+    {
+        uint8_t *fat_entry_ptr = (uint8_t *)&fat_sector_buffer[fat_entry_offset];
+        uint32_t fat_entry = (*((uint32_t *)fat_entry_ptr)) & 0x0fffffff;
+        printf("\n cluster_number|: %d  fat_entry_offset : 0x%x fat_entry: 0x%x \n", cluster_number, fat_entry_offset, fat_entry);
+        print_directory_cluster_contents(cluster_number);
+        count++;
+        printf("Fat entry off set : %d fat entry :%x ", fat_entry_offset, fat_entry);
+        if (count == max_number_of_fat_entries && fat_entry != 0x0fffffff)
+        {
+            //
+            printf("-------------__Directory spans more than 1 fat sector breaking . \n");
+            break;
+        }
+
+        if (fat_entry == 0x0fffffff)
+        {
+            printf("End Of cluster chain :%x ", fat_entry);
+            break;
+        } else if(fat_entry == 0x0FFFFFF7) {
+            printf("Bad Cluster :%x ", fat_entry);
+            break;
+        }
+
+        cluster_number = fat_entry;
+        fat_entry_offset = fat_entry;
+        printf("\n new cluster_number|: %x \n", cluster_number);
+        if (cluster_number == 0)
+        {
+            printf("\n  Breaking as cluster chain ends here. \n");
+            break;
+        }
+    }
+    printf("--------------####################----------------------\n");
+}
+
+void print_directory_cluster_contents(uint32_t directory_first_sector)
+{
+    uint32_t first_root_dir_sector = getFirstSectorOfCluster(directory_first_sector);
     uint32_t last_clust_root_dir_sector = first_root_dir_sector + current_sd_partition.sectorPerCluster;
     uint32_t sector_number = first_root_dir_sector;
     uint8_t buffer[512] __attribute__((aligned(4)));
 
-    while(sector_number < last_clust_root_dir_sector) {
+    while (sector_number < last_clust_root_dir_sector)
+    {
         print_entries_in_sector(sector_number, &buffer[0]);
+        printf("---Completed printing sector :%d, next sector :%d \n", sector_number, sector_number + 1);
         sector_number++;
     }
-
-
-    // // Try reading FAT sector
-    // if (!sdcard_read(2, 1, (uint8_t *)&buffer[0]))
-    // {
-    //     printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
-    //     return;
-    // }
-
-    // uint32_t *fat_cluster_entry = (uint32_t *)&buffer[0];
-    // fat_cluster_entry = fat_cluster_entry + fat_entry_offset;
-
-    // printf("Content of fat cluster entry : %x \n", *fat_cluster_entry);
-    // uint32_t x1 = 17312;
-    // // while (x1 < 1)
-    // // {
-    // sdcard_read(x1, 1, (uint8_t *)&buffer[0]);
-    // printf("\n------------DUMP of SECTOR: %d -----------\n", x1);
-    // uint16_t i = 0;
-    // while (i < 512)
-    //     printf("%x ", buffer[i++]);
-
-    // // x1++;
-    // // }
+    printf("---Completed printing all the sectors in cluster \n");
 }
 
-void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer) {
+uint8_t ascii_for_utf_16(uint16_t utf_16_code)
+{
+    if (utf_16_code == 0xffff || utf_16_code == 0x0000)
+    {
+        return '\0';
+    }
+
+    if ((utf_16_code & 0xff80) != 0)
+    {
+        return '~';
+        // this character is not representable in ascii;
+    }
+    return (uint8_t)utf_16_code & 0x00ff;
+}
+
+static uint8_t ReadLFNEntry(struct dir_lfn_entry *LFdir, char LFNtext[14])
+{
+    uint8_t utf1, utf2;
+    uint16_t utf, j;
+    bool lfn_done = false;
+    uint8_t LFN_blockcount = 0;
+    if (LFdir)
+    { // Check the directory pointer valid
+        for (j = 0; ((j < 5) && (lfn_done == false)); j++)
+        { // For each of the first 5 characters
+            /* Alignment problems on this 1st block .. please leave alone */
+            utf1 = LFdir->LDIR_Name1[j * 2];     // Load the low byte  ***unaligned access
+            utf2 = LFdir->LDIR_Name1[j * 2 + 1]; // Load the high byte
+            utf = (utf2 << 8) | utf1;            // Roll and join to make word
+            if (utf == 0)
+                lfn_done = true; // If the character is zero we are done
+            else
+                LFNtext[LFN_blockcount++] = (char)ascii_for_utf_16(utf); // Otherwise narrow to ascii and place in buffer
+        }
+        for (j = 0; ((j < 6) && (lfn_done == false)); j++)
+        {                               // For the next six characters
+            utf = LFdir->LDIR_Name2[j]; // Fetch the character
+            if (utf == 0)
+                lfn_done = true; // If the character is zero we are done
+            else
+                LFNtext[LFN_blockcount++] = (char)ascii_for_utf_16(utf); // Otherwise narrow to ascii and place in buffer
+        }
+        for (j = 0; ((j < 2) && (lfn_done == false)); j++)
+        {                               // For the last two characters
+            utf = LFdir->LDIR_Name3[j]; // Fetch the character
+            if (utf == 0)
+                lfn_done = true; // If the character is zero we are done
+            else
+                LFNtext[LFN_blockcount++] = (char)ascii_for_utf_16(utf); // Otherwise narrow to ascii and place in buffer
+        }
+    }
+    LFNtext[LFN_blockcount] = '\0'; // Make ascizz incase it needs to be used as string
+    // printf("%s seq:> %x eSeq : %x \n", LFNtext, LFdir->LDIR_SeqNum, ((~0x40) & LFdir->LDIR_SeqNum));
+    return LFN_blockcount; // Return characters in buffer 0-13 is valid range
+}
+
+bool CopyUnAlignedString(char *Dest, const char *Src, uint32_t size)
+{
+    uint32_t index = 0;
+    while (index < size)
+    {
+        Dest[index] = Src[index];
+        index++;
+    }
+    return true; // One of the pointers was invalid
+}
+
+void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
+{
     uint32_t limit = 512;
     uint32_t index = 0;
-
 
     if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
     {
@@ -227,50 +386,74 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer) {
 
     while (index < limit)
     {
+        // printf("%c ", buffer[index++]);
+        // continue;
+
         struct dir_sfn_entry *dir_entry = (struct dir_sfn_entry *)&buffer[index];
-        // if(dir_entry->short_file_name[0] != ATTR_FILE_EMPTY || dir_entry->short_file_name[0] != ATTR_FILE_DELETED) {
-        if (dir_entry->file_attrib == ATTR_FILE_LABEL)
-        {
-            // printf("dir_entry->short_file_name : %s \n", dir_entry->short_file_name);
-            printf("LABEL: %c%c%c%c%c%c%c%c%c%c%c \n",
-                   dir_entry->short_file_name[0], dir_entry->short_file_name[1], dir_entry->short_file_name[2], dir_entry->short_file_name[3],
-                   dir_entry->short_file_name[4], dir_entry->short_file_name[5], dir_entry->short_file_name[6], dir_entry->short_file_name[7],
-                   dir_entry->short_file_name[8], dir_entry->short_file_name[9], dir_entry->short_file_name[10]);
-        }
-        else if (dir_entry->file_attrib == ATTR_DIRECTORY)
-        {
-            printf("Got directory here. \n");
-        }
-        else if (dir_entry->file_attrib == ATTR_LONG_NAME)
-        {
-            struct dir_lfn_entry * lfn_entry = (struct dir_lfn_entry *) &buffer[index];
-            uint8_t *x = lfn_entry->LDIR_Name1;
-            while(x < &(lfn_entry->LDIR_Name1[10])) {
-                printf("\%c", *x);
-                x++;
-                x++;
-            }
+        struct dir_lfn_entry *lfn_entry = (struct dir_lfn_entry *)&buffer[index];
 
-            x = (uint8_t *)lfn_entry->LDIR_Name2;
-            uint8_t c = 0;
-            while(c < 6) {
-                printf("%c", *x);
-                x++;
-                x++;
-                c++;
-            }
-
-            printf("%c\n", lfn_entry->LDIR_Name3[1]);
-
-            // printf(" \n Got ATTR_LONG_NAME here %d seq number. \n", lfn_entry->LDIR_SeqNum);
-        }
+        // if(dir_entry->file_attrib == ATTR_DIRECTORY) {
+        //     print_directory_contents(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low);
         // }
-        // printf("dir_entry->file_attrib :%x \n", dir_entry->file_attrib);
+
+        if (lfn_entry->LDIR_Attr == ATTR_LONG_NAME)
+        {
+            uint8_t LFN_count = 0;
+            //
+            uint8_t long_file_name[256] __attribute__((aligned(4))) = {'\0'};
+            // We loop here until we get sets of all long file name entries
+            // int8_t entry_count = 1;
+            while (index < limit)
+            {
+                dir_entry = (struct dir_sfn_entry *)&buffer[index];
+                lfn_entry = (struct dir_lfn_entry *)&buffer[index];
+
+                uint8_t LFN_blockcount;
+                char LFNtext[14] = {0};
+                LFN_blockcount = ReadLFNEntry((struct dir_lfn_entry *)&buffer[index], LFNtext);
+                uint8_t index1 = ((~0x40) & lfn_entry->LDIR_SeqNum);
+                index1 = ((index1 - 1) * 13);
+                // printf("Copy at: %d \n ", index1);
+                CopyUnAlignedString((char *)&long_file_name[index1], (char *)&LFNtext[0], LFN_blockcount);
+                // printf("Copy at: %s \n ", long_file_name);
+                // for (int j = 0; j < LFN_blockcount; j++) {
+                //     long_file_name[255 - LFN_count - LFN_blockcount + j] = LFNtext[j];
+                // }
+                LFN_count += LFN_blockcount;
+
+                if (lfn_entry->LDIR_SeqNum == 0x1 || lfn_entry->LDIR_SeqNum == 0x41)
+                {
+                    printf("filename : %s \n", long_file_name);
+                    index += sizeof(struct dir_sfn_entry);
+                    // printf("INDEX : %d \n", index);
+                    if (index >= limit)
+                    {
+                        // printf("INDEX REACHED 512: %d \n", index);
+                        break;
+                    }
+                    dir_entry = (struct dir_sfn_entry *)&buffer[index];
+                    // printf("file attrib : %x  ", dir_entry->file_attrib);
+                    // uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
+                    // printf("file first cluster : %x \n", first_cluster);
+                    // if (dir_entry->file_attrib == ATTR_DIRECTORY)
+                    // {
+                    //     print_directory_contents(first_cluster);
+                    // }
+                    break;
+                }
+                index += sizeof(struct dir_sfn_entry);
+                // printf("INDEX : %d \n", index);
+            }
+            // printf("\n %s \n", long_file_name);
+        }
+        else if (dir_entry->short_file_name[0] == 0)
+        {
+            break; // No more valid entries;
+        }
+
         index += sizeof(struct dir_sfn_entry);
-        // printf("index: %d \n", index);
     }
 }
-
 
 void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t *fat_sector_num, uint32_t *fat_entry_offset)
 {
@@ -280,7 +463,7 @@ void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t *fat_sector_nu
         fat_offset = cluster_number * 2;
     }
 
-    *fat_sector_num = current_sd_partition.reservedSectorCount + (fat_offset / current_sd_partition.bytesPerSector);
+    *fat_sector_num = current_sd_partition.unusedSectors + current_sd_partition.reservedSectorCount + (fat_offset / current_sd_partition.bytesPerSector);
     *fat_entry_offset = (fat_offset % current_sd_partition.bytesPerSector);
 }
 
