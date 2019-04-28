@@ -34,8 +34,8 @@ struct __attribute__((packed, aligned(4))) sd_partition
     uint32_t fatSize;
 };
 
-
-typedef enum {
+typedef enum
+{
     ATTR_FILE_EMPTY = 0x00,
     ATTR_READ_ONLY = 0x01,
     ATTR_HIDDEN = 0x02,
@@ -52,24 +52,25 @@ typedef enum {
 static fat_type selected_fat_type = FAT_NULL;
 static struct sd_partition current_sd_partition = {0};
 
-struct __attribute__((packed, aligned(1))) dir_Structure {
-	sfn_name_t	name;						// 8.3 filename
-	uint8_t		attrib;						// file attributes
-	uint8_t		NTreserved;					// always 0
-	uint8_t		timeTenth;					// tenths of seconds, set to 0 here
-	uint16_t	writeTime;					// time file was last written
-	uint16_t	writeDate;					// date file was last written
-	uint16_t	lastAccessDate;				// date file was last accessed
-	uint16_t	firstClusterHI;				// higher word of the first cluster number
-	uint16_t	createTime;					// time file was created
-	uint16_t	createDate;					// date file was created
-	uint16_t	firstClusterLO;				// lower word of the first cluster number
-	uint32_t	fileSize;					// size of file in bytes
+struct __attribute__((packed, aligned(1))) dir_Structure
+{
+    sfn_name_t name;         // 8.3 filename
+    uint8_t attrib;          // file attributes
+    uint8_t NTreserved;      // always 0
+    uint8_t timeTenth;       // tenths of seconds, set to 0 here
+    uint16_t writeTime;      // time file was last written
+    uint16_t writeDate;      // date file was last written
+    uint16_t lastAccessDate; // date file was last accessed
+    uint16_t firstClusterHI; // higher word of the first cluster number
+    uint16_t createTime;     // time file was created
+    uint16_t createDate;     // date file was created
+    uint16_t firstClusterLO; // lower word of the first cluster number
+    uint32_t fileSize;       // size of file in bytes
 };
 
-
-void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t * fat_sector_num, uint32_t * fat_entry_offset);
+void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t *fat_sector_num, uint32_t *fat_entry_offset);
 uint32_t getFirstSectorOfCluster(uint32_t cluster_number);
+void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer) ;
 
 
 bool initialize_fat()
@@ -169,80 +170,122 @@ void print_root_directory_info()
 {
     uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
     uint32_t fat_sector_num, fat_entry_offset;
-    uint32_t first_root_dir_sector = getFirstSectorOfCluster(root_directory_cluster_number);
+
     getFatEntrySectorAndOffset(root_directory_cluster_number, &fat_sector_num, &fat_entry_offset);
 
+    // printf("FAT sector for root directory : %d \n", fat_sector_num);
+    // printf("FAT entry offset of root directory : %d \n", fat_entry_offset);
+    // printf("First Sector of Root Directory : %d", first_root_dir_sector);
 
-    printf("FAT sector for root directory : %d \n", fat_sector_num);
-    printf("FAT entry offset of root directory : %d \n", fat_entry_offset);
-    printf("First Sector of Root Directory : %d", first_root_dir_sector);
+    
 
+    uint32_t first_root_dir_sector = getFirstSectorOfCluster(root_directory_cluster_number);
+    uint32_t last_clust_root_dir_sector = first_root_dir_sector + current_sd_partition.sectorPerCluster;
+    uint32_t sector_number = first_root_dir_sector;
     uint8_t buffer[512] __attribute__((aligned(4)));
-    if (!sdcard_read(first_root_dir_sector, 1, (uint8_t *)&buffer[0]))
-    {
-        printf("FAT: ROOT DIR sector :%d. \n", first_root_dir_sector);
-        return;
+
+    while(sector_number < last_clust_root_dir_sector) {
+        print_entries_in_sector(sector_number, &buffer[0]);
+        sector_number++;
     }
 
+
+    // // Try reading FAT sector
+    // if (!sdcard_read(2, 1, (uint8_t *)&buffer[0]))
+    // {
+    //     printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+    //     return;
+    // }
+
+    // uint32_t *fat_cluster_entry = (uint32_t *)&buffer[0];
+    // fat_cluster_entry = fat_cluster_entry + fat_entry_offset;
+
+    // printf("Content of fat cluster entry : %x \n", *fat_cluster_entry);
+    // uint32_t x1 = 17312;
+    // // while (x1 < 1)
+    // // {
+    // sdcard_read(x1, 1, (uint8_t *)&buffer[0]);
+    // printf("\n------------DUMP of SECTOR: %d -----------\n", x1);
+    // uint16_t i = 0;
+    // while (i < 512)
+    //     printf("%x ", buffer[i++]);
+
+    // // x1++;
+    // // }
+}
+
+void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer) {
     uint32_t limit = 512;
     uint32_t index = 0;
-    printf("limit: %d \n", limit);
-    while(index < limit) {
-        struct dir_sfn_entry * dir_entry = (struct dir_sfn_entry *) &buffer[index];
-        // if(dir_entry->short_file_name[0] != ATTR_FILE_EMPTY || dir_entry->short_file_name[0] != ATTR_FILE_DELETED) {
-            if(dir_entry->file_attrib == ATTR_FILE_LABEL) {
-                // printf("dir_entry->short_file_name : %s \n", dir_entry->short_file_name);
 
-                printf("LABEL: %c%c%c%c%c%c%c%c%c%c%c \n",
-							dir_entry->short_file_name[0], dir_entry->short_file_name[1], dir_entry->short_file_name[2], dir_entry->short_file_name[3],
-							dir_entry->short_file_name[4], dir_entry->short_file_name[5], dir_entry->short_file_name[6], dir_entry->short_file_name[7],
-							dir_entry->short_file_name[8], dir_entry->short_file_name[9], dir_entry->short_file_name[10]);
-            } else if (dir_entry->file_attrib == ATTR_DIRECTORY) {
-                printf("Got directory here. \n");
-            } else if (dir_entry->file_attrib == ATTR_LONG_NAME) {
-                printf("Got ATTR_LONG_NAME here. \n");
-            }
-        // }
-        printf("dir_entry->file_attrib :%x \n", dir_entry->file_attrib);
-        index += sizeof(struct dir_sfn_entry);
-        printf("index: %d \n", index);
-    }
 
-    //Try reading FAT sector
-    if (!sdcard_read(2, 1, (uint8_t *)&buffer[0]))
+    if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
     {
-        printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+        printf("FAT: ROOT DIR sector :%d. \n", sector_number);
         return;
     }
 
-    uint32_t * fat_cluster_entry = (uint32_t *)&buffer[0];
-    fat_cluster_entry = fat_cluster_entry + fat_entry_offset;
+    while (index < limit)
+    {
+        struct dir_sfn_entry *dir_entry = (struct dir_sfn_entry *)&buffer[index];
+        // if(dir_entry->short_file_name[0] != ATTR_FILE_EMPTY || dir_entry->short_file_name[0] != ATTR_FILE_DELETED) {
+        if (dir_entry->file_attrib == ATTR_FILE_LABEL)
+        {
+            // printf("dir_entry->short_file_name : %s \n", dir_entry->short_file_name);
+            printf("LABEL: %c%c%c%c%c%c%c%c%c%c%c \n",
+                   dir_entry->short_file_name[0], dir_entry->short_file_name[1], dir_entry->short_file_name[2], dir_entry->short_file_name[3],
+                   dir_entry->short_file_name[4], dir_entry->short_file_name[5], dir_entry->short_file_name[6], dir_entry->short_file_name[7],
+                   dir_entry->short_file_name[8], dir_entry->short_file_name[9], dir_entry->short_file_name[10]);
+        }
+        else if (dir_entry->file_attrib == ATTR_DIRECTORY)
+        {
+            printf("Got directory here. \n");
+        }
+        else if (dir_entry->file_attrib == ATTR_LONG_NAME)
+        {
+            struct dir_lfn_entry * lfn_entry = (struct dir_lfn_entry *) &buffer[index];
+            uint8_t *x = lfn_entry->LDIR_Name1;
+            while(x < &(lfn_entry->LDIR_Name1[10])) {
+                printf("\%c", *x);
+                x++;
+                x++;
+            }
 
-    printf("Content of fat cluster entry : %x \n" , *fat_cluster_entry);
-    uint32_t x1 =0;
-    while(x1 < 1) {
-        sdcard_read(x1, 1, (uint8_t *)&buffer[0]);
-        printf("\n------------DUMP of SECTOR: %d -----------\n", x1);
-        uint16_t i = 0;
-        while(i < 512) printf("%x ", buffer[i++]);
+            x = (uint8_t *)lfn_entry->LDIR_Name2;
+            uint8_t c = 0;
+            while(c < 6) {
+                printf("%c", *x);
+                x++;
+                x++;
+                c++;
+            }
 
-        x1++;
+            printf("%c\n", lfn_entry->LDIR_Name3[1]);
+
+            // printf(" \n Got ATTR_LONG_NAME here %d seq number. \n", lfn_entry->LDIR_SeqNum);
+        }
+        // }
+        // printf("dir_entry->file_attrib :%x \n", dir_entry->file_attrib);
+        index += sizeof(struct dir_sfn_entry);
+        // printf("index: %d \n", index);
     }
-
 }
 
 
-void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t * fat_sector_num, uint32_t * fat_entry_offset) {
+void getFatEntrySectorAndOffset(uint32_t cluster_number, uint32_t *fat_sector_num, uint32_t *fat_entry_offset)
+{
     uint32_t fat_offset = cluster_number * 4; //assuming its fat32;
-    if(selected_fat_type == FAT16) {
+    if (selected_fat_type == FAT16)
+    {
         fat_offset = cluster_number * 2;
     }
 
-    *fat_sector_num = current_sd_partition.reservedSectorCount + (fat_offset / current_sd_partition.bytesPerSector); 
+    *fat_sector_num = current_sd_partition.reservedSectorCount + (fat_offset / current_sd_partition.bytesPerSector);
     *fat_entry_offset = (fat_offset % current_sd_partition.bytesPerSector);
 }
 
-uint32_t getFirstSectorOfCluster(uint32_t cluster_number) {
+uint32_t getFirstSectorOfCluster(uint32_t cluster_number)
+{
     uint32_t firstSector = (cluster_number - 2) * current_sd_partition.sectorPerCluster;
     firstSector = firstSector + current_sd_partition.firstDataSector;
     return firstSector;

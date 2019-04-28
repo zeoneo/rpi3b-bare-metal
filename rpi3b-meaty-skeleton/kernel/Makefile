@@ -69,11 +69,7 @@ clean:
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 	rm -f *.list *.map *.txt
 
-install: install-headers install-kernel
-
-install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)
-	cp -R include/. $(DESTDIR)$(INCLUDEDIR)/.
+install: install-kernel
 
 install-kernel: kernel8-32.img
 	mkdir -p $(DESTDIR)$(BOOTDIR)

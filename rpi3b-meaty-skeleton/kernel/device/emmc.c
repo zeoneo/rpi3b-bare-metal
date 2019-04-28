@@ -863,8 +863,8 @@ static int sdSendCommandP( EMMCCommand* cmd, uint32_t arg )
 	/* Check for command in progress */
 	if ( sdWaitForCommand() != SD_OK ) return SD_BUSY;				// Check command wait
 
-	LOG_DEBUG("EMMC: Sending command %s code %08x arg %08x\n",
-		cmd->cmd_name, (unsigned int)cmd->code.CMD_INDEX, (unsigned int)arg);
+	// LOG_DEBUG("EMMC: Sending command %s code %08x arg %08x\n",
+	// 	cmd->cmd_name, (unsigned int)cmd->code.CMD_INDEX, (unsigned int)arg);
 	sdCard.lastCmd = cmd;
 
 	/* Clear interrupt flags.  This is done by setting the ones that are currently set */

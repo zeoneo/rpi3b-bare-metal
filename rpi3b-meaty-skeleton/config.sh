@@ -1,4 +1,4 @@
-SYSTEM_HEADER_PROJECTS="libc kernel"
+SYSTEM_HEADER_PROJECTS="include"
 PROJECTS="libc kernel"
 
 export MAKE=${MAKE:-make}
