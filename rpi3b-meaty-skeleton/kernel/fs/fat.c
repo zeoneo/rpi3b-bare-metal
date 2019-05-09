@@ -22,6 +22,8 @@ struct __attribute__((packed, aligned(4))) mbr
     uint16_t signature;                     // 0xaa55
 };
 
+const uint8_t *file_to_search = "xsh_vlanstat.c";
+
 struct __attribute__((packed, aligned(4))) sd_partition
 {
     uint32_t rootCluster;         // Active partition rootCluster
@@ -170,22 +172,23 @@ bool initialize_fat()
     printf("Reserved sectors :%lu Fat size : %d bytesPerSector: %d \n", current_sd_partition.reservedSectorCount, current_sd_partition.fatSize, current_sd_partition.bytesPerSector);
     return true;
 }
-
+void readFat(uint32_t clusterNumber);
 void print_root_directory_info()
 {
     uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
     print_directory_contents(root_directory_cluster_number);
     // print_fat_sector_content(0xbd);
+    // readFat(0x10a5);
 }
 
-/*
-void readFat() {
-    	uint32_t fat_entry_sector  = current_sd_partition.unusedSectors + current_sd_partition.reservedSectorCount +
-		((2 * 4) / current_sd_partition.bytesPerSector);	// Get sector number of the cluster entry in the FAT
-	// FATEntryOffset = ((2 * 4) % current_sd_partition.bytesPerSector); // Get the offset address in that sector number
+void readFat(uint32_t clusterNumber)
+{
+    uint32_t fat_entry_sector;
+    uint32_t fat_entry_offset;
 
+    getFatEntrySectorAndOffset(clusterNumber, &fat_entry_sector, &fat_entry_offset);
     uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
-    printf("Reading fat sector %d \n", fat_entry_sector);
+    printf("Reading fat sector %d fat_entry_offset: 0X%X \n", fat_entry_sector, fat_entry_offset / 4);
     if (!sdcard_read(fat_entry_sector, 1, (uint8_t *)&fat_sector_buffer[0]))
     {
         printf("FAT: Could not read FAT sector :%d. \n", fat_entry_sector);
@@ -194,15 +197,17 @@ void readFat() {
 
     printf("\n");
     uint32_t count = 0;
-    while (count < 512)
+    uint32_t *fat_ptr = (uint32_t *)&fat_sector_buffer[0];
+    while (count < 512 / sizeof(uint32_t))
     {
-        printf("%x ", fat_sector_buffer[count]);
+        printf("Fat Offset:0X%X Fat Entry: 0X%X  next: 0X%X \n", count, *fat_ptr, (*fat_ptr) / 4);
         count++;
+        fat_ptr++;
     }
 
     printf("\n");
 }
-*/
+
 void print_fat_sector_content(uint32_t cluster_number)
 {
     uint32_t fat_sector_num, fat_entry_offset;
@@ -234,58 +239,26 @@ void print_directory_contents(uint32_t directory_first_cluster)
 
     // Now it's time to check if we have multiple clusters for this directory using fat table.
     uint32_t fat_sector_num, fat_entry_offset;
-    getFatEntrySectorAndOffset(cluster_number, &fat_sector_num, &fat_entry_offset);
-    printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
-    if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
+    uint32_t old_fat_sector_num = 0;
+    while (cluster_number != 0x0fffffff && cluster_number != 0x0FFFFFF7 && cluster_number != 0)
     {
-        printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
-        return;
-    }
+        getFatEntrySectorAndOffset(cluster_number, &fat_sector_num, &fat_entry_offset);
 
-    uint32_t count = 0;
-    uint32_t max_number_of_fat_entries = 512 / sizeof(uint32_t);
+        if (old_fat_sector_num != fat_sector_num)
+        {
+            // printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+            if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
+            {
+                printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+                return;
+            }
+        }
 
-    // uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[0];
-    // while (count < max_number_of_fat_entries)
-    // {
-    //     uint32_t fat_entry = (*fat_entry_ptr) & 0x0fffffff;
-    //     printf("Offset:%x Fat entry: %x \n ", count, fat_entry);
-    //     fat_entry_ptr++;
-    //     count++;
-    // }
-    count = 0;
-    while (1)
-    {
-        uint8_t *fat_entry_ptr = (uint8_t *)&fat_sector_buffer[fat_entry_offset];
-        uint32_t fat_entry = (*((uint32_t *)fat_entry_ptr)) & 0x0fffffff;
-        printf("\n cluster_number|: %d  fat_entry_offset : 0x%x fat_entry: 0x%x \n", cluster_number, fat_entry_offset, fat_entry);
         print_directory_cluster_contents(cluster_number);
-        count++;
-        printf("Fat entry off set : %d fat entry :%x ", fat_entry_offset, fat_entry);
-        if (count == max_number_of_fat_entries && fat_entry != 0x0fffffff)
-        {
-            //
-            printf("-------------__Directory spans more than 1 fat sector breaking . \n");
-            break;
-        }
 
-        if (fat_entry == 0x0fffffff)
-        {
-            printf("End Of cluster chain :%x ", fat_entry);
-            break;
-        } else if(fat_entry == 0x0FFFFFF7) {
-            printf("Bad Cluster :%x ", fat_entry);
-            break;
-        }
-
-        cluster_number = fat_entry;
-        fat_entry_offset = fat_entry;
-        printf("\n new cluster_number|: %x \n", cluster_number);
-        if (cluster_number == 0)
-        {
-            printf("\n  Breaking as cluster chain ends here. \n");
-            break;
-        }
+        uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[fat_entry_offset];
+        cluster_number = (*fat_entry_ptr) & 0x0fffffff;
+        old_fat_sector_num = fat_sector_num;
     }
     printf("--------------####################----------------------\n");
 }
@@ -300,10 +273,10 @@ void print_directory_cluster_contents(uint32_t directory_first_sector)
     while (sector_number < last_clust_root_dir_sector)
     {
         print_entries_in_sector(sector_number, &buffer[0]);
-        printf("---Completed printing sector :%d, next sector :%d \n", sector_number, sector_number + 1);
+        // printf("---Completed printing sector :%d, next sector :%d \n", sector_number, sector_number + 1);
         sector_number++;
     }
-    printf("---Completed printing all the sectors in cluster \n");
+    // printf("---Completed printing all the sectors in cluster \n");
 }
 
 uint8_t ascii_for_utf_16(uint16_t utf_16_code)
@@ -357,7 +330,7 @@ static uint8_t ReadLFNEntry(struct dir_lfn_entry *LFdir, char LFNtext[14])
                 LFNtext[LFN_blockcount++] = (char)ascii_for_utf_16(utf); // Otherwise narrow to ascii and place in buffer
         }
     }
-    LFNtext[LFN_blockcount] = '\0'; // Make ascizz incase it needs to be used as string
+    LFNtext[LFN_blockcount] = '\0';
     // printf("%s seq:> %x eSeq : %x \n", LFNtext, LFdir->LDIR_SeqNum, ((~0x40) & LFdir->LDIR_SeqNum));
     return LFN_blockcount; // Return characters in buffer 0-13 is valid range
 }
@@ -433,12 +406,12 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
                     }
                     dir_entry = (struct dir_sfn_entry *)&buffer[index];
                     // printf("file attrib : %x  ", dir_entry->file_attrib);
-                    // uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
+                    uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
                     // printf("file first cluster : %x \n", first_cluster);
-                    // if (dir_entry->file_attrib == ATTR_DIRECTORY)
-                    // {
-                    //     print_directory_contents(first_cluster);
-                    // }
+                    if (dir_entry->file_attrib == ATTR_DIRECTORY)
+                    {
+                        print_directory_contents(first_cluster);
+                    }
                     break;
                 }
                 index += sizeof(struct dir_sfn_entry);

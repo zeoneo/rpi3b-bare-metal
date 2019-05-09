@@ -39,7 +39,7 @@ SECTIONS
     . = ALIGN(4096); /* align to page size */
     __bss_end = .;
 
-    . = . + 32768; /* 32KB for svc stack */
+    . = . + 131072; /* 128KB for svc stack */
     __svc_stack_base = .;
 
     . = . + 1024; /* 1024 Bytes for irq stack */
