@@ -78,7 +78,7 @@ extern "C"
 	bool initialize_fat();
 	void print_root_directory_info();
 	uint32_t get_file_size(uint8_t *absolute_file_name);
-	void read_file(const uint8_t *absolute_file_name, uint8_t *file_buffer);
+	void read_file(uint8_t *absolute_file_name);
 #ifdef __cplusplus
 }
 #endif

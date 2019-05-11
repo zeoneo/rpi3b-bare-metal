@@ -22,7 +22,10 @@ struct __attribute__((packed, aligned(4))) mbr
     uint16_t signature;                     // 0xaa55
 };
 
-uint8_t file_to_search[] = "/SpaceCraft/Runner/color_0.jpg";
+// uint8_t file_to_search[] = "/SpaceCraft/Runner/color_0.jpg";
+uint8_t file_to_search[] = "/memRegionInsert.c";
+
+// uint8_t file_to_search[] = "/overlays/allo-piano-dac-plus-pcm512x-audio.dtbo";
 
 struct __attribute__((packed, aligned(4))) sd_partition
 {
@@ -79,9 +82,9 @@ void print_directory_contents(uint32_t directory_first_cluster);
 bool CopyUnAlignedString(char *Dest, const char *Src, uint32_t size);
 void print_fat_sector_content(uint32_t cluster_number);
 static uint8_t ReadLFNEntry(struct dir_lfn_entry *LFdir, char LFNtext[14]);
-bool search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_dir_name, uint32_t next_index);
-bool search_directory_cluster_contents(uint32_t directory_first_sector, uint8_t *next_dir_name, uint32_t next_index);
-bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *next_dir_name, uint32_t next_index);
+uint32_t search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_dir_name, uint32_t next_index);
+uint32_t search_directory_cluster_contents(uint32_t directory_first_sector, uint8_t *next_dir_name, uint32_t next_index);
+uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *next_dir_name, uint32_t next_index);
 
 bool initialize_fat()
 {
@@ -181,12 +184,13 @@ void print_root_directory_info()
 {
     // uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
     // print_directory_contents(root_directory_cluster_number);
-    get_file_size(&file_to_search[0]);
+    // printf("Files first Cluster: 0x%x \n", get_file_size(&file_to_search[0]));
+    read_file(&file_to_search[0]);
     // print_fat_sector_content(0xbd);
     // readFat(0x10a5);
 }
 
-void find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_file_name, uint32_t next_index);
+uint32_t find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_file_name, uint32_t next_index);
 uint32_t get_file_size(uint8_t *absolute_file_name)
 {
     if (absolute_file_name == 0 || absolute_file_name[0] != '/')
@@ -194,8 +198,7 @@ uint32_t get_file_size(uint8_t *absolute_file_name)
         return 0;
     }
 
-    find_file_in_directory(current_sd_partition.rootCluster, absolute_file_name, 1);
-    return 0;
+    return find_file_in_directory(current_sd_partition.rootCluster, absolute_file_name, 1);
 }
 
 uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
@@ -211,7 +214,7 @@ uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
     return count;
 }
 
-void find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_file_name, uint32_t next_index)
+uint32_t find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_file_name, uint32_t next_index)
 {
     uint8_t next_dir_name[256] = {'\0'};
     uint8_t next_length = get_next_dir_name(&absolute_file_name[next_index], &next_dir_name[0]);
@@ -219,10 +222,10 @@ void find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_file_n
     {
         printf("Can't find directory/file %s \n", absolute_file_name);
     }
-    search_directory_contents(directory_cluster, &absolute_file_name[0], next_index);
+    return search_directory_contents(directory_cluster, &absolute_file_name[0], next_index);
 }
 
-bool search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_dir_name, uint32_t next_index)
+uint32_t search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_dir_name, uint32_t next_index)
 {
     printf("--------------*****************----------------------\n");
     uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
@@ -241,13 +244,15 @@ bool search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_d
             if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
             {
                 printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
-                return false;
+                return 0;
             }
         }
 
-        if (search_directory_cluster_contents(cluster_number, &next_dir_name[0], next_index))
+        uint32_t first_cluster = search_directory_cluster_contents(cluster_number, &next_dir_name[0], next_index);
+
+        if (first_cluster != 0)
         {
-            return true;
+            return first_cluster;
         }
 
         uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[fat_entry_offset];
@@ -255,10 +260,10 @@ bool search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_d
         old_fat_sector_num = fat_sector_num;
     }
     printf("--------------####################----------------------\n");
-    return false;
+    return 0;
 }
 
-bool search_directory_cluster_contents(uint32_t directory_first_sector, uint8_t *next_dir_name, uint32_t next_index)
+uint32_t search_directory_cluster_contents(uint32_t directory_first_sector, uint8_t *next_dir_name, uint32_t next_index)
 {
     uint32_t first_root_dir_sector = getFirstSectorOfCluster(directory_first_sector);
     uint32_t last_clust_root_dir_sector = first_root_dir_sector + current_sd_partition.sectorPerCluster;
@@ -267,13 +272,14 @@ bool search_directory_cluster_contents(uint32_t directory_first_sector, uint8_t 
 
     while (sector_number < last_clust_root_dir_sector)
     {
-        if (search_entries_in_sector(sector_number, &buffer[0], &next_dir_name[0], next_index))
+        uint32_t first_cluster = search_entries_in_sector(sector_number, &buffer[0], &next_dir_name[0], next_index) ;
+        if (first_cluster != 0)
         {
-            return true;
+            return first_cluster;
         }
         sector_number++;
     }
-    return false;
+    return 0;
 }
 
 bool is_same_file(uint8_t *src, uint8_t *dest)
@@ -293,7 +299,8 @@ bool is_same_file(uint8_t *src, uint8_t *dest)
     }
     return true;
 }
-bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *next_dir_name, uint32_t next_index)
+
+uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *next_dir_name, uint32_t next_index)
 {
     uint32_t limit = 512;
     uint32_t index = 0;
@@ -301,7 +308,7 @@ bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *
     if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
     {
         printf("FAT: ROOT DIR sector :%d. \n", sector_number);
-        return false;
+        return 0;
     }
 
     uint8_t next_file_name[256] = {'\0'};
@@ -309,7 +316,7 @@ bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *
     if (next_length == 0)
     {
         printf("Length is zero. \n");
-        return false;
+        return 0;
     }
     while (index < limit)
     {
@@ -353,7 +360,7 @@ bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *
                         {
                             return search_directory_contents(first_cluster, &next_dir_name[0], next_index + next_length + 1);
                         }
-                        return true;
+                        return first_cluster;
                     }
                     index += sizeof(struct dir_sfn_entry);
                     // printf("INDEX : %d \n", index);
@@ -366,9 +373,13 @@ bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *
                     // printf("file attrib : %x  ", dir_entry->file_attrib);
                     uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
                     // printf("file first cluster : %x \n", first_cluster);
-                    if (dir_entry->file_attrib == ATTR_DIRECTORY && search_directory_contents(first_cluster, &next_dir_name[0], next_index))
+                    if (dir_entry->file_attrib == ATTR_DIRECTORY)
                     {
-                        return true;
+                        first_cluster = search_directory_contents(first_cluster, &next_dir_name[0], next_index);
+                        if (first_cluster != 0)
+                        {
+                            return first_cluster;
+                        }
                     }
                     break;
                 }
@@ -381,12 +392,66 @@ bool search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8_t *
         }
         index += sizeof(struct dir_sfn_entry);
     }
-    return false;
+    return 0;
 }
 
-void read_file(const uint8_t *absolute_file_name, uint8_t *file_buffer)
+void print_file_cluster_contents(uint32_t directory_first_sector)
 {
-    printf(" absolute_file_name: %s %s \n", absolute_file_name, file_buffer);
+    uint32_t first_root_dir_sector = getFirstSectorOfCluster(directory_first_sector);
+    uint32_t last_clust_root_dir_sector = first_root_dir_sector + current_sd_partition.sectorPerCluster;
+    uint32_t sector_number = first_root_dir_sector;
+    uint8_t buffer[512] __attribute__((aligned(4)));
+    bool is_done = false;
+    while (sector_number < last_clust_root_dir_sector && !is_done)
+    {
+        if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
+        {
+            printf("FAT: ROOT DIR sector :%d. \n", sector_number);
+            return;
+        }
+        uint32_t index = 0;
+        while(index < 512) {
+            if(buffer[index] == '\0') {
+                is_done = true;
+                break;
+            }
+            printf("%c", buffer[index]);
+            index++;
+        }
+        sector_number++;
+    }
+}
+
+void read_file(uint8_t *absolute_file_name)
+{
+    // printf(" absolute_file_name: %s %s \n", absolute_file_name, file_buffer);
+
+    uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
+    uint32_t cluster_number = get_file_size(absolute_file_name);
+
+    // Now it's time to check if we have multiple clusters for this directory using fat table.
+    uint32_t fat_sector_num, fat_entry_offset;
+    uint32_t old_fat_sector_num = 0;
+    while (cluster_number != 0x0fffffff && cluster_number != 0x0FFFFFF7 && cluster_number != 0)
+    {
+        getFatEntrySectorAndOffset(cluster_number, &fat_sector_num, &fat_entry_offset);
+
+        if (old_fat_sector_num != fat_sector_num)
+        {
+            // printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+            if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
+            {
+                printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+                return;
+            }
+        }
+
+        print_file_cluster_contents(cluster_number);
+
+        uint32_t *fat_entry_ptr = (uint32_t *)&fat_sector_buffer[fat_entry_offset];
+        cluster_number = (*fat_entry_ptr) & 0x0fffffff;
+        old_fat_sector_num = fat_sector_num;
+    }
 }
 
 void print_directory_contents(uint32_t directory_first_cluster)
