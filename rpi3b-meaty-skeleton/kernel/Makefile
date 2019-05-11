@@ -18,11 +18,13 @@ ARCHDIR=arch/$(HOSTARCH)
 MEMDIR=mem
 DEVICEDIR=device
 FSDIR=fs
+GRAPHICSDIR=graphics
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
 include $(DEVICEDIR)/make.config
 include $(FSDIR)/make.config
+include $(GRAPHICSDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -34,6 +36,7 @@ $(KERNEL_ARCH_OBJS) \
 $(KERNEL_MEM_OBJS) \
 $(KERNEL_DEVICE_OBJS) \
 $(KERNEL_FS_OBJS) \
+$(KERNEL_GRAPHICS_OBJS) \
 kernel/kernel.o \
 
 OBJS= $(KERNEL_OBJS)
