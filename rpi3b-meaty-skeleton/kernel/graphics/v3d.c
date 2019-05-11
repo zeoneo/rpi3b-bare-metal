@@ -2,7 +2,7 @@
 #include <kernel/rpi-mailbox-interface.h>
 #include <plibc/stdio.h>
 
-volatile uint32_t *v3d = (__attribute__((aligned(4))) uint32_t*)(uintptr_t)(V3D_BASE);
+#define v3d1 ((volatile __attribute__((aligned(4))) uint32_t *)(uintptr_t)(V3D_BASE))
 
 typedef enum {
 	CLK_EMMC_ID = 0x1,									// Mailbox Tag Channel EMMC clock ID 
@@ -19,21 +19,33 @@ typedef enum {
 
 // https://github.com/raspberrypi/documentation/blob/JamesH65-mailbox_docs/configuration/mailboxes/propertiesARM-VC.md
 
-bool init_v3d (void) {
+void set_max_speed() {
     RPI_PropertyInit();
-    RPI_PropertyAddTag(TAG_SET_CLOCK_RATE, CLK_V3D_ID, 250000000, 1);
-    RPI_PropertyAddTag(TAG_ENABLE_QPU, !0);
+    RPI_PropertyAddTag(TAG_GET_MAX_CLOCK_RATE, CLK_V3D_ID);
     RPI_PropertyProcess();
 
-    rpi_mailbox_property_t *mp = RPI_PropertyGet(TAG_SET_CLOCK_RATE);
+    rpi_mailbox_property_t *mp = RPI_PropertyGet(TAG_GET_MAX_CLOCK_RATE);
+    uint32_t max_clock_rate = mp->data.buffer_32[1];
+
+    RPI_PropertyInit();
+    RPI_PropertyAddTag(TAG_SET_CLOCK_RATE, CLK_V3D_ID, max_clock_rate, 1);
+    RPI_PropertyProcess();
+    mp = RPI_PropertyGet(TAG_SET_CLOCK_RATE);
 
     printf("\n clock_id: %d", (uint32_t)(mp->data.buffer_32[0]));
-    printf("\n clock state: %d v3d[V3D_IDENT0]:%x \n", (uint32_t)(mp->data.buffer_32[1]), v3d[V3D_IDENT0]);
+    printf("\n max_clock_rate: %d \n", max_clock_rate);
 
-	if (v3d[V3D_IDENT0] == 0x02443356) { // Magic number.
+}
+
+bool init_v3d (void) {
+    set_max_speed();
+    RPI_PropertyInit();
+    RPI_PropertyAddTag(TAG_ENABLE_QPU, !0);
+    RPI_PropertyProcess();
+    printf("\n v3d1[V3D_IDENT0]:%x \n", v3d1[V3D_IDENT0]);
+	if (v3d1[V3D_IDENT0] == 0x02443356) { // Magic number.
     	return true;
 	}
-
 	return false;
 }
 

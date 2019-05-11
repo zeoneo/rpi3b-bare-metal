@@ -712,11 +712,11 @@ uint32_t get_console_frame_buffer(uint32_t width, uint32_t height, uint32_t dept
 	console.wth = width;
 	console.ht = height;
 	console.depth = depth;
-    console.fb = frame_buffer_addr & (~0xC0000000);
+    console.fb = frame_buffer_addr & 0x3FFFFFFF; //(~0xC0000000);
 
     console.ClearArea = ClearArea16;
     console.WriteChar = WriteChar16;
 
     printf("\n frame_buffer_addr: %x frame_buffer_size %d  \n", frame_buffer_addr, frame_buffer_size);
-    return frame_buffer_addr;
+    return console.fb;
 }

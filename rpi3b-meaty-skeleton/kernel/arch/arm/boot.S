@@ -255,10 +255,31 @@ dmb:
 	mcr	p15, 0, r12, c7, c10, 5
     bx lr
 
+.section .text.ARMaddrToGPUaddr, "ax", %progbits
 .balign	4
-.globl GPUaddrToARMaddr;
+.globl ARMaddrToGPUaddr;		
+.type ARMaddrToGPUaddr, %function
+ARMaddrToGPUaddr:
+	mov r1, #0xC0000000												;@ Fetch bus alias	
+	orr r0, r0, r1										;@ Create bus address
+	bx   lr												;@ Return
+.balign	4
+.ltorg													;@ Tell assembler ltorg data for this code can go here
+.size	ARMaddrToGPUaddr, .-ARMaddrToGPUaddr
+
+;@"========================================================================="
+@#		GPUaddrToARMaddr -- Composite Pi1, Pi2 & Pi3 code
+@#		C Function: uint32_t GPUaddrToARMaddr (uint32_t BUSaddress);
+@#		Entry: R0 will have GPUAddress value
+;@"========================================================================="
+.section .text.GPUaddrToARMaddr, "ax", %progbits
+.balign	4
+.globl GPUaddrToARMaddr;		
+.type GPUaddrToARMaddr, %function
 GPUaddrToARMaddr:
-    mov r1, #0xC0000000				
+    mov r1, #0xC0000000											;@ Fetch bus alias	
 	bic r0, r0, r1										;@ Create arm address
 	bx   lr												;@ Return
 .balign	4
+.ltorg													;@ Tell assembler ltorg data for this code can go here
+.size	GPUaddrToARMaddr, .-GPUaddrToARMaddr

@@ -8,65 +8,6 @@
 #include<math.h>
 
 
-/* primitive typo\e in the GL pipline */
-typedef enum {
-	PRIM_POINT = 0,
-	PRIM_LINE = 1,
-	PRIM_LINE_LOOP = 2,
-	PRIM_LINE_STRIP = 3,
-	PRIM_TRIANGLE = 4,
-	PRIM_TRIANGLE_STRIP = 5,
-	PRIM_TRIANGLE_FAN = 6,
-} PRIMITIVE;
-
-
-/* These come from the blob information header .. they start at   KHRN_HW_INSTR_HALT */
-/* https://github.com/raspberrypi/userland/blob/a1b89e91f393c7134b4cdc36431f863bb3333163/middleware/khronos/common/2708/khrn_prod_4.h */
-/* GL pipe control commands */
-typedef enum {
-	GL_HALT = 0,
-	GL_NOP = 1,
-	GL_FLUSH = 4,
-	GL_FLUSH_ALL_STATE = 5,
-	GL_START_TILE_BINNING = 6,
-	GL_INCREMENT_SEMAPHORE = 7,
-	GL_WAIT_ON_SEMAPHORE = 8,
-	GL_BRANCH = 16,
-	GL_BRANCH_TO_SUBLIST = 17,
-	GL_RETURN_FROM_SUBLIST = 18,
-	GL_STORE_MULTISAMPLE = 24,
-	GL_STORE_MULTISAMPLE_END = 25,
-	GL_STORE_FULL_TILE_BUFFER = 26,
-	GL_RELOAD_FULL_TILE_BUFFER = 27,
-	GL_STORE_TILE_BUFFER = 28,
-	GL_LOAD_TILE_BUFFER = 29,
-	GL_INDEXED_PRIMITIVE_LIST = 32,
-	GL_VERTEX_ARRAY_PRIMITIVES = 33,
-	GL_VG_COORDINATE_ARRAY_PRIMITIVES = 41,
-	GL_COMPRESSED_PRIMITIVE_LIST = 48,
-	GL_CLIP_COMPRESSD_PRIMITIVE_LIST = 49,
-	GL_PRIMITIVE_LIST_FORMAT = 56,
-	GL_SHADER_STATE = 64,
-	GL_NV_SHADER_STATE = 65,
-	GL_VG_SHADER_STATE = 66,
-	GL_VG_INLINE_SHADER_RECORD = 67,
-	GL_CONFIG_STATE = 96,
-	GL_FLAT_SHADE_FLAGS = 97,
-	GL_POINTS_SIZE = 98,
-	GL_LINE_WIDTH = 99,
-	GL_RHT_X_BOUNDARY = 100,
-	GL_DEPTH_OFFSET = 101,
-	GL_CLIP_WINDOW = 102,
-	GL_VIEWPORT_OFFSET = 103,
-	GL_Z_CLIPPING_PLANES = 104,
-	GL_CLIPPER_XY_SCALING = 105,
-	GL_CLIPPER_Z_ZSCALE_OFFSET = 106, 
-	GL_TILE_BINNING_CONFIG = 112,
-	GL_TILE_RENDER_CONFIG = 113,
-	GL_CLEAR_COLORS = 114,
-	GL_TILE_COORDINATES = 115
-}  GL_CONTROL;
-
 /* Our vertex shader text we will compile */
 char vShaderStr[] =
 "uniform mat4 u_rotateMx;  \n"
@@ -89,7 +30,8 @@ char fShaderStr[] =
 "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
 "}                                                   \n";
 
-volatile uint32_t *v3d;
+#define v3d ((volatile __attribute__((aligned(4))) uint32_t *)(uintptr_t)(V3D_BASE))
+
 extern void* GPUaddrToARMaddr(uint32_t bus_addr);
 
 // int32_t load_shader(int32_t shaderType) {
@@ -134,7 +76,10 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
     }
 
     uint32_t bus_addr = v3d_mem_lock(handle);
-    uint8_t *list = (uint8_t *)(uintptr_t)GPUaddrToARMaddr(bus_addr);
+	uint32_t arm_addr = bus_addr & (~0xC0000000);
+
+	printf("handle :%x, bus_addr:%x arm_addr:%x", handle, bus_addr, arm_addr);
+    uint8_t *list = (uint8_t *)arm_addr;
     uint8_t *p = list;
 
     uint_fast32_t binWth = (renderWth + 63) / 64; // Tiles across
@@ -388,15 +333,18 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
 	v3d[V3D_CT0CA] = bus_addr;
 	v3d[V3D_CT0EA] = bus_addr + length;
 
+	printf("Wait for control list to execute\n");
 	// Wait for control list to execute
 	while (v3d[V3D_CT0CS] & 0x20)
 		;
 
+	printf("wait for binning to finish v3d[V3D_BFC]: %x \n", v3d[V3D_BFC]);
 	// wait for binning to finish
 	while (v3d[V3D_BFC] == 0)
 	{
 	}
 
+	printf("Stop Thread \n");
 	// stop the thread
 	v3d[V3D_CT0CS] = 0x20;
 
@@ -405,19 +353,24 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
 	v3d[V3D_CT1CA] = bus_addr + BUFFER_RENDER_CONTROL;
 	v3d[V3D_CT1EA] = bus_addr + BUFFER_RENDER_CONTROL + render_length;
 
+	printf("Wait for render to execute \n");
 	// Wait for render to execute
 	while (v3d[V3D_CT1CS] & 0x20)
 		;
 
+	printf("wait for render to finish \n");
 	// wait for render to finish
 	while (v3d[V3D_RFC] == 0)
 	{
 	}
 
+	printf(" stop the thread \n");
 	// stop the thread
 	v3d[V3D_CT1CS] = 0x20;
 
+	printf(" Release resources \n");
 	// Release resources
 	v3d_mem_unlock(handle);
 	v3d_mem_free(handle);
+	printf(" Returning  \n");
 }

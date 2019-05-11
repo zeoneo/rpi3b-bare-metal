@@ -16,6 +16,7 @@
 #include <graphics/v3d.h>
 #include <graphics/pi_console.h>
 #include <graphics/opengl_es.h>
+#include <graphics/opengl_es2.h>
 
 extern uint32_t __kernel_end;
 
@@ -26,8 +27,34 @@ typedef struct {
     float a;
 } colour_t;
 volatile int calculate_frame_count = 1;
+
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0])) 
+
 #define COLOUR_DELTA    0.05
-void screen_me(uint32_t fb_addr, uint32_t width, uint32_t height,uint32_t depth, uint32_t pitch1);
+
+static uint32_t shader1[18] = {  // Vertex Color Shader
+		0x958e0dbf, 0xd1724823,   /* mov r0, vary; mov r3.8d, 1.0 */
+		0x818e7176, 0x40024821,   /* fadd r0, r0, r5; mov r1, vary */
+        0x818e7376, 0x10024862,   /* fadd r1, r1, r5; mov r2, vary */
+		0x819e7540, 0x114248a3,   /* fadd r2, r2, r5; mov r3.8a, r0 */
+	    0x809e7009, 0x115049e3,   /* nop; mov r3.8b, r1 */
+		0x809e7012, 0x116049e3,   /* nop; mov r3.8c, r2 */
+		0x159e76c0, 0x30020ba7,   /* mov tlbc, r3; nop; thrend */
+		0x009e7000, 0x100009e7,   /* nop; nop; nop */
+		0x009e7000, 0x500009e7,   /* nop; nop; sbdone */
+};
+
+// static uint32_t shader2[12] = { // Fill Color Shader
+// 		0x009E7000, 0x100009E7,   // nop; nop; nop
+// 		0xFFFFFFFF,	0xE0020BA7,	  // ldi tlbc, RGBA White
+// 		0x009E7000, 0x500009E7,   // nop; nop; sbdone
+// 		0x009E7000, 0x300009E7,   // nop; nop; thrend
+// 		0x009E7000, 0x100009E7,   // nop; nop; nop
+// 		0x009E7000, 0x100009E7,   // nop; nop; nop
+// };
+
+static RENDER_STRUCT scene = { 0 };
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	// Declare as unused
@@ -66,7 +93,47 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 		printf("-------Successfully Initialized QPU----------\n");
 		uint32_t width =0, height =0, depth = 0, pitch =0;
 		get_console_width_height_depth(&width, &height, &depth, &pitch);
+		width = 640;
+		height = 480;
+		depth = 32;
 		uint32_t fb_addr = get_console_frame_buffer(width, height, depth);
+		// Arm Address we got here
+		printf("Init scene \n");
+		if(v3d_InitializeScene(&scene, width, height)) {
+			printf("Initialized the v3d scene \n");
+		} else {
+			printf("Failed to initialized the v3d scene \n");
+		}
+		printf("Init scene complete \n");
+		if(v3d_AddVertexesToScene(&scene)) {
+			printf("Added vertex to scene successfully \n");
+		} else {
+			printf("Failed Added vertex to scene successfully \n");
+		}
+		printf("Add vertex complete \n");
+		if(v3d_AddShadderToScene(&scene, &shader1[0], _countof(shader1))) {
+			printf("Add shaders successfully \n");
+		} else {
+			printf("Failed Add shaders successfully \n");
+		}
+		printf("Add shader complete \n");
+		if(v3d_SetupRenderControl(&scene, fb_addr)) {
+			printf("Set up render success \n");
+		} else {
+			printf("Failed to set up render \n");
+		}
+		printf("Add render control complete \n");
+		if(v3d_SetupBinningConfig(&scene)) {
+			printf(" Set up binning success \n");
+		} else {
+			printf(" Set up binning failed \n");
+		}
+		printf("setup binning render complete \n");
+		v3d_RenderScene(&scene);
+		printf("All done batman .. we have triangles\n");
+
+		// uint32_t arm_fb_addr = fb_addr | 0xC0000000;
+		/*
 		fb_addr = fb_addr & (~0xC0000000);
 		uint32_t *fb = (uint32_t *)fb_addr;
 		for(uint32_t x = 0; x < width/2; x++) {
@@ -84,6 +151,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 		}
 		console_puts("Hello World \n Hi there this is prakash \n");
 		printf("\n");
+		*/
 		// test_triangle(width, height, fb_addr);
 		// while (1){
 		// 	do_rotate(0.1f);
@@ -100,96 +168,3 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	}
 }
 
-
-void screen_me(uint32_t fb_addr, uint32_t width, uint32_t height,uint32_t depth, uint32_t pitch1) {
-	uint8_t *fb =  (uint8_t *) fb_addr;
-	uint32_t bpp = depth;
-	printf("fb_addr :%x \n", fb_addr);
-
-		uint32_t x, y, pitch = pitch1;
-		uint32_t pixel_offset;
-		uint32_t r, g, b, a;
-		float cd = COLOUR_DELTA;
-		uint32_t frame_count = 0;
-
-	colour_t current_colour;
-	current_colour.r = 0;
-	current_colour.g = 0;
-	current_colour.b = 0;
-	current_colour.a = 1.0;
-	while( 1 )
-	{
-		current_colour.r = 0;
-
-		/* Produce a colour spread across the screen */
-		for( y = 0; y < height ; y++ )
-		{
-			current_colour.r += ( 1.0 / height );
-			current_colour.b = 0;
-
-			for( x = 0; x < width; x++ )
-			{
-				pixel_offset = ( x * ( bpp >> 3 ) ) + ( y * pitch );
-
-				r = (int)( current_colour.r * 0xFF ) & 0xFF;
-				g = (int)( current_colour.g * 0xFF ) & 0xFF;
-				b = (int)( current_colour.b * 0xFF ) & 0xFF;
-				a = (int)( current_colour.b * 0xFF ) & 0xFF;
-
-				if( bpp == 32 )
-				{
-					/* Four bytes to write */
-					fb[ pixel_offset++ ] = r;
-					fb[ pixel_offset++ ] = g;
-					fb[ pixel_offset++ ] = b;
-					fb[ pixel_offset++ ] = a;
-				}
-				else if( bpp == 24 )
-				{
-					/* Three bytes to write */
-					fb[ pixel_offset++ ] = r;
-					fb[ pixel_offset++ ] = g;
-					fb[ pixel_offset++ ] = b;
-				}
-				else if( bpp == 16 )
-				{
-					/* Two bytes to write */
-					/* Bit pack RGB565 into the 16-bit pixel offset */
-					*(unsigned short*)&fb[pixel_offset] = ( (r >> 3) << 11 ) | ( ( g >> 2 ) << 5 ) | ( b >> 3 );
-				}
-				else
-				{
-					/* Palette mode. TODO: Work out a colour scheme for
-					packing rgb into an 8-bit palette! */
-				}
-
-				current_colour.b += ( 1.0 / width );
-			}
-		}
-
-		/* Scroll through the green colour */
-		current_colour.g += cd;
-		if( current_colour.g > 1.0 )
-		{
-			current_colour.g = 1.0;
-			cd = -COLOUR_DELTA;
-		}
-		else if( current_colour.g < 0.0 )
-		{
-			current_colour.g = 0.0;
-			cd = COLOUR_DELTA;
-		}
-
-		frame_count++;
-		if( calculate_frame_count )
-		{
-			calculate_frame_count = 0;
-
-			/* Number of frames in a minute, divided by seconds per minute */
-			// float fps = (float)frame_count / 60;
-			printf( "Frames: %d \r\n", frame_count );
-
-			frame_count = 0;
-		}
-	}
-}
