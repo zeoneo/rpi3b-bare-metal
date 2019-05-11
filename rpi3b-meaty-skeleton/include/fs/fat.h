@@ -45,37 +45,40 @@ extern "C"
 	};
 
 	typedef char lfn_name_t[256]; // long file name
-	typedef char sfn_name_t[11]; // short file name
+	typedef char sfn_name_t[11];  // short file name
 
-struct __attribute__((packed, aligned(1))) dir_sfn_entry {
-	sfn_name_t	short_file_name;
-	uint8_t		file_attrib;
-	uint8_t		reserved;					// always 0
-	uint8_t		time_in_tenth_of_sec;
-	uint16_t	last_write_time;
-	uint16_t	last_write_date;
-	uint16_t	last_access_date;
-	uint16_t	first_cluster_high; // This along with lower bytes form first cluster where data is stored.
-	uint16_t	file_creation_time;
-	uint16_t	file_creation_date;
-	uint16_t	first_cluster_low;
-	uint32_t	file_size_bytes;
-};
+	struct __attribute__((packed, aligned(1))) dir_sfn_entry
+	{
+		sfn_name_t short_file_name;
+		uint8_t file_attrib;
+		uint8_t reserved; // always 0
+		uint8_t time_in_tenth_of_sec;
+		uint16_t last_write_time;
+		uint16_t last_write_date;
+		uint16_t last_access_date;
+		uint16_t first_cluster_high; // This along with lower bytes form first cluster where data is stored.
+		uint16_t file_creation_time;
+		uint16_t file_creation_date;
+		uint16_t first_cluster_low;
+		uint32_t file_size_bytes;
+	};
 
-struct __attribute__((packed, aligned(1))) dir_lfn_entry {
-	uint8_t		LDIR_SeqNum;				// Long directory order		
-	uint8_t		LDIR_Name1[10];				// Characters 1-5 of long name (UTF 16) but misaligned again
-	uint8_t		LDIR_Attr;					// Long directory attribute .. always 0x0f	
-	uint8_t		LDIR_Type;					// Long directory type ... always 0x00
-	uint8_t		LDIR_ChkSum;				// Long directory checksum
-	uint16_t	LDIR_Name2[6];				// Characters 6-11 of long name (UTF 16)
-	uint16_t	LDIR_firstClusterLO;		// First cluster lo
-	uint16_t	LDIR_Name3[2];				// Characters 12-13 of long name (UTF 16)
-};
+	struct __attribute__((packed, aligned(1))) dir_lfn_entry
+	{
+		uint8_t LDIR_SeqNum;		  // Long directory order
+		uint8_t LDIR_Name1[10];		  // Characters 1-5 of long name (UTF 16) but misaligned again
+		uint8_t LDIR_Attr;			  // Long directory attribute .. always 0x0f
+		uint8_t LDIR_Type;			  // Long directory type ... always 0x00
+		uint8_t LDIR_ChkSum;		  // Long directory checksum
+		uint16_t LDIR_Name2[6];		  // Characters 6-11 of long name (UTF 16)
+		uint16_t LDIR_firstClusterLO; // First cluster lo
+		uint16_t LDIR_Name3[2];		  // Characters 12-13 of long name (UTF 16)
+	};
 
-bool initialize_fat();
-void print_root_directory_info();
-
+	bool initialize_fat();
+	void print_root_directory_info();
+	uint32_t get_file_size(uint8_t *absolute_file_name);
+	void read_file(const uint8_t *absolute_file_name, uint8_t *file_buffer);
 #ifdef __cplusplus
 }
 #endif
