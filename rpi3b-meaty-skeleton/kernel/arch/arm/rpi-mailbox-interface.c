@@ -164,6 +164,58 @@ void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...)
         pt[pt_index++] = va_arg(vl, unsigned int); //state
         break;
 
+    case TAG_ENABLE_QPU:
+        pt[pt_index++] = 4; //request length
+        pt[pt_index++] = 0;
+        pt[pt_index++] = va_arg(vl, unsigned int); // 0 turn off qpu !0 enable qpu;
+        break;
+
+    case TAG_EXECUTE_QPU:
+        pt[pt_index++] = 16; //request lenght
+        pt[pt_index++] = 0;
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 Jobs
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 Pointer to buffer, 24 words of 32 bits.
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 No flush
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 Timeout
+        break;
+
+    case TAG_ALLOCATE_MEMORY:
+        pt[pt_index++] = 12; //request length
+        pt[pt_index++] = 0; //request
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 size
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 alignment
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 flags
+
+        // MEM_FLAG_DISCARDABLE = 1 << 0, /* can be resized to 0 at any time. Use for cached data */
+        // MEM_FLAG_NORMAL = 0 << 2, /* normal allocating alias. Don't use from ARM */
+        // MEM_FLAG_DIRECT = 1 << 2, /* 0xC alias uncached */
+        // MEM_FLAG_COHERENT = 2 << 2, /* 0x8 alias. Non-allocating in L2 but coherent */
+        // MEM_FLAG_L1_NONALLOCATING = (MEM_FLAG_DIRECT | MEM_FLAG_COHERENT), /* Allocating in L2 */
+        // MEM_FLAG_ZERO = 1 << 4,  /* initialise buffer to all zeros */
+        // MEM_FLAG_NO_INIT = 1 << 5, /* don't initialise (default is initialise to all ones */
+        // MEM_FLAG_HINT_PERMALOCK = 1 << 6, /* Likely to be locked for long periods of time. */
+        break;
+
+    case TAG_LOCK_MEMORY:
+    case TAG_UNLOCK_MEMORY:
+    case TAG_RELEASE_MEMORY:
+        pt[pt_index++] = 4; //request length
+        pt[pt_index++] = 0; //request
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 handle
+        break;
+
+    case TAG_EXECUTE_CODE:
+        pt[pt_index++] = 28; //request length
+        pt[pt_index++] = 0; //request
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 function pointer
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r0
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r1
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r2
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r3
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r4
+        pt[pt_index++] = va_arg(vl, unsigned int); // u32 r5
+        break;
+
     default:
         /* Unsupported tags, just remove the tag from the list */
         pt_index--;

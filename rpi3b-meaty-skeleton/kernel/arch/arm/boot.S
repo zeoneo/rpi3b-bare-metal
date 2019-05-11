@@ -254,3 +254,11 @@ dmb:
 	mov	r12, #0
 	mcr	p15, 0, r12, c7, c10, 5
     bx lr
+
+.balign	4
+.globl GPUaddrToARMaddr;
+GPUaddrToARMaddr:
+    mov r1, #0xC0000000				
+	bic r0, r0, r1										;@ Create arm address
+	bx   lr												;@ Return
+.balign	4
