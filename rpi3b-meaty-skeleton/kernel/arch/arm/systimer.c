@@ -69,6 +69,14 @@ uint64_t timer_getTickCount64(void)
     return (resVal);                                        // Return the uint64_t timer tick count
 }
 
+uint64_t tick_difference (uint64_t us1, uint64_t us2) {
+	if (us1 > us2) {												// If timer one is greater than two then timer rolled
+		uint64_t td = UINT64_MAX - us1 + 1;							// Counts left to roll value
+		return us2 + td;											// Add that to new count
+	}
+	return us2 - us1;												// Return difference between values
+}
+
 void MicroDelay(uint64_t delayInUs)
 {
     uint64_t timer_tick = timer_getTickCount64();

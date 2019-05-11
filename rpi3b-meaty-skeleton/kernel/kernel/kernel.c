@@ -7,6 +7,7 @@
 #include <device/uart0.h>
 #include <device/dma.h>
 #include <device/usbd.h>
+#include <fs/fat.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
@@ -36,35 +37,20 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// udelay(4579 * 1000 * 10);
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
-	UsbInitialise();
+	// UsbInitialise();
 	// uint32_t address = KeyboardGetAddress(0);
-	// printf("Keyboard address: %d", address);
+	// uint32_t count = MouseCount();
+	// uint32_t mouse_address = MouseGetAddress(0);
 
-	uint32_t count = MouseCount();
-	printf("\n Mouse count: %d \n", count);
-	if (count == 0)
-	{
-		while (1)
-		{
-			/* code */
-		}
+	
+	if(initialize_fat()) {
+		printf("-------Successfully Initialized FAT----------\n");
+		print_root_directory_info();
+	} else {
+		printf("-------Failed to initialize FAT----------\n");
 	}
-	uint32_t mouse_address = MouseGetAddress(0);
-	// struct KeyboardLeds leds = {0};
+	
 	while (1)
 	{
-
-
-		MousePoll(mouse_address);
-		int16_t x = MouseGetPositionX(mouse_address);
-		int16_t y = MouseGetPositionY(mouse_address);
-		printf("Mouse X: %d  Y: %d \n", x, y);
-
-		// KeyboardUpdate(address);
-		// uint8_t key = KeyboardGetChar(address);
-		// if (key != 0)
-		// {
-		// 	printf("key pressed: > %c <\n", key);
-		// }
 	}
 }
