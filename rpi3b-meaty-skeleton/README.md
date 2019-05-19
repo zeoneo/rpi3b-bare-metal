@@ -36,3 +36,13 @@ Next task is to create user space. To dos
  - Add feature to read, load user program and execute it.
  
  
+ Wish list:
+  - Port gcc
+  - Support for ext2 file system
+  - Wifi (too ambitious ?)
+  - Self hosting
+  - Write/port editor
+  - Write 1 or 2 games
+ 
+ 
+ 
