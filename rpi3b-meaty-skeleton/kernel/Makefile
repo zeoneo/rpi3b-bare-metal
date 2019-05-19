@@ -12,17 +12,19 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror -Wno-sign-compare -std=c11  -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lgcc
+LIBS:=$(LIBS) -nostdlib -lk -lm -lgcc
 
 ARCHDIR=arch/$(HOSTARCH)
 MEMDIR=mem
 DEVICEDIR=device
 FSDIR=fs
+GRAPHICSDIR=graphics
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
 include $(DEVICEDIR)/make.config
 include $(FSDIR)/make.config
+include $(GRAPHICSDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -34,6 +36,7 @@ $(KERNEL_ARCH_OBJS) \
 $(KERNEL_MEM_OBJS) \
 $(KERNEL_DEVICE_OBJS) \
 $(KERNEL_FS_OBJS) \
+$(KERNEL_GRAPHICS_OBJS) \
 kernel/kernel.o \
 
 OBJS= $(KERNEL_OBJS)
