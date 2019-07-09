@@ -1,34 +1,48 @@
 #include <stdint.h>
-#include <plibc/stdio.h>
 #include <mem/virtmem.h>
-#include <device/uart0.h>
 
 extern uint32_t __kernel_end;
+
+extern uint32_t __code_start;
+extern uint32_t __text_boot_end_aligned;
 extern uint32_t __first_lvl_tbl_base;
-static uint32_t MMUTABLEBASE;
-extern void initialize_virtual_memory(void)
+extern uint32_t __second_lvl_tbl_base;
+extern uint32_t __second_lvl_tbl_end;
+
+// static uint32_t kernel_jump_addr;
+
+void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
 {
-    MMUTABLEBASE = (uint32_t)&__first_lvl_tbl_base;
-    // Identity Map whole kernel area upto __kernel_end in linker.ld
-    uint32_t ra;
-    for (ra = 0;; ra += 0x00100000)
-    {
-        mmu_section(ra, ra, 0x0000);
-        if (ra >= (uint32_t)&__kernel_end)
-        {
+
+    uint32_t MMUTABLEBASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__first_lvl_tbl_base - (uint32_t)&__code_start;
+
+    uint32_t SECOND_TBL_BASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__second_lvl_tbl_base - (uint32_t)&__code_start;
+    
+    // Identity Map boot.text section
+    mmu_page(0x8000, 0x8000, 0x0000, MMUTABLEBASE, SECOND_TBL_BASE);
+
+    // Map Higher half kernel
+    uint32_t ra = (uint32_t)&__text_boot_end_aligned;
+    uint32_t higher_half_kernel_end = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__second_lvl_tbl_end - (uint32_t)&__code_start;
+    uint32_t virt_addr = 0x80000000;
+    while(1) {
+        mmu_section(virt_addr, ra, 0x0000, MMUTABLEBASE);
+        ra += 0x00100000; // 4KB
+        virt_addr += 0x00100000;
+        if(ra > (higher_half_kernel_end + 0x00100000)) {
             break;
         }
     }
 
+    
     //peripherals
-    mmu_section(0x3f000000, 0x3f000000, 0x0000); //NOT CACHED!
-    mmu_section(0x3f200000, 0x3f200000, 0x0000); //NOT CACHED!
+    mmu_section(0x80000000 + 0x3f000000, 0x3f000000, 0x0000, MMUTABLEBASE); //NOT CACHED!
+    mmu_section(0x80000000 + 0x3f200000, 0x3f200000, 0x0000, MMUTABLEBASE); //NOT CACHED!
 
-    printf("Enabling MMU \n ");
     start_mmu(MMUTABLEBASE, 0x00000005);
 }
 
-uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags)
+uint32_t  __attribute__((section (".text.boot"))) mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags, uint32_t mmu_base)
 {
     uint32_t table1EntryOffset;
     uint32_t table1EntryAddress;
@@ -38,7 +52,7 @@ uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags)
     //and multiply it by 4 as each entry is 4 Bytes 32bits
 
     // MMU table base should be at 16KB granularity, Least signficant 12 bits will be always 0. hence do OR with that
-    table1EntryAddress = MMUTABLEBASE | table1EntryOffset;
+    table1EntryAddress = mmu_base | table1EntryOffset;
 
     // 31: 20  12 bits are physical 12 ms bits from physical address
     tableEntry = (padd & 0xFFF00000);
@@ -54,6 +68,25 @@ uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags)
 
     //hexstrings(rb); hexstring(rc);
     // printf("\n entryAddr: 0x%x, entry value:0x%x \n", table1EntryAddress, tableEntry);
-    PUT32(table1EntryAddress, tableEntry);
+    BOOT_PUT32(table1EntryAddress, tableEntry);
     return (0);
+}
+
+uint32_t __attribute__((section (".text.boot"))) mmu_page ( uint32_t vadd, uint32_t padd, uint32_t flags, uint32_t first_lvl_base, uint32_t second_lvl_base)
+{
+    uint32_t ra;
+    uint32_t rb;
+    uint32_t rc;
+
+    ra=vadd>>20;
+    rb=first_lvl_base|(ra<<2);
+    rc=(second_lvl_base&0xFFFFFC00)/*|(domain<<5)*/|1;
+    //hexstrings(rb); hexstring(rc);
+    BOOT_PUT32(rb,rc); //first level descriptor
+    ra=(vadd>>12)&0xFF;
+    rb=(second_lvl_base&0xFFFFFC00)|(ra<<2);
+    rc=(padd&0xFFFFF000)|(0xFF0)|flags|2;
+    //hexstrings(rb); hexstring(rc);
+    BOOT_PUT32(rb,rc); //second level descriptor
+    return(0);
 }

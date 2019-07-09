@@ -3,10 +3,10 @@
 #include <plibc/stdio.h>
 #include <kernel/rpi-interrupts.h>
 
-extern int dma_src_page_1;
-extern int dma_dest_page_1;
-extern int dma_dest_page_2;
-extern int dma_cb_page;
+int dma_src_page_1 = 0x0;
+int dma_dest_page_1 = 0x0;
+int dma_dest_page_2 = 0x0;
+int dma_cb_page = 0x0; //TODO: Fix this
 
 extern void PUT32(uint32_t addr, uint32_t value);
 

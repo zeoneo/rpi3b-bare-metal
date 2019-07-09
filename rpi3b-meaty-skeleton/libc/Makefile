@@ -1,4 +1,4 @@
-CFLAGS?=-O2 -g -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+CFLAGS?=-O2 -g -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare -nostdlib -nostartfiles -mgeneral-regs-only
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
