@@ -1,40 +1,41 @@
 #include <stdint.h>
-#include <mem/virtmem.h>
-
-extern uint32_t __kernel_end;
 
 extern uint32_t __code_start;
 extern uint32_t __text_boot_end_aligned;
 extern uint32_t __first_lvl_tbl_base;
 extern uint32_t __second_lvl_tbl_base;
-extern uint32_t __second_lvl_tbl_end;
+extern uint32_t __kernel_end;
 
-// static uint32_t kernel_jump_addr;
+extern void start_mmu(uint32_t mmu_base, uint32_t flags);
+extern void BOOT_PUT32(uint32_t address, uint32_t value);
+
+void initialize_virtual_memory(void);
+uint32_t mmu_section(uint32_t vadd, uint32_t padd, uint32_t flags, uint32_t mmu_base);
+uint32_t mmu_page ( uint32_t vadd, uint32_t padd, uint32_t flags, uint32_t first_lvl_base, uint32_t second_lvl_base);
 
 void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
 {
 
     uint32_t MMUTABLEBASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__first_lvl_tbl_base - (uint32_t)&__code_start;
-
     uint32_t SECOND_TBL_BASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__second_lvl_tbl_base - (uint32_t)&__code_start;
     
-    // Identity Map boot.text section
+    // Identity Map boot.text section 
+    // TODO: Convert this to loop instead of hardcoding addresses.
     mmu_page(0x8000, 0x8000, 0x0000, MMUTABLEBASE, SECOND_TBL_BASE);
 
     // Map Higher half kernel
     uint32_t ra = (uint32_t)&__text_boot_end_aligned;
-    uint32_t higher_half_kernel_end = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__second_lvl_tbl_end - (uint32_t)&__code_start;
+    uint32_t higher_half_kernel_end = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__kernel_end - (uint32_t)&__code_start;
     uint32_t virt_addr = 0x80000000;
     while(1) {
         mmu_section(virt_addr, ra, 0x0000, MMUTABLEBASE);
         ra += 0x00100000; // 4KB
         virt_addr += 0x00100000;
-        if(ra > (higher_half_kernel_end + 0x00100000)) {
+        if(ra >= (higher_half_kernel_end)) {
             break;
         }
     }
 
-    
     //peripherals
     mmu_section(0x80000000 + 0x3f000000, 0x3f000000, 0x0000, MMUTABLEBASE); //NOT CACHED!
     mmu_section(0x80000000 + 0x3f200000, 0x3f200000, 0x0000, MMUTABLEBASE); //NOT CACHED!
@@ -78,15 +79,13 @@ uint32_t __attribute__((section (".text.boot"))) mmu_page ( uint32_t vadd, uint3
     uint32_t rb;
     uint32_t rc;
 
-    ra=vadd>>20;
-    rb=first_lvl_base|(ra<<2);
-    rc=(second_lvl_base&0xFFFFFC00)/*|(domain<<5)*/|1;
-    //hexstrings(rb); hexstring(rc);
+    ra= vadd>>20;
+    rb= first_lvl_base|(ra<<2);
+    rc= (second_lvl_base & 0xFFFFFC00) |1;
     BOOT_PUT32(rb,rc); //first level descriptor
     ra=(vadd>>12)&0xFF;
     rb=(second_lvl_base&0xFFFFFC00)|(ra<<2);
     rc=(padd&0xFFFFF000)|(0xFF0)|flags|2;
-    //hexstrings(rb); hexstring(rc);
     BOOT_PUT32(rb,rc); //second level descriptor
     return(0);
 }

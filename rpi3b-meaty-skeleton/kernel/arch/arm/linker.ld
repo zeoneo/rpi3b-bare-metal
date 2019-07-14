@@ -34,13 +34,14 @@ SECTIONS
 	.rodata : { *(.rodata) }
 	.data : { *(.data) }
 
-    __bss_start = .;
-    .bss :
+    
+    .bss(NOLOAD) :
     {
-        bss = .;
-        *(.bss*)
+        __bss_start = .;
+        *(.bss)
+        __bss_end = .;
     }
-    __bss_end = .;
+    
 
     . = . + 131072; /* 128KB for svc stack */
     __svc_stack_base = .;
@@ -59,12 +60,7 @@ SECTIONS
     __second_lvl_tbl_base = .;
     . = . + 0x00100000; /* 1MB for 2nd level page tables */
     __second_lvl_tbl_end = .;
-
-    
-
+    . = ALIGN(0x00100000); 
     __kernel_end = .;
-    __kernel_size = __kernel_end - __code_start;
-    __physical_first_lvl_table_base = __text_boot_end_aligned + __first_lvl_tbl_base - __code_start;
-    __physical_second_lvl_table_end = __text_boot_end_aligned + __second_lvl_tbl_end - __code_start;
-
+    /* PROVIDE(__kernel_end = .); */
 }

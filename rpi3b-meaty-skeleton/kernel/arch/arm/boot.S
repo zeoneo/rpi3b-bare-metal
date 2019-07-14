@@ -92,11 +92,13 @@ _start:
     mov r0,#0xD3
     msr cpsr_c,r0
     mov sp, #0x8000 ;@ Temporarily initialize stack pointer to 0x8000 it will grow down to lower memory address
+    ;@ After mapping higher half of the kernel we need to reinitialize stack pointer
+    ;@ SP is initialized here bcoz I have poor asm skills and I need to call C funtion "initialize_virtual_memory" which might use stack pointer
+    ldr r8, =_clear_bss
 
-    ldr r8, =kernel_main
-
+    ldr r0, =__kernel_end
+    
     bl initialize_virtual_memory
-
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD2
     msr cpsr_c,r0
@@ -107,7 +109,7 @@ _start:
     msr cpsr_c,r0
     ldr sp, =__svc_stack_base
 
-    bx r8 ;@jump kernel
+    bx r8 ;@jump clear bss
 
     b _inf_loop
 

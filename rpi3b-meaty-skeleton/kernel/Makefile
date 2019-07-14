@@ -53,7 +53,7 @@ all: kernel8-32.img
 
 kernel8-32.img:kernel8-32.elf
 	arm-none-eabi-objdump -D kernel8-32.elf > kernel8-32.list
-	arm-none-eabi-nm  kernel8-32.elf  > kernel8-32.map
+	arm-none-eabi-nm --demangle -gn --defined-only kernel8-32.elf  > kernel8-32.map
 	arm-none-eabi-objcopy kernel8-32.elf -O binary kernel8-32.img
 
 kernel8-32.elf: $(OBJS) $(ARCHDIR)/linker.ld
