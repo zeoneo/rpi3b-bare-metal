@@ -20,12 +20,12 @@ void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
     boot_uart_init();
 
     uint32_t text_boot_end_aligned, first_lvl_tbl_base, second_lvl_tbl_base, virt_start, code_start, kernel_end;
-    __asm__ volatile("ldr %[result], =__text_boot_end_aligned" : [result] "=r" (text_boot_end_aligned));
-    __asm__ volatile("ldr %[result], =__first_lvl_tbl_base" : [result] "=r" (first_lvl_tbl_base));
-    __asm__ volatile("ldr %[result], =__second_lvl_tbl_base" : [result] "=r" (second_lvl_tbl_base));
-    __asm__ volatile("ldr %[result], =__code_start" : [result] "=r" (code_start));
-    __asm__ volatile("ldr %[result], =__kernel_end" : [result] "=r" (kernel_end));
-    __asm__ volatile("ldr %[result], =__virt_start" : [result] "=r" (virt_start));
+    __asm__ volatile("ldr %[sym_addr], =__text_boot_end_aligned" : [sym_addr] "=r" (text_boot_end_aligned));
+    __asm__ volatile("ldr %[sym_addr], =__first_lvl_tbl_base" : [sym_addr] "=r" (first_lvl_tbl_base));
+    __asm__ volatile("ldr %[sym_addr], =__second_lvl_tbl_base" : [sym_addr] "=r" (second_lvl_tbl_base));
+    __asm__ volatile("ldr %[sym_addr], =__code_start" : [sym_addr] "=r" (code_start));
+    __asm__ volatile("ldr %[sym_addr], =__kernel_end" : [sym_addr] "=r" (kernel_end));
+    __asm__ volatile("ldr %[sym_addr], =__virt_start" : [sym_addr] "=r" (virt_start));
 
     boot_hexstrings(text_boot_end_aligned);
     boot_hexstrings(first_lvl_tbl_base);
@@ -35,10 +35,11 @@ void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
 
     uint32_t MMUTABLEBASE = text_boot_end_aligned + first_lvl_tbl_base - code_start;
     uint32_t SECOND_TBL_BASE = text_boot_end_aligned + second_lvl_tbl_base - code_start;
-
+    boot_hexstrings(SECOND_TBL_BASE);
     // Identity Map boot.text section 
     // TODO: Convert this to loop instead of hardcoding addresses.
     mmu_page(0x8000, 0x8000, 0x0000, MMUTABLEBASE, SECOND_TBL_BASE);
+    //mmu_section(0x8000, 0x8000, 0x0000, MMUTABLEBASE);
 
     // Map Higher half kernel
     uint32_t phys_addr = text_boot_end_aligned;
@@ -85,6 +86,10 @@ uint32_t  __attribute__((section (".text.boot"))) mmu_section(uint32_t vadd, uin
 
     //hexstrings(rb); hexstring(rc);
     // printf("\n entryAddr: 0x%x, entry value:0x%x \n", table1EntryAddress, tableEntry);
+    boot_uart_putc('e');
+    boot_hexstrings(table1EntryOffset);
+        boot_uart_putc('b');
+    boot_hexstrings(mmu_base);
     boot_uart_putc('s');
     boot_hexstrings(table1EntryAddress);
     boot_uart_putc('\n');
@@ -105,10 +110,13 @@ uint32_t __attribute__((section (".text.boot"))) mmu_page ( uint32_t vadd, uint3
     ra=(vadd>>12)&0xFF;
     rb=(second_lvl_base&0xFFFFFC00)|(ra<<2);
     rc=(padd&0xFFFFF000)|(0xFF0)|flags|2;
-    boot_uart_putc('r');
+    boot_uart_putc('\n');
+    boot_uart_putc('f');
     boot_hexstrings(first_lvl_base);
-    boot_uart_putc('p');
+    boot_uart_putc('b');
     boot_hexstrings(second_lvl_base);
+    boot_uart_putc('e');
+    boot_hexstrings(rb);
     boot_uart_putc('\n');
     BOOT_PUT32(rb,rc); //second level descriptor
     return(0);

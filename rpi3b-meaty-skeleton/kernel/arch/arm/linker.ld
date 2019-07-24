@@ -55,7 +55,7 @@ SECTIONS
     . = ALIGN(16384); /* align 16KB for page tables */
 
     __first_lvl_tbl_base = .;
-    . = . + 4096; /* First level page table size */
+    . = . + 16384; /* First level page table size */
     __first_lvl_tbl_end = .;
 
     /* 1KB for each 2nd lvl page table = 4 Bytes * 256 */
