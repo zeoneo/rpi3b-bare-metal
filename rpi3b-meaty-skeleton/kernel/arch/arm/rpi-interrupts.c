@@ -1,9 +1,9 @@
-#include <plibc/stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel/rpi-base.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
+#include <klib/printk.h>
 #include <device/uart0.h>
 
 #define INTERRUPTS_PENDING (RPI_INTERRUPT_CONTROLLER_BASE + 0x200)
@@ -94,7 +94,6 @@ void __attribute__((interrupt("FIQ"))) fast_interrupt_vector(void)
 
 void interrupts_init(void)
 {
-    _enable_interrupts();
     DISABLE_INTERRUPTS();
     bzero(handlers, sizeof(interrupt_handler_f) * NUM_IRQS);
     bzero(clearers, sizeof(interrupt_clearer_f) * NUM_IRQS);
@@ -109,7 +108,7 @@ void interrupts_init(void)
  */
 void irq_handler(void)
 {
-    printf("IRQ triggered");
+    printk("IRQ triggered");
     int32_t j;
     for (j = 0; j < NUM_IRQS; j++)
     {
@@ -151,7 +150,7 @@ void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, int
     }
     else
     {
-        printf("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
+        printk("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
 }
 void unregister_irq_handler(irq_number_t irq_num)
@@ -181,7 +180,7 @@ void unregister_irq_handler(irq_number_t irq_num)
     }
     else
     {
-        printf("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
+        printk("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
 }
 

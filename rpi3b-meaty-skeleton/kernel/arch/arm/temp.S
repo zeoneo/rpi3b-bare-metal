@@ -113,3 +113,4 @@ GPUaddrToARMaddr:
 .balign	4
 .ltorg													;@ Tell assembler ltorg data for this code can go here
 .size	GPUaddrToARMaddr, .-GPUaddrToARMaddr
+

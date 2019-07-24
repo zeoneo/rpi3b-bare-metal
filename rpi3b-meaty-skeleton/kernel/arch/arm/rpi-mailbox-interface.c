@@ -253,7 +253,7 @@ rpi_mailbox_property_t *RPI_PropertyGet(rpi_mailbox_tag_t tag)
 
     while (index < (pt[PT_OSIZE] >> 2))
     {
-        /* printf( "Test Tag: [%d] %8.8X\r\n", index, pt[index] ); */
+        /* printk( "Test Tag: [%d] %8.8X\r\n", index, pt[index] ); */
         if (pt[index] == (int32_t)tag)
         {
             tag_buffer = &pt[index];

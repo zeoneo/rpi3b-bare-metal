@@ -6,7 +6,7 @@
 #include <device/hcd.h>
 #include <device/hid.h>
 #include <device/usb-mem.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 #include <device/usbd.h>
 #include <device/hub.h>
 
@@ -31,18 +31,18 @@ void UsbShowTree(struct UsbDevice *root, const int level, const char tee)
 	{
 		if (TreeLevelInUse[i] == 0)
 		{
-			printf("   ");
+			printk("   ");
 		}
 		else
 		{
-			printf(" %c ", '\xB3'); // Draw level lines if in use
+			printk(" %c ", '\xB3'); // Draw level lines if in use
 		}
 	}
 	int maxPacket = SizeFromNumber(root->Descriptor.MaxPacketSize0);
 	struct HubDevice *hubDev = (struct HubDevice *)root->DriverData;
 
-	printf(" %c-%s id: %d port: %d speed: %s packetsize: %d \n", tee, UsbGetDescription(root), root->Number, root->PortNumber, SpeedToChar(root->Speed), maxPacket);
-	// printf(" %c --%s id: %d port: %d \n", tee, UsbGetDescription(root), root->PortNumber, root->Parent->PortNumber); // Print this entry
+	printk(" %c-%s id: %d port: %d speed: %s packetsize: %d \n", tee, UsbGetDescription(root), root->Number, root->PortNumber, SpeedToChar(root->Speed), maxPacket);
+	// printk(" %c --%s id: %d port: %d \n", tee, UsbGetDescription(root), root->PortNumber, root->Parent->PortNumber); // Print this entry
 	if (root->DriverData->DeviceDriver == DeviceDriverHub)
 	{
 
@@ -68,7 +68,7 @@ void UsbShowTree(struct UsbDevice *root, const int level, const char tee)
 	}
 	// else
 	// {
-	// 	printf("Descriptor is not hub. :%d \n", root->Descriptor.DescriptorType);
+	// 	printk("Descriptor is not hub. :%d \n", root->Descriptor.DescriptorType);
 	// }
 }
 
@@ -79,22 +79,22 @@ Result UsbControlMessage(struct UsbDevice *device,
 	Result result;
 
 	uint32_t *buffer = (uint32_t *)input_buffer;
-	// printf("USBD_PRAKASH: Input buffer. address: %x buffer:%x \n", input_buffer, buffer);
+	// printk("USBD_PRAKASH: Input buffer. address: %x buffer:%x \n", input_buffer, buffer);
 	if (((uint32_t)buffer & 0x3) != 0)
 	{
-		printf("USBD: Warning message buffer not word aligned. address: %x \n", buffer);
+		printk("USBD: Warning message buffer not word aligned. address: %x \n", buffer);
 	}
 
 	result = HcdSumbitControlMessage(device, pipe, buffer, bufferLength, request);
 
 	if (result != OK)
 	{
-		printf("USBD: Failed to send message to %s: %d.\n", UsbGetDescription(device), result);
+		printk("USBD: Failed to send message to %s: %d.\n", UsbGetDescription(device), result);
 		return result;
 	}
 	// else
 	// {
-	// 	printf("USBD_PRAKASH: HcdSubmit control message ok.\n");
+	// 	printk("USBD_PRAKASH: HcdSubmit control message ok.\n");
 	// }
 
 	while (timeout-- > 0 && (device->Error & Processing))
@@ -103,36 +103,36 @@ Result UsbControlMessage(struct UsbDevice *device,
 		uint64_t timer_tick = timer_getTickCount64();
 		while (timer_getTickCount64() < (timer_tick + 10000))
 			;
-		// printf("Wating 10000 micros seconds completed .\n");
+		// printk("Wating 10000 micros seconds completed .\n");
 	}
-	// printf("USBD_PRAKASH: Wating complete.\n");
+	// printk("USBD_PRAKASH: Wating complete.\n");
 	if ((device->Error & Processing))
 	{
-		printf("USBD: Message to %s timeout reached.\n", UsbGetDescription(device));
+		printk("USBD: Message to %s timeout reached.\n", UsbGetDescription(device));
 		return ErrorTimeout;
 	}
 
 	if (device->Error & ~Processing)
 	{
-		printf("USBD:device->Error & ~Processing.\n");
+		printk("USBD:device->Error & ~Processing.\n");
 		if (device->Parent != NULL && device->Parent->DeviceCheckConnection != NULL)
 		{
 			// Check we're still connected!
-			printf("USBD: Verifying %s is still connected.\n", UsbGetDescription(device));
+			printk("USBD: Verifying %s is still connected.\n", UsbGetDescription(device));
 			if ((result = device->Parent->DeviceCheckConnection(device->Parent, device)) != OK)
 			{
 				return ErrorDisconnected;
 			}
-			printf("USBD: Yes, %s is still connected.\n", UsbGetDescription(device));
+			printk("USBD: Yes, %s is still connected.\n", UsbGetDescription(device));
 		}
 		else
 		{
-			printf("USBD_PRAKASH: device->Parent->DeviceCheckConnection: %x.\n", device->Parent->DeviceCheckConnection);
+			printk("USBD_PRAKASH: device->Parent->DeviceCheckConnection: %x.\n", device->Parent->DeviceCheckConnection);
 		}
 		result = ErrorDevice;
 	}
 
-	// printf("USBD_PRAKASH: Control message  exiting at end. result: %d \n", result);
+	// printk("USBD_PRAKASH: Control message  exiting at end. result: %d \n", result);
 	return result;
 }
 
@@ -154,7 +154,7 @@ Result UsbSetConfiguration(struct UsbDevice *device, uint8_t configuration)
 
 	if (device->Status != Addressed)
 	{
-		printf("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
+		printk("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
 		return ErrorDevice;
 	}
 
@@ -208,13 +208,13 @@ Result UsbGetDescriptor(struct UsbDevice *device, enum DescriptorType type,
 			 },
 			 ControlMessageTimeout)) != OK)
 	{
-		printf("USBD: Failed to get descriptor %x:%x for device %s. Result %x.\n", type, index, UsbGetDescription(device), result);
+		printk("USBD: Failed to get descriptor %x:%x for device %s. Result %x.\n", type, index, UsbGetDescription(device), result);
 		return result;
 	}
 
 	if (device->LastTransfer < minimumLength)
 	{
-		printf("USBD: Unexpectedly short descriptor (%d/%d) %x:%x for device %s. Result %x.\n", device->LastTransfer, minimumLength, type, index, UsbGetDescription(device), result);
+		printk("USBD: Unexpectedly short descriptor (%d/%d) %x:%x for device %s. Result %x.\n", device->LastTransfer, minimumLength, type, index, UsbGetDescription(device), result);
 		return ErrorDevice;
 	}
 
@@ -330,48 +330,48 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 
 	if (device->Status != Addressed)
 	{
-		printf("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
+		printk("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
 		return ErrorDevice;
 	}
 
 	if ((result = UsbGetDescriptor(device, Configuration, configuration, 0, (void *)&device->Configuration, sizeof(device->Configuration), sizeof(device->Configuration), 0)) != OK)
 	{
-		printf("USBD: Failed to retrieve configuration descriptor %x for device %s.\n", configuration, UsbGetDescription(device));
+		printk("USBD: Failed to retrieve configuration descriptor %x for device %s.\n", configuration, UsbGetDescription(device));
 		return result;
 	}
 
 	if ((fullDescriptor = MemoryAllocate(device->Configuration.TotalLength)) == NULL)
 	{
-		printf("USBD: Failed to allocate space for descriptor.\n");
+		printk("USBD: Failed to allocate space for descriptor.\n");
 		return ErrorMemory;
 	}
 	if ((result = UsbGetDescriptor(device, Configuration, configuration, 0, fullDescriptor, device->Configuration.TotalLength, device->Configuration.TotalLength, 0)) != OK)
 	{
-		printf("USBD: Failed to retrieve full configuration descriptor %x for device %s.\n", configuration, UsbGetDescription(device));
+		printk("USBD: Failed to retrieve full configuration descriptor %x for device %s.\n", configuration, UsbGetDescription(device));
 		goto deallocate;
 	}
 
 	device->ConfigurationIndex = configuration;
 	configuration = device->Configuration.ConfigurationValue;
-	printf("USBD: Configuration device->Configuration.TotalLength: %d \n", device->Configuration.TotalLength);
-	printf("USBD_INTERFACE_COUNT: : %d \n", device->Configuration.InterfaceCount);
+	printk("USBD: Configuration device->Configuration.TotalLength: %d \n", device->Configuration.TotalLength);
+	printk("USBD_INTERFACE_COUNT: : %d \n", device->Configuration.InterfaceCount);
 	header = fullDescriptor;
 	lastInterface = MaxInterfacesPerDevice;
 	lastEndpoint = MaxEndpointsPerDevice;
 	isAlternate = false;
 
-	// printf("USBD_PRAKASH: Entering for loop: ---------------------************************\n");
+	// printk("USBD_PRAKASH: Entering for loop: ---------------------************************\n");
 	for (header = (struct UsbDescriptorHeader *)((uint8_t *)header + header->DescriptorLength);
 		 (uint32_t)header - (uint32_t)fullDescriptor < device->Configuration.TotalLength;
 		 header = (struct UsbDescriptorHeader *)((uint8_t *)header + header->DescriptorLength))
 	{
-		// printf("USBD_PRAKASH: in for loop: \n");
+		// printk("USBD_PRAKASH: in for loop: \n");
 		switch (header->DescriptorType)
 		{
 		case Interface:
-			// printf("USBD_PRAKASH: Interface Descriptor type: \n");
+			// printk("USBD_PRAKASH: Interface Descriptor type: \n");
 			interface = (struct UsbInterfaceDescriptor *)header;
-			// printf("USBD_PRAKASH_ENDPOINT_COUNT: %d: \n", interface->EndpointCount);
+			// printk("USBD_PRAKASH_ENDPOINT_COUNT: %d: \n", interface->EndpointCount);
 			if (lastInterface != interface->Number)
 			{
 				MemoryCopy((void *)&device->Interfaces[lastInterface = interface->Number], (void *)interface, sizeof(struct UsbInterfaceDescriptor));
@@ -382,47 +382,47 @@ Result UsbConfigure(struct UsbDevice *device, uint8_t configuration)
 				isAlternate = true;
 			break;
 		case Endpoint:
-			// printf("USBD_PRAKASH: End point Descriptor type: \n");
+			// printk("USBD_PRAKASH: End point Descriptor type: \n");
 			if (isAlternate)
 			{
 				break;
-				printf("USBD_PRAKASH: End point Descriptor type Is alternate break: \n");
+				printk("USBD_PRAKASH: End point Descriptor type Is alternate break: \n");
 			}
 
 			if (lastInterface == MaxInterfacesPerDevice || lastEndpoint >= device->Interfaces[lastInterface].EndpointCount)
 			{
-				printf("USBD: Unexpected endpoint descriptor in %s.Interface%d.\n", UsbGetDescription(device), lastInterface + 1);
+				printk("USBD: Unexpected endpoint descriptor in %s.Interface%d.\n", UsbGetDescription(device), lastInterface + 1);
 				break;
 			}
 			endpoint = (struct UsbEndpointDescriptor *)header;
 			MemoryCopy((void *)&device->Endpoints[lastInterface][lastEndpoint++], (void *)endpoint, sizeof(struct UsbEndpointDescriptor));
-			// printf("USBD_PRAKASH: End point Descriptor type mmcopied: \n");
+			// printk("USBD_PRAKASH: End point Descriptor type mmcopied: \n");
 			break;
 		default:
-			// printf("USBD_PRAKASH: DEFAULT Descriptor type: \n");
+			// printk("USBD_PRAKASH: DEFAULT Descriptor type: \n");
 			if (header->DescriptorLength == 0)
 			{
-				printf("USBD_PRAKASH: DEFAULT Descriptor type DEsc length 0. go to: \n");
+				printk("USBD_PRAKASH: DEFAULT Descriptor type DEsc length 0. go to: \n");
 				goto headerLoopBreak;
 			}
 
 			break;
 		}
 
-		// printf("USBD: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, lastInterface);
+		// printk("USBD: Descriptor %d length %d, interface %d.\n", header->DescriptorType, header->DescriptorLength, lastInterface);
 	}
-	// printf("USBD_PRAKASH: Out of for loop: ---------------------************************\n");
+	// printk("USBD_PRAKASH: Out of for loop: ---------------------************************\n");
 headerLoopBreak:
 
 	if ((result = UsbSetConfiguration(device, configuration)) != OK)
 	{
-		printf("USBD_PRAK: UsbSetConfiguration not ok: \n");
+		printk("USBD_PRAK: UsbSetConfiguration not ok: \n");
 		goto deallocate;
 	}
-	printf("USBD: %s configuration %d. Class %d, subclass %d.\n", UsbGetDescription(device), configuration, device->Interfaces[0].Class, device->Interfaces[0].SubClass);
+	printk("USBD: %s configuration %d. Class %d, subclass %d.\n", UsbGetDescription(device), configuration, device->Interfaces[0].Class, device->Interfaces[0].SubClass);
 
 	device->FullConfiguration = fullDescriptor;
-	printf("USBD_PRAK: returning usb configure success: \n");
+	printk("USBD_PRAK: returning usb configure success: \n");
 	return OK;
 deallocate:
 	MemoryDeallocate(fullDescriptor);
@@ -444,12 +444,12 @@ Result UsbReadString(struct UsbDevice *device, uint8_t stringIndex, char *buffer
 
 	if (result != OK)
 	{
-		printf("USBD: Error getting language list from %s.\n", UsbGetDescription(device));
+		printk("USBD: Error getting language list from %s.\n", UsbGetDescription(device));
 		return result;
 	}
 	else if (device->LastTransfer < 4)
 	{
-		printf("USBD: Unexpectedly short language list from %s.\n", UsbGetDescription(device));
+		printk("USBD: Unexpectedly short language list from %s.\n", UsbGetDescription(device));
 		return ErrorDevice;
 	}
 
@@ -510,7 +510,7 @@ Result UsbSetInterface(struct UsbDevice *device, uint8_t interface)
 
 	if (device->Status != Default)
 	{
-		printf("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
+		printk("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
 		return ErrorDevice;
 	}
 
@@ -536,7 +536,7 @@ Result UsbSetInterface(struct UsbDevice *device, uint8_t interface)
 
 	MicroDelay(10000);
 
-	printf("USBD_PRAKASH: Interface  set successful.\n");
+	printk("USBD_PRAKASH: Interface  set successful.\n");
 	return OK;
 }
 
@@ -546,7 +546,7 @@ Result UsbSetAddress(struct UsbDevice *device, uint8_t address)
 
 	if (device->Status != Default)
 	{
-		printf("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
+		printk("USBD: Illegal attempt to configure device %s in state %x.\n", UsbGetDescription(device), device->Status);
 		return ErrorDevice;
 	}
 
@@ -575,7 +575,7 @@ Result UsbSetAddress(struct UsbDevice *device, uint8_t address)
 	device->Number = address;
 	device->Status = Addressed;
 
-	printf("USBD_PRAKASH: Address set successful.\n");
+	printk("USBD_PRAKASH: Address set successful.\n");
 	return OK;
 }
 
@@ -592,18 +592,18 @@ Result UsbInitialise()
 
 	if (sizeof(struct UsbDeviceRequest) != 0x8)
 	{
-		printf("USBD: Incorrectly compiled driver. UsbDeviceRequest: %x (0x8).\n",
+		printk("USBD: Incorrectly compiled driver. UsbDeviceRequest: %x (0x8).\n",
 			   sizeof(struct UsbDeviceRequest));
 		return ErrorCompiler; // Correct packing settings are required.
 	}
 	else
 	{
-		printf("USBD: Size of usb device request :%d", sizeof(struct UsbDeviceRequest));
+		printk("USBD: Size of usb device request :%d", sizeof(struct UsbDeviceRequest));
 	}
 
 	if ((result = HcdInitialize()) != OK)
 	{
-		printf("USBD: Abort, HCD failed to initialise.\n");
+		printk("USBD: Abort, HCD failed to initialise.\n");
 		return result;
 	}
 
@@ -623,21 +623,21 @@ Result UsbAttachRootHub()
 {
 	Result result;
 	struct UsbDevice *rootHub;
-	printf("USBD_PRAKASH: Scanning for devices. \n");
+	printk("USBD_PRAKASH: Scanning for devices. \n");
 	if (Devices[0] != NULL)
 	{
 		UsbDeallocateDevice(Devices[0]);
-		printf("USBD: de allocated earlier device. \n");
+		printk("USBD: de allocated earlier device. \n");
 	}
 	if ((result = UsbAllocateDevice(&rootHub)) != OK)
 	{
-		printf("USBD_PRAKASH: Could not allocated root hub. \n");
+		printk("USBD_PRAKASH: Could not allocated root hub. \n");
 		return result;
 	}
 
 	Devices[0]->Status = Powered;
 
-	printf("USBD_PRAKASH: Calling USB Attach Device. \n");
+	printk("USBD_PRAKASH: Calling USB Attach Device. \n");
 	return UsbAttachDevice(Devices[0]);
 }
 
@@ -656,7 +656,7 @@ Result UsbAllocateDevice(struct UsbDevice **device)
 		}
 	}
 
-	printf("USBD: Allocating new device, address %x.\n", (*device)->Number);
+	printk("USBD: Allocating new device, address %x.\n", (*device)->Number);
 
 	(*device)->Status = Attached;
 	(*device)->Error = None;
@@ -683,50 +683,50 @@ Result UsbAttachDevice(struct UsbDevice *device)
 	// Store the address until it is actually assigned.
 	address = device->Number;
 	device->Number = 0;
-	printf("USBD: Scanning %d. %s.\n", address, SpeedToChar(device->Speed));
+	printk("USBD: Scanning %d. %s.\n", address, SpeedToChar(device->Speed));
 
 	if ((result = UsbReadDeviceDescriptor(device)) != OK)
 	{
-		printf("USBD: Failed to read device descriptor for %d.\n", address);
+		printk("USBD: Failed to read device descriptor for %d.\n", address);
 		device->Number = address;
 		return result;
 	}
 
-	printf("USBD_CONF_COUNT: %d \n", device->Descriptor.ConfigurationCount);
+	printk("USBD_CONF_COUNT: %d \n", device->Descriptor.ConfigurationCount);
 
 	device->Status = Default;
 
 	if (device->Parent != NULL)
 	{
-		printf("USBD_PRAK: Found real device.\n");
+		printk("USBD_PRAK: Found real device.\n");
 		if (device->Parent->DeviceChildReset != NULL)
 		{
 			// DeviceChildReset -> HubChildReset
 			// Reset the port for what will be the second time.
 			if ((result = device->Parent->DeviceChildReset(device->Parent, device)) != OK)
 			{
-				printf("USBD: Failed to reset port again for new device %s.\n", UsbGetDescription(device));
+				printk("USBD: Failed to reset port again for new device %s.\n", UsbGetDescription(device));
 				device->Number = address;
 				return result;
 			}
 			else
 			{
-				printf("USBD_PRAK: DeviceChildReset Child reset successful.\n");
+				printk("USBD_PRAK: DeviceChildReset Child reset successful.\n");
 			}
 		}
 		else
 		{
-			printf("USBD_PRAK: DeviceChildReset is not set.\n");
+			printk("USBD_PRAK: DeviceChildReset is not set.\n");
 		}
 	}
 	else
 	{
-		printf("USBD_PRAK: Found Fake root device.\n");
+		printk("USBD_PRAK: Found Fake root device.\n");
 	}
 
 	if ((result = UsbSetAddress(device, address)) != OK)
 	{
-		printf("USBD: Failed to assign address to %x.\n", address);
+		printk("USBD: Failed to assign address to %x.\n", address);
 		device->Number = address;
 		return result;
 	}
@@ -737,15 +737,15 @@ Result UsbAttachDevice(struct UsbDevice *device)
 
 	if ((result = UsbReadDeviceDescriptor(device)) != OK)
 	{
-		printf("USBD: Failed to reread device descriptor for %x.\n", address);
+		printk("USBD: Failed to reread device descriptor for %x.\n", address);
 		return result;
 	}
 
-	printf("USBD: Attach Device %s. Address:%d Class:%d Subclass:%d USB:%x.%x. %d configurations, %d interfaces.\n",
+	printk("USBD: Attach Device %s. Address:%d Class:%d Subclass:%d USB:%x.%x. %d configurations, %d interfaces.\n",
 		   UsbGetDescription(device), address, device->Descriptor.Class, device->Descriptor.SubClass, device->Descriptor.UsbVersion >> 8,
 		   (device->Descriptor.UsbVersion >> 4) & 0xf, device->Descriptor.ConfigurationCount, device->Configuration.InterfaceCount);
 
-	printf("USBD: Device Attached: %s.\n", UsbGetDescription(device));
+	printk("USBD: Device Attached: %s.\n", UsbGetDescription(device));
 	buffer = NULL;
 
 	if (device->Descriptor.Product != 0)
@@ -756,7 +756,7 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		{
 			result = UsbReadString(device, device->Descriptor.Product, buffer, 0x100);
 			if (result == OK)
-				printf("USBD:  -Product:       %s.\n", buffer);
+				printk("USBD:  -Product:       %s.\n", buffer);
 		}
 	}
 	if (device->Descriptor.Manufacturer != 0)
@@ -767,7 +767,7 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		{
 			result = UsbReadString(device, device->Descriptor.Manufacturer, buffer, 0x100);
 			if (result == OK)
-				printf("USBD:  -Manufacturer:  %s.\n", buffer);
+				printk("USBD:  -Manufacturer:  %s.\n", buffer);
 		}
 	}
 	if (device->Descriptor.SerialNumber != 0)
@@ -778,7 +778,7 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		{
 			result = UsbReadString(device, device->Descriptor.SerialNumber, buffer, 0x100);
 			if (result == OK)
-				printf("USBD:  -SerialNumber:  %s.\n", buffer);
+				printk("USBD:  -SerialNumber:  %s.\n", buffer);
 		}
 	}
 
@@ -788,12 +788,12 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		buffer = NULL;
 	}
 
-	printf("USBD:  -VID:PID:       %x:%x v%d.%x\n", device->Descriptor.VendorId, device->Descriptor.ProductId, device->Descriptor.Version >> 8, device->Descriptor.Version & 0xff);
+	printk("USBD:  -VID:PID:       %x:%x v%d.%x\n", device->Descriptor.VendorId, device->Descriptor.ProductId, device->Descriptor.Version >> 8, device->Descriptor.Version & 0xff);
 
 	// We only support devices with 1 configuration for now.
 	if ((result = UsbConfigure(device, 0)) != OK)
 	{
-		printf("USBD: Failed to configure device %x.\n", address);
+		printk("USBD: Failed to configure device %x.\n", address);
 		return OK;
 	}
 
@@ -802,18 +802,18 @@ Result UsbAttachDevice(struct UsbDevice *device)
 		if (buffer == NULL)
 		{
 			buffer = MemoryAllocate(0x100);
-			printf("USBD:  Allocated buffer: %s.\n");
+			printk("USBD:  Allocated buffer: %s.\n");
 		}
 		if (buffer != NULL)
 		{
 			result = UsbReadString(device, device->Configuration.StringIndex, buffer, 0x100);
 			if (result == OK)
 			{
-				printf("USBD:  -Configuration: %s.\n", buffer);
+				printk("USBD:  -Configuration: %s.\n", buffer);
 			}
 			else
 			{
-				printf("USBD:  -Configuration: Cannot read string.\n");
+				printk("USBD:  -Configuration: Cannot read string.\n");
 			}
 		}
 	}
@@ -829,20 +829,20 @@ Result UsbAttachDevice(struct UsbDevice *device)
 	{
 		if ((result = InterfaceClassAttach[device->Interfaces[0].Class](device, 0)) != OK)
 		{
-			printf("USBD: Could not start the driver for %s.\n", UsbGetDescription(device));
+			printk("USBD: Could not start the driver for %s.\n", UsbGetDescription(device));
 		}
 	}
 	else
 	{
-		printf("USBD_PRAKASH:  No class found.\n");
+		printk("USBD_PRAKASH:  No class found.\n");
 	}
-	printf("USBD_PRAKASH:  Successfully allocated root hub.\n");
+	printk("USBD_PRAKASH:  Successfully allocated root hub.\n");
 	return OK;
 }
 
 void UsbDeallocateDevice(struct UsbDevice *device)
 {
-	printf("USBD: Deallocating device %d: %s.\n", device->Number, UsbGetDescription(device));
+	printk("USBD: Deallocating device %d: %s.\n", device->Number, UsbGetDescription(device));
 
 	if (device->DeviceDetached != NULL)
 		device->DeviceDetached(device);
@@ -883,11 +883,11 @@ void UsbCheckForChange()
 
 	if (Devices[0] != NULL && Devices[0]->DeviceCheckForChange != NULL)
 	{
-		// printf("Calling check for change. \n");
+		// printk("Calling check for change. \n");
 		Devices[0]->DeviceCheckForChange(Devices[0]);
 	}
 	else
 	{
-		// printf("check for change callback not assigned. \n");
+		// printk("check for change callback not assigned. \n");
 	}
 }

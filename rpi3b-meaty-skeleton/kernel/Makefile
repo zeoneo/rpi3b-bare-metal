@@ -9,22 +9,24 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror -Wno-sign-compare -std=c11  -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
-CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
+CFLAGS:=$(CFLAGS) -nostdinc -ffreestanding -Wall -Wextra -Werror -Wno-sign-compare -std=c11  -mfpu=neon -nostartfiles -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -I/Users/prakashborkar/Desktop/Remote_Repo/rpi-os-uart/rpi3b-meaty-skeleton/sysroot/usr/include
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lm -lgcc
+LIBS:=$(LIBS) -nostdlib -lk -lm
 
 ARCHDIR=arch/$(HOSTARCH)
 MEMDIR=mem
 DEVICEDIR=device
 FSDIR=fs
 GRAPHICSDIR=graphics
+KLIBDIR=klib
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
 include $(DEVICEDIR)/make.config
 include $(FSDIR)/make.config
-include $(GRAPHICSDIR)/make.config
+include $(KLIBDIR)/make.config
+
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -36,8 +38,8 @@ $(KERNEL_ARCH_OBJS) \
 $(KERNEL_MEM_OBJS) \
 $(KERNEL_DEVICE_OBJS) \
 $(KERNEL_FS_OBJS) \
-$(KERNEL_GRAPHICS_OBJS) \
-kernel/kernel.o \
+$(K_LIB_OBJS) \
+kernel/kernel.o
 
 OBJS= $(KERNEL_OBJS)
 

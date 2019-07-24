@@ -1,6 +1,6 @@
 #include <device/dma.h>
 #include <device/uart0.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 #include <kernel/rpi-interrupts.h>
 
 int dma_src_page_1 = 0x0;
@@ -43,7 +43,7 @@ void writeBitmasked(volatile uint32_t *dest, uint32_t mask, uint32_t value)
 
 static void dma_0_irq_handler(void)
 {
-    printf("\nDMA irq handler called. This should be called after clearer. \n");
+    printk("\nDMA irq handler called. This should be called after clearer. \n");
 }
 
 static void dma_0_irq_clearer(void)
@@ -51,7 +51,7 @@ static void dma_0_irq_clearer(void)
     uint32_t *dmaBaseMem = (void *)DMA_BASE;
     volatile struct DmaChannelHeader *dmaHeader = (volatile struct DmaChannelHeader *)(dmaBaseMem + (DMACH(dmaChNum)) / 4);
     dmaHeader->CS = BCM2835_DMA_INT;
-    printf("\nDMA irq clearer called. Should be called before handler \n");
+    printk("\nDMA irq clearer called. Should be called before handler \n");
 }
 
 void show_dma_demo()
@@ -97,8 +97,8 @@ void show_dma_demo()
     cb2->stride = 0x0;
     cb2->next = 0x0; // last Control block
 
-    printf("\n cb1: %x", cb1);
-    printf("\n cb2: %x", cb2);
+    printk("\n cb1: %x", cb1);
+    printk("\n cb2: %x", cb2);
 
     uint32_t *dmaBaseMem = (void *)DMA_BASE;
 

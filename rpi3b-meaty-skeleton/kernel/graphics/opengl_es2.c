@@ -2,7 +2,7 @@
 #include<graphics/opengl_es2.h>
 #include<graphics/v3d.h>
 #include<graphics/gpu_mem_util.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #define v3d ((volatile __attribute__((aligned(4))) uint32_t*)(uintptr_t)(V3D_BASE))
 #define ALIGN_128BIT_MASK  0xFFFFFF80
@@ -332,27 +332,27 @@ if (scene) {
 		v3d[V3D_CT0CA] = scene->binningDataVC4;						// Start binning config address
 		v3d[V3D_CT0EA] = scene->binningCfgEnd;						// End binning config address is at render control start
 
-        printf("\n wait for binning to finish \n");
+        printk("\n wait for binning to finish \n");
 		// wait for binning to finish
 		while (v3d[V3D_BFC] == 0) {
-			printf("V3D_CT0CA: 0x%x, V3D_PCS: 0x%x V3D_ERRSTAT: 0x%x \n", v3d[V3D_CT0CA], v3d[V3D_PCS], v3d[V3D_ERRSTAT]);
+			printk("V3D_CT0CA: 0x%x, V3D_PCS: 0x%x V3D_ERRSTAT: 0x%x \n", v3d[V3D_CT0CA], v3d[V3D_PCS], v3d[V3D_ERRSTAT]);
 		}
-         printf("\n wait for binning to finish completeed \n");
+         printk("\n wait for binning to finish completeed \n");
 		// stop the thread
 		v3d[V3D_CT1CS] = 0x20;
-           printf("\n stopped thread \n");
+           printk("\n stopped thread \n");
 		// Wait for thread to stop
 		while (v3d[V3D_CT1CS] & 0x20);
-        printf("\n wait complete for  stopped thread \n");
+        printk("\n wait complete for  stopped thread \n");
 		// Run our render
 		v3d[V3D_RFC] = 1;											// reset rendering frame count
 		v3d[V3D_CT1CA] = scene->renderControlVC4;					// Start address for render control
 		v3d[V3D_CT1EA] = scene->renderControlEndVC4;				// End address for render control
-        printf("\n wait render \n");
+        printk("\n wait render \n");
 
 		// wait for render to finish
 		while (v3d[V3D_RFC] == 0) {}
-        printf("\n wait render completed\n");
+        printk("\n wait render completed\n");
 
 	}
 }

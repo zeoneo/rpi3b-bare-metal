@@ -38,7 +38,7 @@ SECTIONS
 	.data : { *(.data) }
 
     
-    .bss(NOLOAD) :
+    .bss :
     {
         __bss_start = .;
         *(.bss)
@@ -66,6 +66,9 @@ SECTIONS
     
     /* Reserve 16 MB for Mem Manager Data Structre*/
     . = . + 0x001000000;
+
+    . = . + 1024; /* 1024 Bytes for irq stack */
+    __data_abort_stack_base = .;
 
     /* Align 1MB so that we can do easy section mapping */
     . = ALIGN(0x00100000);

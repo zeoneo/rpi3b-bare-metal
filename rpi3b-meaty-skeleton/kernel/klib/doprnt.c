@@ -3,7 +3,6 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
-#include <plibc/stdio.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -15,6 +14,8 @@ static void ulong_to_string(unsigned long num, char *str,
 
 #define TRUE 1
 #define FALSE 0
+
+#define	EOF	(-1)
 
 enum integer_size
 {

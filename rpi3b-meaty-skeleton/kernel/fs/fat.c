@@ -1,7 +1,7 @@
 #include <string.h>
 #include <fs/fat.h>
 #include <device/emmc.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 struct __attribute__((packed, aligned(2))) partition_info
 {
@@ -90,7 +90,7 @@ bool initialize_fat()
 {
     if (sdInitCard(false) != SD_OK)
     {
-        printf("Failed to initialize SD card");
+        printk("Failed to initialize SD card");
         return false;
     }
     uint8_t num_of_blocks = 1;
@@ -98,7 +98,7 @@ bool initialize_fat()
     uint8_t bpb_buffer[512] __attribute__((aligned(4)));
     if (!sdcard_read(0, num_of_blocks, (uint8_t *)&bpb_buffer[0]))
     {
-        printf("FAT: UNABLE to read first block in sd card. \n");
+        printk("FAT: UNABLE to read first block in sd card. \n");
         return false;
     }
 
@@ -108,36 +108,36 @@ bool initialize_fat()
         struct mbr *mbr_info = (struct mbr *)&bpb_buffer[0];
         if (mbr_info->signature != 0xaa55)
         {
-            printf("BPP is not boot sector or MBR. Corrupted data ???. \n");
+            printk("BPP is not boot sector or MBR. Corrupted data ???. \n");
             return false;
         }
         else
         {
-            printf("Got MBR.. \n");
+            printk("Got MBR.. \n");
             struct partition_info *pd = &mbr_info->partitionData[0];
             current_sd_partition.unusedSectors = pd->firstSector;
             // Read first unused sector i.e. 512 Bytes
             if (!sdcard_read(pd->firstSector, 1, (uint8_t *)&bpb_buffer[0]))
             {
-                printf("Could not mbr first sector. \n");
+                printk("Could not mbr first sector. \n");
                 return false;
             }
             // No need to map bpb_buffer to fat_bpb struct again, but this is easy to understand
             // struct fat_bpb *mbr_bpb = (struct fat_bpb *)bpb_buffer;
             if (bpb->bootjmp[0] != 0xE9 && bpb->bootjmp[0] != 0xEB)
             {
-                printf("MBR doesn't have valid FAT_BPB sector. \n");
+                printk("MBR doesn't have valid FAT_BPB sector. \n");
                 return false;
             }
             else
             {
-                printf("Got valid FAT_BPB for given MBR. \n");
+                printk("Got valid FAT_BPB for given MBR. \n");
             }
         }
     }
     else
     {
-        printf("Got BOOT SECTOR.. \n");
+        printk("Got BOOT SECTOR.. \n");
     }
 
     current_sd_partition.bytesPerSector = bpb->bytes_per_sector;      // Bytes per sector on partition
@@ -147,18 +147,18 @@ bool initialize_fat()
     if ((bpb->fat16_table_size == 0) && (bpb->root_entry_count == 0))
     {
         selected_fat_type = FAT32;
-        printf("Got FAT 32 FS. \n");
+        printk("Got FAT 32 FS. \n");
 
         current_sd_partition.rootCluster = bpb->fat_type_data.ex_fat32.root_cluster; // Hold partition root cluster
         current_sd_partition.firstDataSector = bpb->reserved_sector_count + bpb->hidden_sector_count + (bpb->fat_type_data.ex_fat32.fat_table_size_32 * bpb->fat_table_count);
         current_sd_partition.dataSectors = bpb->fat32_total_sectors - bpb->reserved_sector_count - (bpb->fat_type_data.ex_fat32.fat_table_size_32 * bpb->fat_table_count);
         current_sd_partition.fatSize = bpb->fat_type_data.ex_fat32.fat_table_size_32;
-        printf("ex_fat32 Volume Label: %s \n", bpb->fat_type_data.ex_fat32.volume_label); // Basic detail print if requested
+        printk("ex_fat32 Volume Label: %s \n", bpb->fat_type_data.ex_fat32.volume_label); // Basic detail print if requested
     }
     else
     {
         selected_fat_type = FAT16;
-        printf("Got FAT 16 FS. \n");
+        printk("Got FAT 16 FS. \n");
 
         current_sd_partition.fatSize = bpb->fat16_table_size;
         current_sd_partition.rootCluster = 2; // Hold partition root cluster, FAT16 always start at 2
@@ -167,16 +167,16 @@ bool initialize_fat()
         current_sd_partition.dataSectors = bpb->fat32_total_sectors - (bpb->fat_table_count * bpb->fat16_table_size) - 33; // -1 see above +1 and 32 fixed sectors
         if (bpb->fat_type_data.ex_fat1612.boot_signature == 0x29)
         {
-            printf("FAT12/16 Volume Label: %s\n", bpb->fat_type_data.ex_fat1612.volume_label); // Basic detail print if requested
+            printk("FAT12/16 Volume Label: %s\n", bpb->fat_type_data.ex_fat1612.volume_label); // Basic detail print if requested
         }
     }
 
     uint32_t partition_totalClusters = current_sd_partition.dataSectors / current_sd_partition.sectorPerCluster;
-    printf("First Sector: %lu, Data Sectors: %lu, TotalClusters: %lu, RootCluster: %lu\n",
+    printk("First Sector: %lu, Data Sectors: %lu, TotalClusters: %lu, RootCluster: %lu\n",
            (unsigned long)current_sd_partition.firstDataSector, (unsigned long)current_sd_partition.dataSectors,
            (unsigned long)partition_totalClusters, (unsigned long)current_sd_partition.rootCluster);
 
-    printf("Reserved sectors :%lu Fat size : %d bytesPerSector: %d \n", current_sd_partition.reservedSectorCount, current_sd_partition.fatSize, current_sd_partition.bytesPerSector);
+    printk("Reserved sectors :%lu Fat size : %d bytesPerSector: %d \n", current_sd_partition.reservedSectorCount, current_sd_partition.fatSize, current_sd_partition.bytesPerSector);
     return true;
 }
 void readFat(uint32_t clusterNumber);
@@ -184,7 +184,7 @@ void print_root_directory_info()
 {
     // uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
     // print_directory_contents(root_directory_cluster_number);
-    // printf("Files first Cluster: 0x%x \n", get_file_size(&file_to_search[0]));
+    // printk("Files first Cluster: 0x%x \n", get_file_size(&file_to_search[0]));
     read_file(&file_to_search[0]);
     // print_fat_sector_content(0xbd);
     // readFat(0x10a5);
@@ -205,7 +205,7 @@ uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
 {
     uint8_t count = 0;
     uint8_t *src_ptr = &absolute_file_name[0];
-    // printf("SRC FILE name : %s \n", absolute_file_name);
+    // printk("SRC FILE name : %s \n", absolute_file_name);
     while (*src_ptr != '\0' && *src_ptr != '/')
     {
         dest[count++] = *src_ptr;
@@ -220,14 +220,14 @@ uint32_t find_file_in_directory(uint32_t directory_cluster, uint8_t *absolute_fi
     uint8_t next_length = get_next_dir_name(&absolute_file_name[next_index], &next_dir_name[0]);
     if (next_length == 0)
     {
-        printf("Can't find directory/file %s \n", absolute_file_name);
+        printk("Can't find directory/file %s \n", absolute_file_name);
     }
     return search_directory_contents(directory_cluster, &absolute_file_name[0], next_index);
 }
 
 uint32_t search_directory_contents(uint32_t directory_first_cluster, uint8_t *next_dir_name, uint32_t next_index)
 {
-    printf("--------------*****************----------------------\n");
+    printk("--------------*****************----------------------\n");
     uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
     uint32_t cluster_number = directory_first_cluster;
 
@@ -240,10 +240,10 @@ uint32_t search_directory_contents(uint32_t directory_first_cluster, uint8_t *ne
 
         if (old_fat_sector_num != fat_sector_num)
         {
-            // printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+            // printk("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
             if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
             {
-                printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+                printk("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
                 return 0;
             }
         }
@@ -259,7 +259,7 @@ uint32_t search_directory_contents(uint32_t directory_first_cluster, uint8_t *ne
         cluster_number = (*fat_entry_ptr) & 0x0fffffff;
         old_fat_sector_num = fat_sector_num;
     }
-    printf("--------------####################----------------------\n");
+    printk("--------------####################----------------------\n");
     return 0;
 }
 
@@ -307,7 +307,7 @@ uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8
 
     if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
     {
-        printf("FAT: ROOT DIR sector :%d. \n", sector_number);
+        printk("FAT: ROOT DIR sector :%d. \n", sector_number);
         return 0;
     }
 
@@ -315,7 +315,7 @@ uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8
     uint8_t next_length = get_next_dir_name(&next_dir_name[next_index], &next_file_name[0]);
     if (next_length == 0)
     {
-        printf("Length is zero. \n");
+        printk("Length is zero. \n");
         return 0;
     }
     while (index < limit)
@@ -346,8 +346,8 @@ uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8
 
                     if (is_same_file(&long_file_name[0], &next_file_name[0]))
                     {
-                        printf("filename : %s \n", long_file_name);
-                        printf("File Match Found.  \n");
+                        printk("filename : %s \n", long_file_name);
+                        printk("File Match Found.  \n");
 
                         index += sizeof(struct dir_sfn_entry);
                         if (index >= limit)
@@ -363,16 +363,16 @@ uint32_t search_entries_in_sector(uint32_t sector_number, uint8_t *buffer, uint8
                         return first_cluster;
                     }
                     index += sizeof(struct dir_sfn_entry);
-                    // printf("INDEX : %d \n", index);
+                    // printk("INDEX : %d \n", index);
                     if (index >= limit)
                     {
-                        // printf("INDEX REACHED 512: %d \n", index);
+                        // printk("INDEX REACHED 512: %d \n", index);
                         break;
                     }
                     dir_entry = (struct dir_sfn_entry *)&buffer[index];
-                    // printf("file attrib : %x  ", dir_entry->file_attrib);
+                    // printk("file attrib : %x  ", dir_entry->file_attrib);
                     uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
-                    // printf("file first cluster : %x \n", first_cluster);
+                    // printk("file first cluster : %x \n", first_cluster);
                     if (dir_entry->file_attrib == ATTR_DIRECTORY)
                     {
                         first_cluster = search_directory_contents(first_cluster, &next_dir_name[0], next_index);
@@ -406,7 +406,7 @@ void print_file_cluster_contents(uint32_t directory_first_sector)
     {
         if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
         {
-            printf("FAT: ROOT DIR sector :%d. \n", sector_number);
+            printk("FAT: ROOT DIR sector :%d. \n", sector_number);
             return;
         }
         uint32_t index = 0;
@@ -415,7 +415,7 @@ void print_file_cluster_contents(uint32_t directory_first_sector)
                 is_done = true;
                 break;
             }
-            printf("%c", buffer[index]);
+            printk("%c", buffer[index]);
             index++;
         }
         sector_number++;
@@ -424,7 +424,7 @@ void print_file_cluster_contents(uint32_t directory_first_sector)
 
 void read_file(uint8_t *absolute_file_name)
 {
-    // printf(" absolute_file_name: %s %s \n", absolute_file_name, file_buffer);
+    // printk(" absolute_file_name: %s %s \n", absolute_file_name, file_buffer);
 
     uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
     uint32_t cluster_number = get_file_size(absolute_file_name);
@@ -438,10 +438,10 @@ void read_file(uint8_t *absolute_file_name)
 
         if (old_fat_sector_num != fat_sector_num)
         {
-            // printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+            // printk("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
             if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
             {
-                printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+                printk("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
                 return;
             }
         }
@@ -456,7 +456,7 @@ void read_file(uint8_t *absolute_file_name)
 
 void print_directory_contents(uint32_t directory_first_cluster)
 {
-    printf("--------------*****************----------------------\n");
+    printk("--------------*****************----------------------\n");
     uint8_t fat_sector_buffer[512] __attribute__((aligned(4)));
     uint32_t cluster_number = directory_first_cluster;
 
@@ -469,10 +469,10 @@ void print_directory_contents(uint32_t directory_first_cluster)
 
         if (old_fat_sector_num != fat_sector_num)
         {
-            // printf("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
+            // printk("Reading fat for cluster:%d fat_sector_number:%d ", cluster_number, fat_sector_num);
             if (!sdcard_read(fat_sector_num, 1, (uint8_t *)&fat_sector_buffer[0]))
             {
-                printf("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
+                printk("FAT: Could not read FAT sector :%d. \n", fat_sector_num);
                 return;
             }
         }
@@ -483,7 +483,7 @@ void print_directory_contents(uint32_t directory_first_cluster)
         cluster_number = (*fat_entry_ptr) & 0x0fffffff;
         old_fat_sector_num = fat_sector_num;
     }
-    printf("--------------####################----------------------\n");
+    printk("--------------####################----------------------\n");
 }
 
 void print_directory_cluster_contents(uint32_t directory_first_sector)
@@ -496,10 +496,10 @@ void print_directory_cluster_contents(uint32_t directory_first_sector)
     while (sector_number < last_clust_root_dir_sector)
     {
         print_entries_in_sector(sector_number, &buffer[0]);
-        // printf("---Completed printing sector :%d, next sector :%d \n", sector_number, sector_number + 1);
+        // printk("---Completed printing sector :%d, next sector :%d \n", sector_number, sector_number + 1);
         sector_number++;
     }
-    // printf("---Completed printing all the sectors in cluster \n");
+    // printk("---Completed printing all the sectors in cluster \n");
 }
 
 uint8_t ascii_for_utf_16(uint16_t utf_16_code)
@@ -554,7 +554,7 @@ static uint8_t ReadLFNEntry(struct dir_lfn_entry *LFdir, char LFNtext[14])
         }
     }
     LFNtext[LFN_blockcount] = '\0';
-    // printf("%s seq:> %x eSeq : %x \n", LFNtext, LFdir->LDIR_SeqNum, ((~0x40) & LFdir->LDIR_SeqNum));
+    // printk("%s seq:> %x eSeq : %x \n", LFNtext, LFdir->LDIR_SeqNum, ((~0x40) & LFdir->LDIR_SeqNum));
     return LFN_blockcount; // Return characters in buffer 0-13 is valid range
 }
 
@@ -576,13 +576,13 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
 
     if (!sdcard_read(sector_number, 1, (uint8_t *)&buffer[0]))
     {
-        printf("FAT: ROOT DIR sector :%d. \n", sector_number);
+        printk("FAT: ROOT DIR sector :%d. \n", sector_number);
         return;
     }
 
     while (index < limit)
     {
-        // printf("%c ", buffer[index++]);
+        // printk("%c ", buffer[index++]);
         // continue;
 
         struct dir_sfn_entry *dir_entry = (struct dir_sfn_entry *)&buffer[index];
@@ -609,9 +609,9 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
                 LFN_blockcount = ReadLFNEntry((struct dir_lfn_entry *)&buffer[index], LFNtext);
                 uint8_t index1 = ((~0x40) & lfn_entry->LDIR_SeqNum);
                 index1 = ((index1 - 1) * 13);
-                // printf("Copy at: %d \n ", index1);
+                // printk("Copy at: %d \n ", index1);
                 CopyUnAlignedString((char *)&long_file_name[index1], (char *)&LFNtext[0], LFN_blockcount);
-                // printf("Copy at: %s \n ", long_file_name);
+                // printk("Copy at: %s \n ", long_file_name);
                 // for (int j = 0; j < LFN_blockcount; j++) {
                 //     long_file_name[255 - LFN_count - LFN_blockcount + j] = LFNtext[j];
                 // }
@@ -619,18 +619,18 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
 
                 if (lfn_entry->LDIR_SeqNum == 0x1 || lfn_entry->LDIR_SeqNum == 0x41)
                 {
-                    printf("filename : %s \n", long_file_name);
+                    printk("filename : %s \n", long_file_name);
                     index += sizeof(struct dir_sfn_entry);
-                    // printf("INDEX : %d \n", index);
+                    // printk("INDEX : %d \n", index);
                     if (index >= limit)
                     {
-                        // printf("INDEX REACHED 512: %d \n", index);
+                        // printk("INDEX REACHED 512: %d \n", index);
                         break;
                     }
                     dir_entry = (struct dir_sfn_entry *)&buffer[index];
-                    // printf("file attrib : %x  ", dir_entry->file_attrib);
+                    // printk("file attrib : %x  ", dir_entry->file_attrib);
                     uint32_t first_cluster = ((uint32_t)(dir_entry->first_cluster_high << 16 | dir_entry->first_cluster_low)) & 0x0fffffff;
-                    // printf("file first cluster : %x \n", first_cluster);
+                    // printk("file first cluster : %x \n", first_cluster);
                     if (dir_entry->file_attrib == ATTR_DIRECTORY)
                     {
                         print_directory_contents(first_cluster);
@@ -638,9 +638,9 @@ void print_entries_in_sector(uint32_t sector_number, uint8_t *buffer)
                     break;
                 }
                 index += sizeof(struct dir_sfn_entry);
-                // printf("INDEX : %d \n", index);
+                // printk("INDEX : %d \n", index);
             }
-            // printf("\n %s \n", long_file_name);
+            // printk("\n %s \n", long_file_name);
         }
         else if (dir_entry->short_file_name[0] == 0)
         {

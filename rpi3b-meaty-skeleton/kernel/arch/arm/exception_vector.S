@@ -39,7 +39,7 @@ data_abort_vector_asm:
     ldr r8,[r6,#-8]
     mrc p15,0,r4,c5,c0,0 ;@ data/combined
     mrc p15,0,r5,c5,c0,1 ;@ instruction
-    mov sp,#0x00004000
+    ldr sp, =__data_abort_stack_base ;@ space allocated in linker.ld
     bl hexstrings
     mov r0,r4
     bl hexstrings

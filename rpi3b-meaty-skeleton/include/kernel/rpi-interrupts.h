@@ -61,7 +61,6 @@ typedef struct
 } rpi_irq_controller_t;
 
 extern rpi_irq_controller_t *RPI_GetIrqController(void);
-extern void _enable_interrupts();
 
 __inline__ int32_t INTERRUPTS_ENABLED(void)
 {

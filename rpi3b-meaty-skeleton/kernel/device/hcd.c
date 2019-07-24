@@ -2,7 +2,7 @@
 #include <device/usbd.h>
 #include <device/roothub.h>
 #include <device/usb-mem.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 #include <stdint.h>
 #include <kernel/rpi-mailbox-interface.h>
 #include <kernel/systimer.h>
@@ -51,8 +51,8 @@ void print_usb_power_state()
 
     rpi_mailbox_property_t *mp = RPI_PropertyGet(TAG_GET_POWER_STATE);
 
-    printf("\n device id: %x", (uint32_t)(mp->data.buffer_32[0]));
-    printf("\n device state: %x", (uint32_t)(mp->data.buffer_32[1]));
+    printk("\n device id: %x", (uint32_t)(mp->data.buffer_32[0]));
+    printk("\n device state: %x", (uint32_t)(mp->data.buffer_32[1]));
 }
 
 int power_on_host_controller()
@@ -64,12 +64,12 @@ int power_on_host_controller()
 
     if ((*vendor_id & 0xfffff000) != POWER_ON_VENDOR_ID)
     {
-        printf("\n Host controller with expected vendor id not found. vendor_id: %x ", *vendor_id);
+        printk("\n Host controller with expected vendor id not found. vendor_id: %x ", *vendor_id);
         return -1;
     }
     if (*user_id != POWER_ON_USB_USER_ID)
     {
-        printf("\n Host controller with expected user id not found. user_id: %x ", *user_id);
+        printk("\n Host controller with expected user id not found. user_id: %x ", *user_id);
         return -1;
     }
     return 0;
@@ -80,15 +80,15 @@ int hcd_start()
     Result result;
     uint32_t timeout;
 
-    printf("\n-----HCD START----begins----------\n");
+    printk("\n-----HCD START----begins----------\n");
 
     power_on_host_controller();
 
-    printf("HCD: Start core.\n");
+    printk("HCD: Start core.\n");
 
     if (Core == NULL)
     {
-        printf("HCD: HCD uninitialised. Cannot be started.\n");
+        printk("HCD: HCD uninitialised. Cannot be started.\n");
         return ErrorDevice;
     }
 
@@ -100,7 +100,7 @@ int hcd_start()
     Core->Usb.TsDlinePulseEnable = 0;
     WriteThroughReg(&Core->Usb);
 
-    printf("HCD: Master reset.\n");
+    printk("HCD: Master reset.\n");
     if ((result = HcdReset()) != OK)
     {
         goto deallocate;
@@ -108,11 +108,11 @@ int hcd_start()
 
     if (!PhyInitialised)
     {
-        printf("HCD: One time phy initialisation.\n");
+        printk("HCD: One time phy initialisation.\n");
         PhyInitialised = true;
 
         Core->Usb.ModeSelect = UTMI;
-        printf("HCD: Interface: UTMI+.\n");
+        printk("HCD: Interface: UTMI+.\n");
         Core->Usb.PhyInterface = false;
 
         WriteThroughReg(&Core->Usb);
@@ -122,36 +122,36 @@ int hcd_start()
     ReadBackReg(&Core->Usb);
     if (Core->Hardware.HighSpeedPhysical == Ulpi && Core->Hardware.FullSpeedPhysical == Dedicated)
     {
-        printf("HCD: ULPI FSLS configuration: enabled.\n");
+        printk("HCD: ULPI FSLS configuration: enabled.\n");
         Core->Usb.UlpiFsls = true;
         Core->Usb.ulpi_clk_sus_m = true;
     }
     else
     {
-        printf("HCD: ULPI FSLS configuration: disabled.\n");
+        printk("HCD: ULPI FSLS configuration: disabled.\n");
         Core->Usb.UlpiFsls = false;
         Core->Usb.ulpi_clk_sus_m = false;
     }
     WriteThroughReg(&Core->Usb);
 
-    printf("\n-----HCD START----ends----------\n");
+    printk("\n-----HCD START----ends----------\n");
 
     ReadBackReg(&Core->Usb);
     if (Core->Hardware.HighSpeedPhysical == Ulpi && Core->Hardware.FullSpeedPhysical == Dedicated)
     {
-        printf("HCD: ULPI FSLS configuration: enabled.\n");
+        printk("HCD: ULPI FSLS configuration: enabled.\n");
         Core->Usb.UlpiFsls = true;
         Core->Usb.ulpi_clk_sus_m = true;
     }
     else
     {
-        printf("HCD: ULPI FSLS configuration: disabled.\n");
+        printk("HCD: ULPI FSLS configuration: disabled.\n");
         Core->Usb.UlpiFsls = false;
         Core->Usb.ulpi_clk_sus_m = false;
     }
     WriteThroughReg(&Core->Usb);
 
-    printf("HCD: DMA configuration: enabled.\n");
+    printk("HCD: DMA configuration: enabled.\n");
     ReadBackReg(&Core->Ahb);
     Core->Ahb.DmaEnable = true;
     Core->Ahb.DmaRemainderMode = Incremental;
@@ -161,28 +161,28 @@ int hcd_start()
     switch (Core->Hardware.OperatingMode)
     {
     case HNP_SRP_CAPABLE:
-        printf("HCD: HNP/SRP configuration: HNP, SRP.\n");
+        printk("HCD: HNP/SRP configuration: HNP, SRP.\n");
         Core->Usb.HnpCapable = true;
         Core->Usb.SrpCapable = true;
         break;
     case SRP_ONLY_CAPABLE:
     case SRP_CAPABLE_DEVICE:
     case SRP_CAPABLE_HOST:
-        printf("HCD: HNP/SRP configuration: SRP.\n");
+        printk("HCD: HNP/SRP configuration: SRP.\n");
         Core->Usb.HnpCapable = false;
         Core->Usb.SrpCapable = true;
         break;
     case NO_HNP_SRP_CAPABLE:
     case NO_SRP_CAPABLE_DEVICE:
     case NO_SRP_CAPABLE_HOST:
-        printf("HCD: HNP/SRP configuration: none.\n");
+        printk("HCD: HNP/SRP configuration: none.\n");
         Core->Usb.HnpCapable = false;
         Core->Usb.SrpCapable = false;
         break;
     }
     WriteThroughReg(&Core->Usb);
-    printf("HCD: Core started.\n");
-    printf("HCD: Starting host.\n");
+    printk("HCD: Core started.\n");
+    printk("HCD: Starting host.\n");
 
     ClearReg(Power);
     WriteThroughReg(Power);
@@ -190,12 +190,12 @@ int hcd_start()
     ReadBackReg(&Host->Config);
     if (Core->Hardware.HighSpeedPhysical == Ulpi && Core->Hardware.FullSpeedPhysical == Dedicated && Core->Usb.UlpiFsls)
     {
-        printf("HCD: Host clock: 48Mhz.\n");
+        printk("HCD: Host clock: 48Mhz.\n");
         Host->Config.ClockRate = Clock48MHz;
     }
     else
     {
-        printf("HCD: Host clock: 30-60Mhz.\n");
+        printk("HCD: Host clock: 30-60Mhz.\n");
         Host->Config.ClockRate = Clock30_60MHz;
     }
     WriteThroughReg(&Host->Config);
@@ -209,15 +209,15 @@ int hcd_start()
             Core->Hardware.DmaDescription &&
         (Core->VendorId & 0xfff) >= 0x90a)
     {
-        printf("HCD: DMA descriptor: enabled.\n");
+        printk("HCD: DMA descriptor: enabled.\n");
     }
     else
     {
-        printf("HCD: DMA descriptor: disabled.\n");
+        printk("HCD: DMA descriptor: disabled.\n");
     }
     WriteThroughReg(&Host->Config);
 
-    printf("HCD: FIFO configuration: Total=%x Rx=%x NPTx=%x PTx=%x.\n", ReceiveFifoSize + NonPeriodicFifoSize + PeriodicFifoSize, ReceiveFifoSize, NonPeriodicFifoSize, PeriodicFifoSize);
+    printk("HCD: FIFO configuration: Total=%x Rx=%x NPTx=%x PTx=%x.\n", ReceiveFifoSize + NonPeriodicFifoSize + PeriodicFifoSize, ReceiveFifoSize, NonPeriodicFifoSize, PeriodicFifoSize);
     ReadBackReg(&Core->Receive.Size);
     Core->Receive.Size = ReceiveFifoSize;
     WriteThroughReg(&Core->Receive.Size);
@@ -232,7 +232,7 @@ int hcd_start()
     Core->PeriodicFifo.HostSize.StartAddress = ReceiveFifoSize + NonPeriodicFifoSize;
     WriteThroughReg(&Core->PeriodicFifo.HostSize);
 
-    printf("HCD: Set HNP: enabled.\n");
+    printk("HCD: Set HNP: enabled.\n");
     ReadBackReg(&Core->OtgControl);
     Core->OtgControl.HostSetHnpEnable = true;
     WriteThroughReg(&Core->OtgControl);
@@ -269,7 +269,7 @@ int hcd_start()
 
                 if (timeout++ > 0x100000)
                 {
-                    printf("HCD: Unable to clear halt on channel %u.\n", channel);
+                    printk("HCD: Unable to clear halt on channel %u.\n", channel);
                 }
             } while (Host->Channel[channel].Characteristic.Enable);
         }
@@ -278,12 +278,12 @@ int hcd_start()
     ReadBackReg(&Host->Port);
     if (!Host->Port.Power)
     {
-        printf("HCD: Powering up port.\n");
+        printk("HCD: Powering up port.\n");
         Host->Port.Power = true;
         WriteThroughRegMask(&Host->Port, 0x1000);
     }
 
-    printf("HCD: Reset port.\n");
+    printk("HCD: Reset port.\n");
     ReadBackReg(&Host->Port);
     Host->Port.Reset = true;
     WriteThroughRegMask(&Host->Port, 0x100);
@@ -295,7 +295,7 @@ int hcd_start()
     WriteThroughRegMask(&Host->Port, 0x100);
     ReadBackReg(&Host->Port);
 
-    printf("HCD: Successfully started.\n");
+    printk("HCD: Successfully started.\n");
 
     return OK;
 
@@ -309,13 +309,13 @@ Result HcdStart()
     Result result = hcd_start();
     if (result != OK)
     {
-        printf("Could not start HCD");
+        printk("Could not start HCD");
         return result;
     }
 
     if ((result = UsbAttachRootHub()) != OK)
     {
-        printf("USBD: Failed to enumerate devices.\n");
+        printk("USBD: Failed to enumerate devices.\n");
         goto errorStop;
     }
 
@@ -335,13 +335,13 @@ Result HcdInitialize()
     volatile Result result = OK;
     if (sizeof(struct CoreGlobalRegs) != 0x400 || sizeof(struct HostGlobalRegs) != 0x400 || sizeof(struct PowerReg) != 0x4)
     {
-        printf("HCD: Incorrectly compiled driver. HostGlobalRegs: %x (0x400), CoreGlobalRegs: %x (0x400), PowerReg: %x (0x4).\n",
+        printk("HCD: Incorrectly compiled driver. HostGlobalRegs: %x (0x400), CoreGlobalRegs: %x (0x400), PowerReg: %x (0x4).\n",
                sizeof(struct HostGlobalRegs), sizeof(struct CoreGlobalRegs), sizeof(struct PowerReg));
         result = ErrorCompiler; // Correct packing settings are required.
     }
     else
     {
-        printf("\n HCD: registers allocated proper memory");
+        printk("\n HCD: registers allocated proper memory");
     }
 
     CorePhysical = MemoryReserve(sizeof(struct CoreGlobalRegs), HCD_DESIGNWARE_BASE);
@@ -360,30 +360,30 @@ Result HcdInitialize()
 
     if (Core->Hardware.Architecture != InternalDma)
     {
-        printf("HCD: Host architecture is not Internal DMA. Driver incompatible.\n");
+        printk("HCD: Host architecture is not Internal DMA. Driver incompatible.\n");
         result = ErrorIncompatible;
         goto deallocate;
     }
 
-    printf("HCD: Internal DMA mode.\n");
+    printk("HCD: Internal DMA mode.\n");
     if (Core->Hardware.HighSpeedPhysical == NotSupported)
     {
-        printf("HCD: High speed physical unsupported. Driver incompatible.\n");
+        printk("HCD: High speed physical unsupported. Driver incompatible.\n");
         result = ErrorIncompatible;
         goto deallocate;
     }
-    // printf("HCD: Hardware configuration: %x %x %x %x\n", *(uint32_t *)&Core->Hardware, *((uint32_t *)&Core->Hardware + 1), *((uint32_t *)&Core->Hardware + 2), *((uint32_t *)&Core->Hardware + 3));
+    // printk("HCD: Hardware configuration: %x %x %x %x\n", *(uint32_t *)&Core->Hardware, *((uint32_t *)&Core->Hardware + 1), *((uint32_t *)&Core->Hardware + 2), *((uint32_t *)&Core->Hardware + 3));
     ReadBackReg(&Host->Config);
-    // printf("HCD: Host configuration: %08x\n", *(uint32_t *)&Host->Config);
+    // printk("HCD: Host configuration: %08x\n", *(uint32_t *)&Host->Config);
 
-    printf("HCD: Disabling USB interrupts.\n");
+    printk("HCD: Disabling USB interrupts.\n");
     ReadBackReg(&Core->Ahb);
     Core->Ahb.InterruptEnable = false;
     ClearReg(&Core->InterruptMask);
     WriteThroughReg(&Core->InterruptMask);
     WriteThroughReg(&Core->Ahb);
 
-    printf("HCD: Load completed.\n");
+    printk("HCD: Load completed.\n");
 
     return OK;
 deallocate:
@@ -413,7 +413,7 @@ Result HcdReset()
         ReadBackReg(&Core->Reset);
         if (count++ >= 0x100000)
         {
-            printf("HCD: Device Hang!\n");
+            printk("HCD: Device Hang!\n");
             return ErrorDevice;
         }
     } while (Core->Reset.AhbMasterIdle == false);
@@ -427,7 +427,7 @@ Result HcdReset()
         ReadBackReg(&Core->Reset);
         if (count++ >= 0x100000)
         {
-            printf("HCD: Device Hang!\n");
+            printk("HCD: Device Hang!\n");
             return ErrorDevice;
         }
     } while (Core->Reset.CoreSoft == true || Core->Reset.AhbMasterIdle == false);
@@ -574,11 +574,11 @@ Result HcdTransmitFifoFlush(enum CoreFifoFlush fifo)
     uint32_t count = 0;
 
     if (fifo == FlushAll)
-        printf("HCD: TXFlush(All)\n");
+        printk("HCD: TXFlush(All)\n");
     else if (fifo == FlushNonPeriodic)
-        printf("HCD: TXFlush(NP)\n");
+        printk("HCD: TXFlush(NP)\n");
     else
-        printf("HCD: TXFlush(P%u)\n", fifo);
+        printk("HCD: TXFlush(P%u)\n", fifo);
 
     ClearReg(&Core->Reset);
     Core->Reset.TransmitFifoFlushNumber = fifo;
@@ -591,7 +591,7 @@ Result HcdTransmitFifoFlush(enum CoreFifoFlush fifo)
         ReadBackReg(&Core->Reset);
         if (count++ >= 0x100000)
         {
-            printf("HCD: Device Hang!\n");
+            printk("HCD: Device Hang!\n");
             return ErrorDevice;
         }
     } while (Core->Reset.TransmitFifoFlush == true);
@@ -609,7 +609,7 @@ Result HcdReceiveFifoFlush()
 {
     uint32_t count = 0;
 
-    printf("HCD: RXFlush(All)\n");
+    printk("HCD: RXFlush(All)\n");
 
     ClearReg(&Core->Reset);
     Core->Reset.ReceiveFifoFlush = true;
@@ -621,7 +621,7 @@ Result HcdReceiveFifoFlush()
         ReadBackReg(&Core->Reset);
         if (count++ >= 0x100000)
         {
-            printf("HCD: Device Hang!\n");
+            printk("HCD: Device Hang!\n");
             return ErrorDevice;
         }
     } while (Core->Reset.ReceiveFifoFlush == true);
@@ -661,20 +661,20 @@ Result HcdSumbitInterruptOutMessage(struct UsbDevice *device,
 
         if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, bufferLength, request, Data0)) != OK)
         {
-            printf("HCD: Could not send DATA to %s.\n", UsbGetDescription(device));
+            printk("HCD: Could not send DATA to %s.\n", UsbGetDescription(device));
             return OK;
         }
 
         ReadBackReg(&Host->Channel[0].TransferSize);
         if (Host->Channel[0].TransferSize.TransferSize <= bufferLength)
         {
-            printf("Data transferred : %d \n ", Host->Channel[0].TransferSize.TransferSize);
+            printk("Data transferred : %d \n ", Host->Channel[0].TransferSize.TransferSize);
             device->LastTransfer = bufferLength - Host->Channel[0].TransferSize.TransferSize;
         }
         else
         {
-            printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
-            printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
+            printk("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
+            printk("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
                    ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
                    ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
                    ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
@@ -694,13 +694,13 @@ Result HcdSumbitInterruptOutMessage(struct UsbDevice *device,
 
     if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, 0, request, Data1)) != OK)
     {
-        printf("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
+        printk("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
         return OK;
     }
 
     ReadBackReg(&Host->Channel[0].TransferSize);
     if (Host->Channel[0].TransferSize.TransferSize != 0)
-        printf("HCD: Warning non zero status transfer! %d.\n", Host->Channel[0].TransferSize.TransferSize);
+        printk("HCD: Warning non zero status transfer! %d.\n", Host->Channel[0].TransferSize.TransferSize);
 
     device->Error = NoError;
 
@@ -731,7 +731,7 @@ Result HcdSumbitControlMessage(struct UsbDevice *device,
 
     if ((result = HcdChannelSendWait(device, &tempPipe, 0, request, 8, request, Setup)) != OK)
     {
-        printf("HCD: Could not send SETUP to %s.\n", UsbGetDescription(device));
+        printk("HCD: Could not send SETUP to %s.\n", UsbGetDescription(device));
         return OK;
     }
 
@@ -751,7 +751,7 @@ Result HcdSumbitControlMessage(struct UsbDevice *device,
 
         if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, bufferLength, request, Data1)) != OK)
         {
-            printf("HCD: Could not send DATA to %s.\n", UsbGetDescription(device));
+            printk("HCD: Could not send DATA to %s.\n", UsbGetDescription(device));
             return OK;
         }
 
@@ -762,8 +762,8 @@ Result HcdSumbitControlMessage(struct UsbDevice *device,
                 device->LastTransfer = bufferLength - Host->Channel[0].TransferSize.TransferSize;
             else
             {
-                printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
-                printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
+                printk("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
+                printk("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
                        ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
                        ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
                        ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
@@ -788,13 +788,13 @@ Result HcdSumbitControlMessage(struct UsbDevice *device,
 
     if ((result = HcdChannelSendWait(device, &tempPipe, 0, databuffer, 0, request, Data1)) != OK)
     {
-        printf("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
+        printk("HCD: Could not send STATUS to %s.\n", UsbGetDescription(device));
         return OK;
     }
 
     ReadBackReg(&Host->Channel[0].TransferSize);
     if (Host->Channel[0].TransferSize.TransferSize != 0)
-        printf("HCD: Warning non zero status transfer! %d.\n", Host->Channel[0].TransferSize.TransferSize);
+        printk("HCD: Warning non zero status transfer! %d.\n", Host->Channel[0].TransferSize.TransferSize);
 
     device->Error = NoError;
 
@@ -850,8 +850,8 @@ Result HcdInterruptPoll(struct UsbDevice *device,
     }
     else
     {
-        printf("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
-        printf("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
+        printk("HCD: Weird transfer.. %d/%d bytes received.\n", Host->Channel[0].TransferSize.TransferSize, bufferLength);
+        printk("HCD: Message %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x ...\n",
                ((uint8_t *)databuffer)[0x0], ((uint8_t *)databuffer)[0x1], ((uint8_t *)databuffer)[0x2], ((uint8_t *)databuffer)[0x3],
                ((uint8_t *)databuffer)[0x4], ((uint8_t *)databuffer)[0x5], ((uint8_t *)databuffer)[0x6], ((uint8_t *)databuffer)[0x7],
                ((uint8_t *)databuffer)[0x8], ((uint8_t *)databuffer)[0x9], ((uint8_t *)databuffer)[0xa], ((uint8_t *)databuffer)[0xb],
@@ -875,14 +875,14 @@ Result HcdChannelSendWait(struct UsbDevice *device,
 retry:
     if (tries++ == 3)
     {
-        printf("HCD: Failed to send to %s after 3 attempts.\n", UsbGetDescription(device));
+        printk("HCD: Failed to send to %s after 3 attempts.\n", UsbGetDescription(device));
         return ErrorTimeout;
     }
 
     if ((result = HcdPrepareChannel(device, channel, bufferLength, packetId, pipe)) != OK)
     {
         device->Error = ConnectionError;
-        printf("HCD: Could not prepare data channel to %s.\n", UsbGetDescription(device));
+        printk("HCD: Could not prepare data channel to %s.\n", UsbGetDescription(device));
         return result;
     }
 
@@ -894,7 +894,7 @@ retry:
         {
             if (result == ErrorRetry)
             {
-                printf("Need to retry the packet");
+                printk("Need to retry the packet");
                 goto retry;
             }
             return result;
@@ -911,13 +911,13 @@ retry:
     if (packets == Host->Channel[channel].TransferSize.PacketCount)
     {
         device->Error = ConnectionError;
-        printf("HCD: Transfer to %s got stuck.\n", UsbGetDescription(device));
+        printk("HCD: Transfer to %s got stuck.\n", UsbGetDescription(device));
         return ErrorDevice;
     }
 
     if (tries > 1)
     {
-        printf("HCD: Transfer to %s succeeded on attempt %d/3.\n", UsbGetDescription(device), tries);
+        printk("HCD: Transfer to %s succeeded on attempt %d/3.\n", UsbGetDescription(device), tries);
     }
 
     return OK;
@@ -928,7 +928,7 @@ Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
 {
     if (channel > Core->Hardware.HostChannelCount)
     {
-        printf("HCD: Channel %d is not available on this host.\n", channel);
+        printk("HCD: Channel %d is not available on this host.\n", channel);
         return ErrorArgument;
     }
 
@@ -952,7 +952,7 @@ Result HcdPrepareChannel(struct UsbDevice *device, uint8_t channel,
     ClearReg(&Host->Channel[channel].SplitControl);
     if (pipe->Speed != High)
     {
-        // printf("HCD: Prepare channel enable split control. \n");
+        // printk("HCD: Prepare channel enable split control. \n");
         Host->Channel[channel].SplitControl.SplitEnable = true;
         Host->Channel[channel].SplitControl.HubAddress = device->Parent->Number;
         Host->Channel[channel].SplitControl.PortAddress = device->PortNumber;
@@ -986,14 +986,14 @@ Result HcdChannelSendInterruptPoll(struct UsbDevice *device,
 retry:
     if (tries++ == 3)
     {
-        printf("HCD: Failed to send to %s after 3 attempts.\n", UsbGetDescription(device));
+        printk("HCD: Failed to send to %s after 3 attempts.\n", UsbGetDescription(device));
         return ErrorTimeout;
     }
 
     if ((result = HcdPrepareChannel(device, channel, bufferLength, packetId, pipe)) != OK)
     {
         device->Error = ConnectionError;
-        printf("HCD: Could not prepare data channel to %s.\n", UsbGetDescription(device));
+        printk("HCD: Could not prepare data channel to %s.\n", UsbGetDescription(device));
         return result;
     }
 
@@ -1005,7 +1005,7 @@ retry:
         {
             if (result == ErrorRetry)
             {
-                printf("Need to retry the packet");
+                printk("Need to retry the packet");
                 goto retry;
             }
             return result;
@@ -1022,13 +1022,13 @@ retry:
     if (packets == Host->Channel[channel].TransferSize.PacketCount)
     {
         device->Error = ConnectionError;
-        printf("HCD: Transfer to %s got stuck.\n", UsbGetDescription(device));
+        printk("HCD: Transfer to %s got stuck.\n", UsbGetDescription(device));
         return ErrorDevice;
     }
 
     if (tries > 1)
     {
-        printf("HCD: Transfer to %s succeeded on attempt %d/3.\n", UsbGetDescription(device), tries);
+        printk("HCD: Transfer to %s succeeded on attempt %d/3.\n", UsbGetDescription(device), tries);
     }
 
     return OK;
@@ -1055,7 +1055,7 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
         {
             if (timeout++ == RequestTimeout)
             {
-                printf("HCD: Request to %s has timed out.\n", UsbGetDescription(device));
+                printk("HCD: Request to %s has timed out.\n", UsbGetDescription(device));
                 device->Error = ConnectionError;
                 return ErrorTimeout;
             }
@@ -1069,12 +1069,12 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
 
         if (Host->Channel[channel].SplitControl.SplitEnable)
         {
-            // printf("HCD: Pipe maxSize:%d speed:%d endpoint:%d device:%d transfer type:%d direction:%d \n",
+            // printk("HCD: Pipe maxSize:%d speed:%d endpoint:%d device:%d transfer type:%d direction:%d \n",
             //    pipe->MaxSize, pipe->Speed, pipe->EndPoint, pipe->Device, pipe->Type, pipe->Direction);
-            // printf("HCD: Working split enable %s.\n", UsbGetDescription(device));
+            // printk("HCD: Working split enable %s.\n", UsbGetDescription(device));
             if (Host->Channel[channel].Interrupt.Acknowledgement)
             {
-                // printf("HCD: Working split enable. ACK  %s.\n", UsbGetDescription(device));
+                // printk("HCD: Working split enable. ACK  %s.\n", UsbGetDescription(device));
                 for (tries = 0; tries < 3; tries++)
                 {
                     SetReg(&Host->Channel[channel].Interrupt);
@@ -1093,7 +1093,7 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
                     {
                         if (timeout++ == RequestTimeout)
                         {
-                            printf("HCD: Request split completion to %s has timed out.\n", UsbGetDescription(device));
+                            printk("HCD: Request split completion to %s has timed out.\n", UsbGetDescription(device));
                             device->Error = ConnectionError;
                             return ErrorTimeout;
                         }
@@ -1124,47 +1124,47 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
                 }
                 else if (Host->Channel[channel].Interrupt.TransactionError)
                 {
-                    printf("HCD: TransactionError error. Retrying \n");
+                    printk("HCD: TransactionError error. Retrying \n");
                     MicroDelay(25000);
                     continue;
                 }
 
-                // printf("HCD: Working split enable checking interrupts.  %s.\n", UsbGetDescription(device));
+                // printk("HCD: Working split enable checking interrupts.  %s.\n", UsbGetDescription(device));
                 if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, false)) != OK)
                 {
 
-                    printf("HCDI1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                    printk("HCDI1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                            ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                            ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
 
-                    printf("HCDI1: Request split completion to %s failed.\n", UsbGetDescription(device));
+                    printk("HCDI1: Request split completion to %s failed.\n", UsbGetDescription(device));
 
                     return result;
                 }
             }
             else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
             {
-                printf("HCD: Working split enable %s NACK.\n", UsbGetDescription(device));
+                printk("HCD: Working split enable %s NACK.\n", UsbGetDescription(device));
                 globalTries--;
                 MicroDelay(25000);
                 continue;
             }
             else if (Host->Channel[channel].Interrupt.TransactionError)
             {
-                printf("HCD: Working split enable %s TRANsCA ERROR.\n", UsbGetDescription(device));
+                printk("HCD: Working split enable %s TRANsCA ERROR.\n", UsbGetDescription(device));
                 MicroDelay(25000);
                 continue;
             }
         }
         else
         {
-            // printf("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
+            // printk("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
             if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
             {
-                printf("HCDI2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                printk("HCDI2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-                printf("HCDI2: Request to %s failed.\n", UsbGetDescription(device));
+                printk("HCDI2: Request to %s failed.\n", UsbGetDescription(device));
                 return ErrorRetry;
             }
         }
@@ -1179,11 +1179,11 @@ Result HcdChannelSendInterruptPollOne(struct UsbDevice *device,
         }
         if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
         {
-            printf("HCDI3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
-            // printf("HCDI3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+            printk("HCDI3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
+            // printk("HCDI3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
             //        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
             //        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-            // printf("HCDI3: Request to %s failed.\n", UsbGetDescription(device));
+            // printk("HCDI3: Request to %s failed.\n", UsbGetDescription(device));
             return result;
         }
         device->Error = ConnectionError;
@@ -1216,7 +1216,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
         {
             if (timeout++ == RequestTimeout)
             {
-                printf("HCD: Request to %s has timed out.\n", UsbGetDescription(device));
+                printk("HCD: Request to %s has timed out.\n", UsbGetDescription(device));
                 device->Error = ConnectionError;
                 return ErrorTimeout;
             }
@@ -1230,12 +1230,12 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 
         if (Host->Channel[channel].SplitControl.SplitEnable)
         {
-            // printf("HCD: Pipe maxSize:%d speed:%d endpoint:%d device:%d transfer type:%d direction:%d \n",
+            // printk("HCD: Pipe maxSize:%d speed:%d endpoint:%d device:%d transfer type:%d direction:%d \n",
             //    pipe->MaxSize, pipe->Speed, pipe->EndPoint, pipe->Device, pipe->Type, pipe->Direction);
-            // printf("HCD: Working split enable %s.\n", UsbGetDescription(device));
+            // printk("HCD: Working split enable %s.\n", UsbGetDescription(device));
             if (Host->Channel[channel].Interrupt.Acknowledgement)
             {
-                // printf("HCD: Working split enable. ACK  %s.\n", UsbGetDescription(device));
+                // printk("HCD: Working split enable. ACK  %s.\n", UsbGetDescription(device));
                 for (tries = 0; tries < 3; tries++)
                 {
                     SetReg(&Host->Channel[channel].Interrupt);
@@ -1254,7 +1254,7 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
                     {
                         if (timeout++ == RequestTimeout)
                         {
-                            printf("HCD: Request split completion to %s has timed out.\n", UsbGetDescription(device));
+                            printk("HCD: Request split completion to %s has timed out.\n", UsbGetDescription(device));
                             device->Error = ConnectionError;
                             return ErrorTimeout;
                         }
@@ -1275,54 +1275,54 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
                 }
                 else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
                 {
-                    printf("HCD: NAK got for split transactions. \n");
+                    printk("HCD: NAK got for split transactions. \n");
                     globalTries--;
                     MicroDelay(25000);
                     continue;
                 }
                 else if (Host->Channel[channel].Interrupt.TransactionError)
                 {
-                    printf("HCD: TransactionError error. Retrying \n");
+                    printk("HCD: TransactionError error. Retrying \n");
                     MicroDelay(25000);
                     continue;
                 }
 
-                // printf("HCD: Working split enable checking interrupts.  %s.\n", UsbGetDescription(device));
+                // printk("HCD: Working split enable checking interrupts.  %s.\n", UsbGetDescription(device));
                 if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, false)) != OK)
                 {
 
-                    printf("HCD1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                    printk("HCD1: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                            ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                            ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
 
-                    printf("HCD1: Request split completion to %s failed.\n", UsbGetDescription(device));
+                    printk("HCD1: Request split completion to %s failed.\n", UsbGetDescription(device));
 
                     return result;
                 }
             }
             else if (Host->Channel[channel].Interrupt.NegativeAcknowledgement)
             {
-                printf("HCD: Working split enable %s NACK.\n", UsbGetDescription(device));
+                printk("HCD: Working split enable %s NACK.\n", UsbGetDescription(device));
                 globalTries--;
                 MicroDelay(25000);
                 continue;
             }
             else if (Host->Channel[channel].Interrupt.TransactionError)
             {
-                printf("HCD: Working split enable %s TRANsCA ERROR.\n", UsbGetDescription(device));
+                printk("HCD: Working split enable %s TRANsCA ERROR.\n", UsbGetDescription(device));
                 MicroDelay(25000);
                 continue;
             }
         }
         else
         {
-            // printf("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
+            // printk("HCD: Working not split transaction  %s.\n", UsbGetDescription(device));
             if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
             {
-                printf("HCD2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+                printk("HCD2: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                        ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                        ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-                printf("HCD2: Request to %s failed.\n", UsbGetDescription(device));
+                printk("HCD2: Request to %s failed.\n", UsbGetDescription(device));
                 return ErrorRetry;
             }
         }
@@ -1332,13 +1332,13 @@ Result HcdChannelSendWaitOne(struct UsbDevice *device,
 
     if (globalTries == 3 || actualTries == 10)
     {
-        printf("HCD3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
+        printk("HCD3: Request to %s has failed 3 times.\n", UsbGetDescription(device));
         if ((result = HcdChannelInterruptToError(device, Host->Channel[channel].Interrupt, !Host->Channel[channel].SplitControl.SplitEnable)) != OK)
         {
-            printf("HCD3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
+            printk("HCD3: Control message to %x: %02x%02x%02x%02x %02x%02x%02x%02x.\n", *(uint32_t *)pipe,
                    ((uint8_t *)request)[0], ((uint8_t *)request)[1], ((uint8_t *)request)[2], ((uint8_t *)request)[3],
                    ((uint8_t *)request)[4], ((uint8_t *)request)[5], ((uint8_t *)request)[6], ((uint8_t *)request)[7]);
-            printf("HCD3: Request to %s failed.\n", UsbGetDescription(device));
+            printk("HCD3: Request to %s failed.\n", UsbGetDescription(device));
             return result;
         }
         device->Error = ConnectionError;
@@ -1355,7 +1355,7 @@ void HcdTransmitChannel(uint8_t channel, void *buffer)
     WriteThroughReg(&Host->Channel[channel].SplitControl);
 
     if (((uint32_t)buffer & 3) != 0)
-        printf("HCD: Transfer buffer %x is not DWORD aligned. Ignored, but dangerous.\n", buffer);
+        printk("HCD: Transfer buffer %x is not DWORD aligned. Ignored, but dangerous.\n", buffer);
 
     Host->Channel[channel].DmaAddress = (void *)((uint32_t)buffer | (uint32_t)0xC0000000);
     WriteThroughReg(&Host->Channel[channel].DmaAddress);
@@ -1375,59 +1375,59 @@ Result HcdChannelInterruptToError(struct UsbDevice *device, struct ChannelInterr
     if (interrupts.AhbError)
     {
         device->Error = AhbError;
-        printf("HCD: AHB error in transfer.\n");
+        printk("HCD: AHB error in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.Stall)
     {
         device->Error = Stall;
-        printf("HCD: Stall error in transfer.\n");
+        printk("HCD: Stall error in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.NegativeAcknowledgement)
     {
         device->Error = NoAcknowledge;
-        printf("HCD: NAK error in transfer.\n");
+        printk("HCD: NAK error in transfer.\n");
         return ErrorDevice;
     }
     if (!interrupts.Acknowledgement)
     {
-        printf("HCD: Transfer was not acknowledged.\n");
+        printk("HCD: Transfer was not acknowledged.\n");
         result = ErrorTimeout;
     }
     if (interrupts.NotYet)
     {
         device->Error = NotYetError;
-        printf("HCD: Not yet error in transfer.\n");
+        printk("HCD: Not yet error in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.BabbleError)
     {
         device->Error = Babble;
-        printf("HCD: Babble error in transfer.\n");
+        printk("HCD: Babble error in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.FrameOverrun)
     {
         device->Error = BufferError;
-        printf("HCD: Frame overrun in transfer.\n");
+        printk("HCD: Frame overrun in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.DataToggleError)
     {
         device->Error = BitError;
-        printf("HCD: Data toggle error in transfer.\n");
+        printk("HCD: Data toggle error in transfer.\n");
         return ErrorDevice;
     }
     if (interrupts.TransactionError)
     {
         device->Error = ConnectionError;
-        printf("HCD: Transaction error in transfer.\n");
+        printk("HCD: Transaction error in transfer.\n");
         return ErrorDevice;
     }
     if (!interrupts.TransferComplete && isComplete)
     {
-        printf("HCD: Transfer did not complete.\n");
+        printk("HCD: Transfer did not complete.\n");
         result = ErrorTimeout;
     }
     return result;

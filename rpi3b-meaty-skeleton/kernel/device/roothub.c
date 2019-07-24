@@ -1,4 +1,3 @@
-#include <wchar.h>
 #include <device/roothub.h>
 #include <device/hub.h>
 #include <device/hcd.h>
@@ -7,8 +6,7 @@
 #include <stdint.h>
 #include <kernel/types.h>
 #include <kernel/systimer.h>
-#include <plibc/stdio.h>
-#include <stdlib.h>
+#include <klib/printk.h>
 
 extern volatile struct PowerReg *Power;
 struct UsbDeviceDescriptor DeviceDescriptor = {
@@ -126,7 +124,7 @@ Result HcdProcessRootHubMessage(struct UsbDevice *device,
 
     if (pipe.Type == Interrupt)
     {
-        printf("HCD.Hub: RootHub does not support IRQ pipes.\n");
+        printk("HCD.Hub: RootHub does not support IRQ pipes.\n");
         device->Error = Stall;
         return OK;
     }

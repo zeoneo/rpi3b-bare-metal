@@ -1,12 +1,13 @@
 #include<device/emmc.h>
-#include<plibc/stdio.h>
+#include<klib/printk.h>
 #include<kernel/rpi-base.h>
 #include<kernel/systimer.h>
 
 #define DEBUG_INFO 1
+#define NULL (void *)0
 
 #if DEBUG_INFO == 1
-#define LOG_DEBUG(...) printf( __VA_ARGS__ )
+#define LOG_DEBUG(...) printk( __VA_ARGS__ )
 #else
 #define LOG_DEBUG(...)
 #endif
@@ -426,24 +427,25 @@ struct __attribute__((__packed__, aligned(4))) regCID {
 	};
 };
 
-#include <assert.h>								// Need for compile time static_assert
+// #include <assert.h>								// Need for compile time static_assert
 
+//TODO: fix assert import
 /* Check the main register section group sizes */
-static_assert(sizeof(struct regBLKSIZECNT) == 0x04, "EMMC register BLKSIZECNT should be 0x04 bytes in size");
-static_assert(sizeof(struct regCMDTM) == 0x04, "EMMC register CMDTM should be 0x04 bytes in size");
-static_assert(sizeof(struct regSTATUS) == 0x04, "EMMC register STATUS should be 0x04 bytes in size");
-static_assert(sizeof(struct regCONTROL0) == 0x04, "EMMC register CONTROL0 should be 0x04 bytes in size");
-static_assert(sizeof(struct regCONTROL1) == 0x04, "EMMC register CONTROL1 should be 0x04 bytes in size");
-static_assert(sizeof(struct regCONTROL2) == 0x04, "EMMC register CONTROL2 should be 0x04 bytes in size");
-static_assert(sizeof(struct regINTERRUPT) == 0x04, "EMMC register INTERRUPT should be 0x04 bytes in size");
-static_assert(sizeof(struct regIRPT_MASK) == 0x04, "EMMC register IRPT_MASK should be 0x04 bytes in size");
-static_assert(sizeof(struct regIRPT_EN) == 0x04, "EMMC register IRPT_EN should be 0x04 bytes in size");
-static_assert(sizeof(struct regTUNE_STEP) == 0x04, "EMMC register TUNE_STEP should be 0x04 bytes in size");
-static_assert(sizeof(struct regSLOTISR_VER) == 0x04, "EMMC register SLOTISR_VER should be 0x04 bytes in size");
+// static_assert(sizeof(struct regBLKSIZECNT) == 0x04, "EMMC register BLKSIZECNT should be 0x04 bytes in size");
+// static_assert(sizeof(struct regCMDTM) == 0x04, "EMMC register CMDTM should be 0x04 bytes in size");
+// static_assert(sizeof(struct regSTATUS) == 0x04, "EMMC register STATUS should be 0x04 bytes in size");
+// static_assert(sizeof(struct regCONTROL0) == 0x04, "EMMC register CONTROL0 should be 0x04 bytes in size");
+// static_assert(sizeof(struct regCONTROL1) == 0x04, "EMMC register CONTROL1 should be 0x04 bytes in size");
+// static_assert(sizeof(struct regCONTROL2) == 0x04, "EMMC register CONTROL2 should be 0x04 bytes in size");
+// static_assert(sizeof(struct regINTERRUPT) == 0x04, "EMMC register INTERRUPT should be 0x04 bytes in size");
+// static_assert(sizeof(struct regIRPT_MASK) == 0x04, "EMMC register IRPT_MASK should be 0x04 bytes in size");
+// static_assert(sizeof(struct regIRPT_EN) == 0x04, "EMMC register IRPT_EN should be 0x04 bytes in size");
+// static_assert(sizeof(struct regTUNE_STEP) == 0x04, "EMMC register TUNE_STEP should be 0x04 bytes in size");
+// static_assert(sizeof(struct regSLOTISR_VER) == 0x04, "EMMC register SLOTISR_VER should be 0x04 bytes in size");
 
-static_assert(sizeof(struct regOCR) == 0x04, "EMMC register OCR should be 0x04 bytes in size");
-static_assert(sizeof(struct regSCR) == 0x08, "EMMC register SCR should be 0x08 bytes in size");
-static_assert(sizeof(struct regCID) == 0x10, "EMMC register CID should be 0x10 bytes in size");
+// static_assert(sizeof(struct regOCR) == 0x04, "EMMC register OCR should be 0x04 bytes in size");
+// static_assert(sizeof(struct regSCR) == 0x08, "EMMC register SCR should be 0x08 bytes in size");
+// static_assert(sizeof(struct regCID) == 0x10, "EMMC register CID should be 0x10 bytes in size");
 
 
 /*--------------------------------------------------------------------------}
@@ -808,7 +810,7 @@ static SDRESULT sdWaitForInterrupt (uint32_t mask )
 		(ival & INT_CMD_TIMEOUT) ||									// Command timeout occurred 
 		(ival & INT_DATA_TIMEOUT) )									// Data timeout occurred
 	{
-		printf("EMMC: Wait for interrupt %08x timeout: %08x %08x %08x\n", 
+		printk("EMMC: Wait for interrupt %08x timeout: %08x %08x %08x\n", 
 			(unsigned int)mask, (unsigned int)EMMC_STATUS->Raw32, 
 			(unsigned int)ival, (unsigned int)*EMMC_RESP0);			// Log any error if requested
 
@@ -817,7 +819,7 @@ static SDRESULT sdWaitForInterrupt (uint32_t mask )
 
 		return SD_TIMEOUT;											// Return SD_TIMEOUT
 	} else if ( ival & INT_ERROR_MASK ) {
-		printf("EMMC: Error waiting for interrupt: %08x %08x %08x\n", 
+		printk("EMMC: Error waiting for interrupt: %08x %08x %08x\n", 
 			(unsigned int)EMMC_STATUS->Raw32, (unsigned int)ival, 
 			(unsigned int)*EMMC_RESP0);								// Log any error if requested
 
@@ -846,7 +848,7 @@ static SDRESULT sdWaitForCommand (void)
 	}
 	if( (td >= 1000000) || (EMMC_INTERRUPT->Raw32 & INT_ERROR_MASK) )// Error occurred or it timed out
     {
-		printf("EMMC: Wait for command aborted: %08x %08x %08x\n", 
+		printk("EMMC: Wait for command aborted: %08x %08x %08x\n", 
 			(unsigned int)EMMC_STATUS->Raw32, (unsigned int)EMMC_INTERRUPT->Raw32, 
 			(unsigned int)*EMMC_RESP0);								// Log any error if requested
 		return SD_BUSY;												// return SD_BUSY
@@ -959,7 +961,7 @@ static SDRESULT sdSetClock (uint32_t freq)
 			else td = tick_difference(start_time, timer_getTickCount64());			// Time difference between start time and now
 	}
 	if (td >= 100000) {												// Timeout waiting for inghibit flags
-		printf("EMMC: Set clock: timeout waiting for inhibit flags. Status %08x.\n",
+		printk("EMMC: Set clock: timeout waiting for inhibit flags. Status %08x.\n",
 			(unsigned int)EMMC_STATUS->Raw32);
 		return SD_ERROR_CLOCK;										// Return clock error
 	}
@@ -990,7 +992,7 @@ static SDRESULT sdSetClock (uint32_t freq)
 			else td = tick_difference(start_time, timer_getTickCount64());			// Time difference between start time and now
 	}
 	if (td >= 100000) {												// Timeout waiting for stability flag
-		printf("EMMC: ERROR: failed to get stable clock.\n");
+		printk("EMMC: ERROR: failed to get stable clock.\n");
 		return SD_ERROR_CLOCK;										// Return clock error
 	}
 	return SD_OK;													// Clock frequency set worked
@@ -1009,7 +1011,7 @@ static SDRESULT sdWaitForData (void)
 	}
 	if ( (td >= 500000) || (EMMC_INTERRUPT->Raw32 & INT_ERROR_MASK) )
     {
-		printf("EMMC: Wait for data aborted: %08x %08x %08x\n", 
+		printk("EMMC: Wait for data aborted: %08x %08x %08x\n", 
 			(unsigned int)EMMC_STATUS->Raw32, (unsigned int)EMMC_INTERRUPT->Raw32, 
 			(unsigned int)*EMMC_RESP0);								// Log any error if requested
 		return SD_BUSY;												// return SD_BUSY
@@ -1092,7 +1094,7 @@ static SDRESULT sdResetCard (void)
 			else td = tick_difference(start_time, timer_getTickCount64());			// Time difference between start time and now
 	}
 	if (td >= 100000) {												// Timeout waiting for reset flag
-		printf("EMMC: ERROR: failed to reset.\n");
+		printk("EMMC: ERROR: failed to reset.\n");
 		return SD_ERROR_RESET;										// Return reset SD Card error
     }
 
@@ -1136,7 +1138,7 @@ static SDRESULT sdReadSCR (void)
 	// Wait for READ_RDY interrupt.
 	if( (resp = sdWaitForInterrupt(INT_READ_RDY)) )
 	{
-		printf("EMMC: Timeout waiting for ready to read\n");
+		printk("EMMC: Timeout waiting for ready to read\n");
 		return sdDebugResponse(resp);
 	}
 
@@ -1157,11 +1159,11 @@ static SDRESULT sdReadSCR (void)
 	// If SCR not fully read, the operation timed out.
 	if( numRead != 2 )
 	{
-		printf("EMMC: SEND_SCR ERR: %08x %08x %08x\n", 
+		printk("EMMC: SEND_SCR ERR: %08x %08x %08x\n", 
 				(unsigned int)EMMC_STATUS->Raw32, 
 				(unsigned int)EMMC_INTERRUPT->Raw32, 
 				(unsigned int)*EMMC_RESP0);
-		printf("EMMC: Reading SCR, only read %d words\n", numRead);
+		printk("EMMC: Reading SCR, only read %d words\n", numRead);
 
 		return SD_TIMEOUT;
 	}
@@ -1176,17 +1178,17 @@ static SDRESULT sdAppSendOpCond (uint32_t arg )
 	SDRESULT  resp;
 	if( (resp = sdSendCommandA(IX_APP_SEND_OP_COND,arg)) && resp != SD_TIMEOUT )
     {
-		printf("EMMC: ACMD41 returned non-timeout error %d\n",resp);
+		printk("EMMC: ACMD41 returned non-timeout error %d\n",resp);
 		return resp;
     }
 	int count = 6;
 	while( (sdCard.ocr.card_power_up_busy == 0) && count-- )
 	{
-		//scPrintf("EMMC: Retrying ACMD SEND_OP_COND status %08x\n",*EMMC_STATUS);
+		//scprintk("EMMC: Retrying ACMD SEND_OP_COND status %08x\n",*EMMC_STATUS);
 		MicroDelay(400000);
 		if( (resp = sdSendCommandA(IX_APP_SEND_OP_COND,arg)) && resp != SD_TIMEOUT )
 		{
-			printf("EMMC: ACMD41 returned non-timeout error %d\n",resp);
+			printk("EMMC: ACMD41 returned non-timeout error %d\n",resp);
 			return resp;
 		}
 	}
@@ -1250,7 +1252,7 @@ SDRESULT sdInitCard (bool mount) {
 	// Actually cards seem to respond in identify state at this point.
 	// Check this with a SEND_STATUS (CMD13)
 	//if( (resp = sdSendCommand(IX_SEND_STATUS)) ) return sdDebugResponse(resp);
-	//printf("Card current state: %08x %s\n",sdCard.status,STATUS_NAME[sdCard.cardState]);
+	//printk("Card current state: %08x %s\n",sdCard.status,STATUS_NAME[sdCard.cardState]);
 
 	// Send SEND_CSD (CMD9) and parse the result.
 	if( (resp = sdSendCommand(IX_SEND_CSD)) ) return sdDebugResponse(resp);
@@ -1285,7 +1287,7 @@ SDRESULT sdInitCard (bool mount) {
 	unsigned int serial = sdCard.cid.SerialNumHi;
 	serial <<= 16;
 	serial |= sdCard.cid.SerialNumLo;
-	    printf("EMMC: SD Card %s %dMb mfr %d '%c%c:%c%c%c%c%c' r%d.%d %d/%d, #%08x RCA %04x\n",
+	    printk("EMMC: SD Card %s %dMb mfr %d '%c%c:%c%c%c%c%c' r%d.%d %d/%d, #%08x RCA %04x\n",
 		SD_TYPE_NAME[sdCard.type], (int)(sdCard.CardCapacity >> 20),
 		sdCard.cid.MID, sdCard.cid.OID_Hi, sdCard.cid.OID_Lo,
 		sdCard.cid.ProdName1, sdCard.cid.ProdName2, sdCard.cid.ProdName3, sdCard.cid.ProdName4, sdCard.cid.ProdName5,
@@ -1350,7 +1352,7 @@ static SDRESULT sdTransferBlocks (uint32_t startBlock, uint32_t numBlocks, uint8
 		// Wait for ready interrupt for the next block.
 		if( (resp = sdWaitForInterrupt(readyInt)) )
 		{
-			printf("EMMC: Timeout waiting for ready to read\n");
+			printk("EMMC: Timeout waiting for ready to read\n");
 			return sdDebugResponse(resp);
 		}
 
@@ -1389,7 +1391,7 @@ static SDRESULT sdTransferBlocks (uint32_t startBlock, uint32_t numBlocks, uint8
 
 	// If not all bytes were read, the operation timed out.
 	if( blocksDone != numBlocks ) {
-		printf("EMMC: Transfer error only done %d/%d blocks\n",blocksDone,numBlocks);
+		printk("EMMC: Transfer error only done %d/%d blocks\n",blocksDone,numBlocks);
 		LOG_DEBUG("EMMC: Transfer: %08x %08x %08x %08x\n", (unsigned int)EMMC_STATUS->Raw32, 
 			(unsigned int)EMMC_INTERRUPT->Raw32, (unsigned int)*EMMC_RESP0, 
 			(unsigned int)EMMC_BLKSIZECNT->Raw32);
@@ -1402,7 +1404,7 @@ static SDRESULT sdTransferBlocks (uint32_t startBlock, uint32_t numBlocks, uint8
 	// For a write operation, ensure DATA_DONE interrupt before we stop transmission.
 	if( write && (resp = sdWaitForInterrupt(INT_DATA_DONE)) )
 	{
-		printf("EMMC: Timeout waiting for data done\n");
+		printk("EMMC: Timeout waiting for data done\n");
 		return sdDebugResponse(resp);
 	}
 
@@ -1438,7 +1440,7 @@ SDRESULT sdClearBlocks(uint32_t startBlock , uint32_t numBlocks)
 	{
 	if ( --count == 0 )
 		{
-		printf("EMMC: Timeout waiting for erase: %08x %08x\n", 
+		printk("EMMC: Timeout waiting for erase: %08x %08x\n", 
 			(unsigned int)EMMC_STATUS->Raw32, (unsigned int)EMMC_INTERRUPT->Raw32);
 		return SD_TIMEOUT;
 		}
@@ -1446,7 +1448,7 @@ SDRESULT sdClearBlocks(uint32_t startBlock , uint32_t numBlocks)
 		MicroDelay(10);
 	}
 
-	printf("EMMC: completed erase command int %08x\n", *EMMC_INTERRUPT);
+	printk("EMMC: completed erase command int %08x\n", *EMMC_INTERRUPT);
 
 	return SD_OK;
 }

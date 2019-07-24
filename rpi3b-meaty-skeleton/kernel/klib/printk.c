@@ -1,10 +1,10 @@
 /**
- * @file printf.c
+ * @file printk.c
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
-#include <plibc/stdio.h>
 #include <stdarg.h>
+#include <klib/printk.h>
 #include <device/uart0.h>
 
 /**
@@ -35,7 +35,7 @@ int fputc(int c, int dev)
 extern int _doprnt(const char *fmt, va_list ap,
                    int (*putc_func)(int, int), int putc_arg);
 
-int printf(const char *format, ...)
+int printk(const char *format, ...)
 {
     va_list ap;
     int ret;

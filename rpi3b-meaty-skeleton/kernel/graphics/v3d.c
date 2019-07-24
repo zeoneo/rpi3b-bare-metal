@@ -1,6 +1,6 @@
 #include <graphics/v3d.h>
 #include <kernel/rpi-mailbox-interface.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #define v3d1 ((volatile __attribute__((aligned(4))) uint32_t *)(uintptr_t)(V3D_BASE))
 
@@ -32,8 +32,8 @@ void set_max_speed() {
     RPI_PropertyProcess();
     mp = RPI_PropertyGet(TAG_SET_CLOCK_RATE);
 
-    printf("\n clock_id: %d", (uint32_t)(mp->data.buffer_32[0]));
-    printf("\n max_clock_rate: %d \n", max_clock_rate);
+    printk("\n clock_id: %d", (uint32_t)(mp->data.buffer_32[0]));
+    printk("\n max_clock_rate: %d \n", max_clock_rate);
 
 }
 
@@ -42,7 +42,7 @@ bool init_v3d (void) {
     RPI_PropertyInit();
     RPI_PropertyAddTag(TAG_ENABLE_QPU, !0);
     RPI_PropertyProcess();
-    printf("\n v3d1[V3D_IDENT0]:%x \n", v3d1[V3D_IDENT0]);
+    printk("\n v3d1[V3D_IDENT0]:%x \n", v3d1[V3D_IDENT0]);
 	if (v3d1[V3D_IDENT0] == 0x02443356) { // Magic number.
     	return true;
 	}

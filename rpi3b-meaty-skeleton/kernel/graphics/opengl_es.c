@@ -1,7 +1,7 @@
 #include<graphics/opengl_es.h>
 #include<graphics/v3d.h>
 #include<graphics/gpu_mem_util.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #include<stdint.h>
 #include<stdbool.h>
@@ -71,14 +71,14 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
 
     uint32_t handle = v3d_mem_alloc(0x800000, 0x1000, MEM_FLAG_COHERENT | MEM_FLAG_ZERO);
     if(handle == 0) {
-        printf("Could not allocate memory in gpu \n");
+        printk("Could not allocate memory in gpu \n");
         return;
     }
 
     uint32_t bus_addr = v3d_mem_lock(handle);
 	uint32_t arm_addr = bus_addr & (~0xC0000000);
 
-	printf("handle :%x, bus_addr:%x arm_addr:%x", handle, bus_addr, arm_addr);
+	printk("handle :%x, bus_addr:%x arm_addr:%x", handle, bus_addr, arm_addr);
     uint8_t *list = (uint8_t *)arm_addr;
     uint8_t *p = list;
 
@@ -333,18 +333,18 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
 	v3d[V3D_CT0CA] = bus_addr;
 	v3d[V3D_CT0EA] = bus_addr + length;
 
-	printf("Wait for control list to execute\n");
+	printk("Wait for control list to execute\n");
 	// Wait for control list to execute
 	while (v3d[V3D_CT0CS] & 0x20)
 		;
 
-	printf("wait for binning to finish v3d[V3D_BFC]: %x \n", v3d[V3D_BFC]);
+	printk("wait for binning to finish v3d[V3D_BFC]: %x \n", v3d[V3D_BFC]);
 	// wait for binning to finish
 	while (v3d[V3D_BFC] == 0)
 	{
 	}
 
-	printf("Stop Thread \n");
+	printk("Stop Thread \n");
 	// stop the thread
 	v3d[V3D_CT0CS] = 0x20;
 
@@ -353,24 +353,24 @@ void test_triangle (uint16_t renderWth, uint16_t renderHt, uint32_t renderBuffer
 	v3d[V3D_CT1CA] = bus_addr + BUFFER_RENDER_CONTROL;
 	v3d[V3D_CT1EA] = bus_addr + BUFFER_RENDER_CONTROL + render_length;
 
-	printf("Wait for render to execute \n");
+	printk("Wait for render to execute \n");
 	// Wait for render to execute
 	while (v3d[V3D_CT1CS] & 0x20)
 		;
 
-	printf("wait for render to finish \n");
+	printk("wait for render to finish \n");
 	// wait for render to finish
 	while (v3d[V3D_RFC] == 0)
 	{
 	}
 
-	printf(" stop the thread \n");
+	printk(" stop the thread \n");
 	// stop the thread
 	v3d[V3D_CT1CS] = 0x20;
 
-	printf(" Release resources \n");
+	printk(" Release resources \n");
 	// Release resources
 	v3d_mem_unlock(handle);
 	v3d_mem_free(handle);
-	printf(" Returning  \n");
+	printk(" Returning  \n");
 }

@@ -6,11 +6,17 @@
 
 #define PAGE_SIZE 4096
 
-typedef struct
-{
-    uint8_t allocated : 1;   // This page is allocated to something
-    uint8_t kernel_page : 1; // This page is a part of the kernel
-    uint32_t reserved : 30;
+// typedef struct
+// {
+//     uint8_t allocated : 1;   // This page is allocated to something
+//     uint8_t kernel_page : 1; // This page is a part of the kernel
+//     uint32_t reserved : 30;
+// } page_flags_t;
+
+typedef struct __attribute__((__packed__, aligned(1))) {
+    unsigned allocated : 1;							// @95-84	ccc as on SD CSD bits
+    unsigned kernel_page : 1;					// @83-80	read_bl_len on SD CSD bits
+    unsigned reserved : 6;
 } page_flags_t;
 
 typedef struct {
@@ -22,9 +28,9 @@ typedef struct {
 
 typedef struct page
 {
-    uint32_t vaddr_mapped; // The virtual address that maps to this page
+    uint16_t vaddr_higher; // The virtual address that maps to this page
+    uint8_t vaddr_lower;
     page_flags_t flags;
-    DEFINE_LINK(page);
 } page_t;
 
 void mem_init();

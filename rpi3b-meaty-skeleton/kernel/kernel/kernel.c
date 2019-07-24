@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #include <device/keyboard.h>
 #include <device/mouse.h>
@@ -12,10 +12,11 @@
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
 #include <mem/physmem.h>
-#include <graphics/v3d.h>
-#include <graphics/pi_console.h>
-#include <graphics/opengl_es.h>
-#include <graphics/opengl_es2.h>
+#include <mem/virtmem.h>
+// #include <graphics/v3d.h>
+// #include <graphics/pi_console.h>
+// #include <graphics/opengl_es.h>
+// #include <graphics/opengl_es2.h>
 
 extern uint32_t __kernel_end;
 extern uint32_t __text_boot_start;
@@ -68,22 +69,20 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void)atags;
 
 	uart_init();
-	printf("\n-----------------Kernel Started Dude--------------------\n");
-	hexstrings((uint32_t)&__text_boot_start);
-	printf("\n __text_boot_end: 0x%x \n", &__text_boot_end);
-	printf("\n __text_boot_end_aligned: 0x%x \n", &__text_boot_end_aligned);
-	printf("\n Kernel End: 0x%x \n", &__kernel_end);
-	printf("\n First Level Table Base : 0x%x \n", &__first_lvl_tbl_base);
-	printf("\n Second Level Table Base : 0x%x \n", &__second_lvl_tbl_base);
-	printf("\n Second Level Table End : 0x%x \n", &__second_lvl_tbl_end);
+	printk("\n-----------------Kernel Started Dude--------------------\n");
 	mem_init();
-	printf("\n Num of free Pages: %d \n", get_num_of_free_pages());
-	// interrupts_init();
+	printk("\n Num of free Pages: %d \n", get_num_of_free_pages());
+	interrupts_init();
+	timer_init();
+	printk("Timer Ticks Now: %d \n", timer_getTickCount32());
+	timer_set(3000);
 
-	// timer_init();
-	// mem_init();
+	// printk("Timer Ticks Now: %d \n", timer_getTickCount32());
+	virt_mem_init();
+	get_new_vpage(0x8c000000);
+	printk("\n Num of free Pages: %d \n", get_num_of_free_pages());
 
-	
+	printk("\n-----------------Kernel Init Completed--------------------\n");
 	while (1)
 	{
 	}

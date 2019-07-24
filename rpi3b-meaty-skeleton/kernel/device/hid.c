@@ -5,7 +5,7 @@
 #include <device/usbd.h>
 #include <device/usb_report.h>
 #include <device/usb-mem.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 #include <kernel/systimer.h>
 
 #define HidMessageTimeout 10
@@ -17,7 +17,7 @@ extern Result (*InterfaceClassAttach[InterfaceClassAttachCount])(struct UsbDevic
 
 void HidLoad()
 {
-    printf("CSUD: HID driver version 0.1\n");
+    printk("CSUD: HID driver version 0.1\n");
     InterfaceClassAttach[InterfaceClassHid] = HidAttach;
 }
 
@@ -37,13 +37,13 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     }
     if (device->Interfaces[interfaceNumber].EndpointCount < 1)
     {
-        printf("HID: Invalid HID device with fewer than one endpoints (%d).\n", device->Interfaces[interfaceNumber].EndpointCount);
+        printk("HID: Invalid HID device with fewer than one endpoints (%d).\n", device->Interfaces[interfaceNumber].EndpointCount);
         return ErrorIncompatible;
     }
     if (device->Endpoints[interfaceNumber][0].EndpointAddress.Direction != In ||
         device->Endpoints[interfaceNumber][0].Attributes.Type != Interrupt)
     {
-        printf("HID: Invalid HID device with unusual endpoints (0).\n");
+        printk("HID: Invalid HID device with unusual endpoints (0).\n");
         return ErrorIncompatible;
     }
     if (device->Interfaces[interfaceNumber].EndpointCount >= 2)
@@ -51,28 +51,28 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         if (device->Endpoints[interfaceNumber][1].EndpointAddress.Direction != Out ||
             device->Endpoints[interfaceNumber][1].Attributes.Type != Interrupt)
         {
-            printf("HID: Invalid HID device with unusual endpoints (1).\n");
+            printk("HID: Invalid HID device with unusual endpoints (1).\n");
             return ErrorIncompatible;
         }
     }
     if (device->Status != Configured)
     {
-        printf("HID: Cannot start driver on unconfigured device!\n");
+        printk("HID: Cannot start driver on unconfigured device!\n");
         return ErrorDevice;
     }
     if (device->Interfaces[interfaceNumber].SubClass == 1)
     {
         if (device->Interfaces[interfaceNumber].Protocol == 1)
-            printf("HID: Boot keyboard detected.\n");
+            printk("HID: Boot keyboard detected.\n");
         else if (device->Interfaces[interfaceNumber].Protocol == 2)
-            printf("HID: Boot mouse detected.\n");
+            printk("HID: Boot mouse detected.\n");
         else
-            printf("HID: Unknown boot device detected.\n");
+            printk("HID: Unknown boot device detected.\n");
 
-        printf("HID: Reverting from boot to normal HID mode.\n");
+        printk("HID: Reverting from boot to normal HID mode.\n");
         if ((result = HidSetProtocol(device, interfaceNumber, 1)) != OK) // change protocol to 1 for report mode. 0 is boot mode
         {
-            printf("HID: Could not revert to report mode from HID mode.\n");
+            printk("HID: Could not revert to report mode from HID mode.\n");
             return result;
         }
         pollingInterval = device->Endpoints[interfaceNumber][0].Interval;
@@ -103,19 +103,19 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
         header = (void *)((uint8_t *)header + header->DescriptorLength);
     } while (true);
 
-    // printf("HID_PRAKASH descriptor address: %x \n", descriptor);
+    // printk("HID_PRAKASH descriptor address: %x \n", descriptor);
     if (descriptor == NULL)
     {
-        printf("HID: No HID descriptor in %s.Interface%d. Cannot be a HID device.\n", UsbGetDescription(device), interfaceNumber + 1);
+        printk("HID: No HID descriptor in %s.Interface%d. Cannot be a HID device.\n", UsbGetDescription(device), interfaceNumber + 1);
         return ErrorIncompatible;
     }
 
     if (descriptor->HidVersion > 0x111)
     {
-        printf("HID: Device uses unsupported HID version %x.%x.\n", descriptor->HidVersion >> 8, descriptor->HidVersion & 0xff);
+        printk("HID: Device uses unsupported HID version %x.%x.\n", descriptor->HidVersion >> 8, descriptor->HidVersion & 0xff);
         return ErrorIncompatible;
     }
-    printf("HID: Device version HID %x.%x.\n", descriptor->HidVersion >> 8, descriptor->HidVersion & 0xff);
+    printk("HID: Device version HID %x.%x.\n", descriptor->HidVersion >> 8, descriptor->HidVersion & 0xff);
 
     device->DeviceDeallocate = HidDeallocate;
     device->DeviceDetached = HidDetached;
@@ -126,45 +126,45 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     }
 
     device->DriverData->DataSize = sizeof(struct HidDevice);
-    // printf("HID_PRAKASH: debug 2. \n");
+    // printk("HID_PRAKASH: debug 2. \n");
     device->DriverData->DeviceDriver = DeviceDriverHid;
-    // printf("HID_PRAKASH: debug 3. \n");
+    // printk("HID_PRAKASH: debug 3. \n");
     data = (struct HidDevice *)device->DriverData;
     data->pollingIntervalInMs = pollingInterval == 0 ? 4 : pollingInterval; //atleast 4ms of polling interval.
     data->Descriptor = descriptor;
     data->DriverData = NULL;
 
     uint16_t length_aligned = descriptor->LengthHi << 8 | descriptor->LengthLo;
-    printf("HID_PRAKASH: Descriptor count :%d  \n", descriptor->DescriptorCount);
-    // printf("HID_PRAKASH: debug 3.01. size:%x  \n", length_aligned);
+    printk("HID_PRAKASH: Descriptor count :%d  \n", descriptor->DescriptorCount);
+    // printk("HID_PRAKASH: debug 3.01. size:%x  \n", length_aligned);
     reportDescriptor = MemoryAllocate(length_aligned); //
     if (reportDescriptor == NULL)
     {
-        // printf("HID_PRAKASH: debug 3.1. \n");
+        // printk("HID_PRAKASH: debug 3.1. \n");
         result = ErrorMemory;
         goto deallocate;
     }
 
     if ((result = UsbGetDescriptor(device, HidReport, 0, interfaceNumber, reportDescriptor, length_aligned, length_aligned, 1)) != OK)
     {
-        // printf("HID_PRAKASH: debug 5. \n");
+        // printk("HID_PRAKASH: debug 5. \n");
         MemoryDeallocate(reportDescriptor);
-        // printf("HID_PRAKASH: debug 6. \n");
-        printf("HID: Could not read report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
+        // printk("HID_PRAKASH: debug 6. \n");
+        printk("HID: Could not read report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
         goto deallocate;
     }
     if ((result = HidParseReportDescriptor(device, reportDescriptor, length_aligned)) != OK)
     {
-        // printf("HID_PRAKASH: debug 7. \n");
+        // printk("HID_PRAKASH: debug 7. \n");
         MemoryDeallocate(reportDescriptor);
-        // printf("HID_PRAKASH: debug 8. \n");
-        printf("HID: Invalid report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
+        // printk("HID_PRAKASH: debug 8. \n");
+        printk("HID: Invalid report descriptor for %s.Interface%d.\n", UsbGetDescription(device), interfaceNumber + 1);
         goto deallocate;
     }
 
-    // printf("HID_PRAKASH: debug 9. \n");
+    // printk("HID_PRAKASH: debug 9. \n");
     MemoryDeallocate(reportDescriptor);
-    // printf("HID_PRAKASH: debug     10. \n");
+    // printk("HID_PRAKASH: debug     10. \n");
     reportDescriptor = NULL;
 
     data->ParserResult->Interface = interfaceNumber;
@@ -174,10 +174,10 @@ Result HidAttach(struct UsbDevice *device, uint32_t interfaceNumber)
     {
         HidUsageAttach[(uint16_t)data->ParserResult->Application.Desktop](device, interfaceNumber);
     }
-    printf("HID_PRAK: HID ATTACH safe return. \n");
+    printk("HID_PRAK: HID ATTACH safe return. \n");
     return OK;
 deallocate:
-    printf("HID_PRAK: HID ATTACH DEALLOCAte. \n");
+    printk("HID_PRAK: HID ATTACH DEALLOCAte. \n");
     if (reportDescriptor != NULL)
         MemoryDeallocate(reportDescriptor);
     HidDeallocate(device);
@@ -306,7 +306,7 @@ Result HidParseReportDescriptor(struct UsbDevice *device, void *descriptor, uint
     data = (struct HidDevice *)device->DriverData;
 
     HidEnumerateReport(descriptor, length, HidEnumerateActionCountReport, &reports);
-    printf("HID: Found %d reports. \n", reports.reportCount);
+    printk("HID: Found %d reports. \n", reports.reportCount);
 
     if ((parse = MemoryAllocate(sizeof(struct HidParserResult) + 4 * reports.reportCount)) == NULL)
     {
@@ -461,7 +461,7 @@ void HidEnumerateActionCountReport(void *data, uint16_t tag, uint32_t value)
             reports->reportCount++;
             reports->input = true;
         }
-        printf("HID: %.*sInput(%03o)\n", reports->indent, "           ", value);
+        printk("HID: %.*sInput(%03o)\n", reports->indent, "           ", value);
         break;
     case TagMainOutput:
         if (!reports->output)
@@ -469,7 +469,7 @@ void HidEnumerateActionCountReport(void *data, uint16_t tag, uint32_t value)
             reports->reportCount++;
             reports->output = true;
         }
-        printf("HID: %.*sOutput(%03o)\n", reports->indent, "           ", value);
+        printk("HID: %.*sOutput(%03o)\n", reports->indent, "           ", value);
         break;
     case TagMainFeature:
         if (!reports->feature)
@@ -477,85 +477,85 @@ void HidEnumerateActionCountReport(void *data, uint16_t tag, uint32_t value)
             reports->reportCount++;
             reports->feature = true;
         }
-        printf("HID: %.*sFeature(%03o)\n", reports->indent, "           ", value);
+        printk("HID: %.*sFeature(%03o)\n", reports->indent, "           ", value);
         break;
     case TagMainCollection:
-        printf("HID: %.*sCollection(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sCollection(%d)\n", reports->indent, "           ", value);
         reports->indent++;
         break;
     case TagMainEndCollection:
         reports->indent--;
-        printf("HID: %.*sEnd Collection\n", reports->indent, "           ");
+        printk("HID: %.*sEnd Collection\n", reports->indent, "           ");
         break;
     case TagGlobalUsagePage:
-        printf("HID: %.*sUsage Page(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUsage Page(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalLogicalMinimum:
-        printf("HID: %.*sLogical Minimum(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sLogical Minimum(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalLogicalMaximum:
-        printf("HID: %.*sLogical Maximum(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sLogical Maximum(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalPhysicalMinimum:
-        printf("HID: %.*sPhysical Minimum(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sPhysical Minimum(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalPhysicalMaximum:
-        printf("HID: %.*sPhysical Maximum(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sPhysical Maximum(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalUnitExponent:
-        printf("HID: %.*sUnit Exponent(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUnit Exponent(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalUnit:
-        printf("HID: %.*sUnit(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUnit(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalReportSize:
-        printf("HID: %.*sReport Size(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sReport Size(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalReportId:
         reports->input = reports->output = reports->feature = false;
-        printf("HID: %.*sReport ID(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sReport ID(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalReportCount:
-        printf("HID: %.*sReport Count(%d)\n", reports->indent, "           ", value);
+        printk("HID: %.*sReport Count(%d)\n", reports->indent, "           ", value);
         break;
     case TagGlobalPush:
-        printf("HID: %.*sPush\n", reports->indent, "           ");
+        printk("HID: %.*sPush\n", reports->indent, "           ");
         break;
     case TagGlobalPop:
-        printf("HID: %.*sPop\n", reports->indent, "           ");
+        printk("HID: %.*sPop\n", reports->indent, "           ");
         break;
     case TagLocalUsage:
-        printf("HID: %.*sUsage(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUsage(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalUsageMinimum:
-        printf("HID: %.*sUsage Minimum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUsage Minimum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalUsageMaximum:
-        printf("HID: %.*sUsage Maximum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sUsage Maximum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalDesignatorIndex:
-        printf("HID: %.*sDesignator Index(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sDesignator Index(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalDesignatorMinimum:
-        printf("HID: %.*sDesignator Minimum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sDesignator Minimum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalDesignatorMaximum:
-        printf("HID: %.*sDesignator Maximum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sDesignator Maximum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalStringIndex:
-        printf("HID: %.*sString Index(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sString Index(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalStringMinimum:
-        printf("HID: %.*sString Minimum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sString Minimum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalStringMaximum:
-        printf("HID: %.*sString Maximum(%u)\n", reports->indent, "           ", value);
+        printk("HID: %.*sString Maximum(%u)\n", reports->indent, "           ", value);
         break;
     case TagLocalDelimiter:
-        printf("HID: %.*sDelimiter\n", reports->indent, "           ");
+        printk("HID: %.*sDelimiter\n", reports->indent, "           ");
         break;
     default:
-        printf("HID: Unexpected tag in report %d = %x.\n", tag, value);
+        printk("HID: Unexpected tag in report %d = %x.\n", tag, value);
         break;
     }
 }
@@ -829,33 +829,33 @@ Result HidReadDevice(struct UsbDevice *device, uint8_t reportNumber)
         return ErrorMemory;
     }
 
-    // printf("Report buffer: size:%d ", size);
+    // printk("Report buffer: size:%d ", size);
     int i1 = 0;
     uint8_t *temp_buf = (uint8_t *)report->ReportBuffer;
     while (i1 < size)
     {
         *temp_buf = 0x0;
-        // printf("%x ", *temp_buf);
+        // printk("%x ", *temp_buf);
         temp_buf++;
         i1++;
     }
-    // printf("\n");
+    // printk("\n");
 
-    // printf("HID_BEFORE: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
+    // printk("HID_BEFORE: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
     // 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3),
     // 	*(report->ReportBuffer + 4), *(report->ReportBuffer + 5), *(report->ReportBuffer + 6), *(report->ReportBuffer + 7));
 
-    // printf("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
+    // printk("Getting report from report type: %d report id:%d interface:%d size: %d buffer:%x \n", report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer);
     if ((result = HidGetReport(device, report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer)) != OK)
     {
         if (result != ErrorDisconnected)
-            printf("HID: Could not read %s report %d.\n", UsbGetDescription(device), report);
+            printk("HID: Could not read %s report %d.\n", UsbGetDescription(device), report);
         return result;
     }
 
     // Uncomment this for a quick hack to view 8 bytes worth of report.
 
-    // printf("HID_AFTER: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
+    // printk("HID_AFTER: %s.Report%d: %02x%02x%02x%02x %02x%02x%02x%02x.\n", UsbGetDescription(device), reportNumber + 1,
     // 	*(report->ReportBuffer + 0), *(report->ReportBuffer + 1), *(report->ReportBuffer + 2), *(report->ReportBuffer + 3));
 
     for (uint32_t i = 0; i < report->FieldCount; i++)
@@ -938,7 +938,7 @@ Result HidWriteDevice(struct UsbDevice *device, uint8_t reportNumber)
     if ((result = HidSetReport(device, report->Type, report->Id, data->ParserResult->Interface, size, report->ReportBuffer)) != OK)
     {
         if (result != ErrorDisconnected)
-            printf("HID: Coult not read %s report %d.\n", UsbGetDescription(device), report);
+            printk("HID: Coult not read %s report %d.\n", UsbGetDescription(device), report);
         return result;
     }
 

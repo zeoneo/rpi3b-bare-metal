@@ -1,17 +1,19 @@
 #include <device/usb-mem.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 #include <stdarg.h>
 
 
 // #define DEBUG 1
 
 #ifdef DEBUG
-	#define LOG(f_, ...) printf((f_), ##__VA_ARGS__)
+	#define LOG(f_, ...) printk((f_), ##__VA_ARGS__)
 #else
 	#define LOG(f_, ...) 
 #endif
 
 #define HEAP_END ((void *)0xFFFFFFFF)
+
+#define NULL (void *)0
 
 struct HeapAllocation
 {

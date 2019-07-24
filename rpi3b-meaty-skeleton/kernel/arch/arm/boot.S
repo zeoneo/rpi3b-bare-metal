@@ -68,6 +68,54 @@ _start:
     eret
 
 .NotInHypMode:
+
+    mov r0, #0xD3
+    msr cpsr_c,r0
+    mov sp, #0x8000 ;@ Temporarily initialize stack pointer to 0x8000 it will grow down to lower memory address
+    ;@ After mapping higher half of the kernel we need to reinitialize stack pointer
+    ;@ SP is initialized here bcoz I have poor asm skills and I need to call C funtion "initialize_virtual_memory" which might use stack pointer
+    ldr r8, =_clear_bss
+
+    ;@ bl boot_uart_init
+
+    ;@ Initialize Exception Table defined in exception_vectors.S
+    MRC p15, 0, r0, c12, c0, 0 ;@ Read VBAR into Rt
+    ;@ bl boot_hexstrings
+    ldr r0, =__exception_table
+    MCR p15, 0, r0, c12, c0, 0 ;@ Write Rt to VBAR
+
+    bl init_vfp
+    bl disable_mmu
+    bl disable_l1_caches
+    bl invalidate_l1_icache
+    bl invalidate_l1_dcache
+    bl invalidate_tlb
+    bl enable_branch_prediction
+    bl enable_data_prefetch
+    bl initialize_virtual_memory ;@ this calls start_mmu
+
+    ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
+    mov r0,#0xD2
+    msr cpsr_c,r0
+    ldr sp, =__irq_stack_base
+
+    ;@ (PSR_SVC_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
+    mov r0,#0xD3
+    msr cpsr_c,r0
+    ldr sp, =__svc_stack_base
+
+    bx r8 ;@jump clear bss
+
+    ;@ If kernel exits then loop in low power state.
+_inf_loop:  wfe
+    b       _inf_loop
+
+.globl BOOT_PUT32
+BOOT_PUT32:
+    str r1,[r0]
+    bx lr
+
+init_vfp:
     // enable unaligned address access
     mrc p15, 0, r0, c1, c0, 0
     orr r0, #1 << 22
@@ -89,47 +137,68 @@ _start:
     MOV r0,#0x40000000
     // FPEXC = r0
     FMXR FPEXC, r0
+    bx lr
 
+disable_mmu:
+    MRC p15, 0, r1, c1, c0, 0 
+    BIC r1, r1, #0x1
+    MCR p15, 0, r1, c1, c0, 0
+    bx lr
 
-    mov r0,#0xD3
-    msr cpsr_c,r0
-    mov sp, #0x8000 ;@ Temporarily initialize stack pointer to 0x8000 it will grow down to lower memory address
-    ;@ After mapping higher half of the kernel we need to reinitialize stack pointer
-    ;@ SP is initialized here bcoz I have poor asm skills and I need to call C funtion "initialize_virtual_memory" which might use stack pointer
-    ldr r8, =_clear_bss
+@ Disable L1 Caches
+disable_l1_caches:
+    MRC p15, 0, r1, c1, c0, 0 
+    BIC r1, r1, #(0x1 << 12)
+    BIC r1, r1, #(0x1 << 2)
+    MCR p15, 0, r1, c1, c0, 0
+    bx lr
 
-    ldr r0, =__code_start
-    
-    ;@ MRC p15, 0, <Rt>, c12, c0, 0 ; Read VBAR into Rt 
-    MCR p15, 0, r0, c12, c0, 0 ;@ Write Rt to VBAR
+@ Invalidate L1 Caches
+@ Invalidate Instruction cache MOV r1, #0
+invalidate_l1_icache:
+    MCR p15, 0, r1, c7, c5, 0
+    bx lr
 
-    bl boot_uart_init
-    ldr r0, =__text_boot_start
-    bl boot_hexstrings
-    bl initialize_virtual_memory
-    ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
-    mov r0,#0xD2
-    msr cpsr_c,r0
-    ldr sp, =__irq_stack_base
+@ Invalidate Data cache
+@ to make the code general purpose, @ cache size first and loop through
+invalidate_l1_dcache:
+    MRC p15, 1, r0, c0, c0, 0
+    LDR r3, =#0x1ff
+    AND r0, r3, r0, LSR #13
+    MOV r1, #0
+way_loop:
+    MOV r3, #0
+set_loop:
+    MOV r2, r1, LSL #30
+    ORR r2, r3, LSL #5
+    MCR p15, 0, r2, c7, c6, 2
+    ADD r3, r3, #1
+    CMP r0, r3
+    BGT set_loop
+    ADD r1, r1, #1
+    CMP r1, #4
+    BNE way_loop
+    bx lr
 
-    ;@ (PSR_SVC_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
-    mov r0,#0xD3
-    msr cpsr_c,r0
-    ldr sp, =__svc_stack_base
+@ Invalidate TLB
+invalidate_tlb:
+    MCR p15, 0, r1, c8, c7, 0
+    bx lr
 
+enable_branch_prediction:
+    MOV r1, #0
+    MRC p15, 0, r1, c1, c0, 0
+    ORR r1, r1, #(0x1 << 11)
+    MCR p15, 0, r1, c1, c0, 0
+    bx lr
 
-
-    bx r8 ;@jump clear bss
-
-    b _inf_loop
-
-    // halt
-_inf_loop:
-    b       _inf_loop
-
-.globl BOOT_PUT32
-BOOT_PUT32:
-    str r1,[r0]
+@ Enable D-side Prefetch
+enable_data_prefetch:
+    MRC p15, 0, r1, c1, c0, 1
+    ORR r1, r1, #(0x1 <<2)
+    MCR p15, 0, r1, c1, c0, 1;
+    DSB
+    ISB
     bx lr
 
 .globl start_mmu

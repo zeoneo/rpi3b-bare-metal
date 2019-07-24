@@ -7,7 +7,7 @@
 #include <device/hid.h>
 #include <device/usb_report.h>
 #include <device/usb-mem.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #ifdef __cplusplus
 extern "C"

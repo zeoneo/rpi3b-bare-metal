@@ -1,6 +1,6 @@
 #include<graphics/pi_console.h>
 #include <kernel/rpi-mailbox-interface.h>
-#include <plibc/stdio.h>
+#include <klib/printk.h>
 
 #define BitFontHt 16
 #define BitFontWth 8
@@ -685,7 +685,7 @@ void get_console_width_height_depth(uint32_t *width, uint32_t *height, uint32_t 
 
     mp = RPI_PropertyGet(TAG_GET_PITCH);
     *pitch = mp->data.value_32;
-    printf("\n width: %d height %d depth %d pitch:%d  \n", *width, *height, *depth, *pitch);
+    printk("\n width: %d height %d depth %d pitch:%d  \n", *width, *height, *depth, *pitch);
 }
 
 uint32_t get_console_frame_buffer(uint32_t width, uint32_t height, uint32_t depth) {
@@ -717,6 +717,6 @@ uint32_t get_console_frame_buffer(uint32_t width, uint32_t height, uint32_t dept
     console.ClearArea = ClearArea16;
     console.WriteChar = WriteChar16;
 
-    printf("\n frame_buffer_addr: %x frame_buffer_size %d  \n", frame_buffer_addr, frame_buffer_size);
+    printk("\n frame_buffer_addr: %x frame_buffer_size %d  \n", frame_buffer_addr, frame_buffer_size);
     return console.fb;
 }

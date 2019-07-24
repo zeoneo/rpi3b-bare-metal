@@ -9,8 +9,8 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -Werror -std=c11
-CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
+CFLAGS:=$(CFLAGS) -nostdinc -ffreestanding -Wall -Wextra -Werror -std=c11
+CPPFLAGS:=$(CPPFLAGS) -D__is_libc -I/Users/prakashborkar/Desktop/Remote_Repo/rpi-os-uart/rpi3b-meaty-skeleton/sysroot/usr/include
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
 
@@ -30,8 +30,6 @@ string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
-stdio/doprnt.o \
-stdio/printf.o \
 
 
 HOSTEDOBJS=\

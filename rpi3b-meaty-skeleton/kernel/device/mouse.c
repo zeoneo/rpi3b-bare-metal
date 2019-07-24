@@ -12,7 +12,7 @@ struct UsbDevice* mice[MouseMaxMice];
 
 void MouseLoad() 
 {
-	printf("CSUD: Mouse driver version 0.1\n"); 
+	printk("CSUD: Mouse driver version 0.1\n"); 
 	mouseCount = 0;
 	for (uint32_t i = 0; i < MouseMaxMice; i++)
 	{
@@ -76,36 +76,36 @@ Result MouseAttach(struct UsbDevice *device,  __attribute__((__unused__)) uint32
 	struct MouseDevice *data;
 	struct HidParserResult *parse;
 
-	printf("\n Mouse Attach is called... \n ");
+	printk("\n Mouse Attach is called... \n ");
 	if ((MouseMaxMice & 3) != 0) {
-		printf("MOUSE: Warning! MouseMaxMice not a multiple of 4. The driver wasn't built for this!\n");
+		printk("MOUSE: Warning! MouseMaxMice not a multiple of 4. The driver wasn't built for this!\n");
 	}
 	if (mouseCount == MouseMaxMice) {
-		printf("MOUSE: %s not connected. Too many mice connected (%d/%d). Change MouseMaxMice in device.mouse.c to allow more.\n", UsbGetDescription(device), mouseCount, MouseMaxMice);
+		printk("MOUSE: %s not connected. Too many mice connected (%d/%d). Change MouseMaxMice in device.mouse.c to allow more.\n", UsbGetDescription(device), mouseCount, MouseMaxMice);
 		return ErrorIncompatible;
 	}
 	
 	hidData = (struct HidDevice*)device->DriverData;
 	if (hidData->Header.DeviceDriver != DeviceDriverHid) {
-		printf("MOUSE: %s isn't a HID device. The mouse driver is built upon the HID driver.\n", UsbGetDescription(device));
+		printk("MOUSE: %s isn't a HID device. The mouse driver is built upon the HID driver.\n", UsbGetDescription(device));
 		return ErrorIncompatible;
 	}
 
 	parse = hidData->ParserResult;
 	if (parse->Application.Page != GenericDesktopControl ||
 		parse->Application.Desktop != DesktopMouse) {
-		printf("MOUSE: %s doesn't seem to be a mouse...\n", UsbGetDescription(device));
+		printk("MOUSE: %s doesn't seem to be a mouse...\n", UsbGetDescription(device));
 		return ErrorIncompatible;
 	}
 	if (parse->ReportCount < 1) {
-		printf("MOUSE: %s doesn't have enough outputs to be a mouse.\n", UsbGetDescription(device));
+		printk("MOUSE: %s doesn't have enough outputs to be a mouse.\n", UsbGetDescription(device));
 		return ErrorIncompatible;
 	}
 	hidData->HidDetached = MouseDetached;
 	hidData->HidDeallocate = MouseDeallocate;
 	
 	if ((hidData->DriverData = MemoryAllocate(sizeof(struct MouseDevice))) == NULL) {
-		printf("MOUSE: Not enough memory to allocate mouse %s.\n", UsbGetDescription(device));
+		printk("MOUSE: Not enough memory to allocate mouse %s.\n", UsbGetDescription(device));
 		return ErrorMemory;
 	}
 	data = (struct MouseDevice*)hidData->DriverData;
@@ -121,9 +121,9 @@ Result MouseAttach(struct UsbDevice *device,  __attribute__((__unused__)) uint32
 		}
 	}
 
-	printf("MOUSE: data->Index: %d", data->Index);
+	printk("MOUSE: data->Index: %d", data->Index);
 	if (mouseNumber == 0xffffffff) {
-		printf("MOUSE: PANIC! Driver in inconsistent state! MouseCount is inaccurate.\n");
+		printk("MOUSE: PANIC! Driver in inconsistent state! MouseCount is inaccurate.\n");
 		MouseDeallocate(device);
 		return ErrorGeneral;
 	}
@@ -134,9 +134,9 @@ Result MouseAttach(struct UsbDevice *device,  __attribute__((__unused__)) uint32
 		if (parse->Report[i]->Type == Input 
 //		    && data->MouseReport == NULL
 		) {
-			printf("MOUSE: Output report %d. %d fields.\n", i, parse->Report[i]->FieldCount);
+			printk("MOUSE: Output report %d. %d fields.\n", i, parse->Report[i]->FieldCount);
 			data->MouseReport = parse->Report[i];
-			printf("MOUSE_PRAKASH: data->MouseReport->Index: %d", data->MouseReport->Index);
+			printk("MOUSE_PRAKASH: data->MouseReport->Index: %d", data->MouseReport->Index);
 		} 
 	}
 
@@ -145,7 +145,7 @@ Result MouseAttach(struct UsbDevice *device,  __attribute__((__unused__)) uint32
 	data->wheel = 0;
 	data->buttonState = 0;
 
-	printf("MOUSE: New mouse assigned %d!\n", device->Number);
+	printk("MOUSE: New mouse assigned %d!\n", device->Number);
 
 	return OK;
 }
@@ -162,10 +162,10 @@ Result MousePoll(uint32_t mouseAddress) {
 	mouseNumber = MouseIndex(mouseAddress);	
 	if (mouseNumber == 0xffffffff) return ErrorDisconnected;
 	data = (struct MouseDevice*)(((struct HidDevice*)mice[mouseNumber]->DriverData)->DriverData);
-	printf("MOUSE: Mouse report index: %d \n" , data->MouseReport->Index);
+	printk("MOUSE: Mouse report index: %d \n" , data->MouseReport->Index);
 	if ((result = HidReadDevice(mice[mouseNumber], data->MouseReport->Index)) != OK) {
 		if (result != ErrorDisconnected)
-			printf("MOUSE: Could not get mouse report from %s.\n", UsbGetDescription(mice[mouseNumber]));
+			printk("MOUSE: Could not get mouse report from %s.\n", UsbGetDescription(mice[mouseNumber]));
 		return result;
 	}
 
@@ -178,7 +178,7 @@ Result MousePoll(uint32_t mouseAddress) {
 		data->mouseX += (int8_t)ReportBuffer[1];
 		data->mouseY += (int8_t)ReportBuffer[2];
 		data->wheel += (int8_t)ReportBuffer[3];
-		printf("buttonState :%d \n", data->buttonState);
+		printk("buttonState :%d \n", data->buttonState);
 		if (data->mouseX < 0) {
 			data->mouseX = 0;
 		}
