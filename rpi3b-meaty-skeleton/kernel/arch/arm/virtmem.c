@@ -27,11 +27,12 @@ void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
     uint32_t ra = (uint32_t)&__text_boot_end_aligned;
     uint32_t higher_half_kernel_end = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__kernel_end - (uint32_t)&__code_start;
     uint32_t virt_addr = 0x80000000;
+    higher_half_kernel_end = 0x81200000;// (uint32_t)&__kernel_end;
     while(1) {
         mmu_section(virt_addr, ra, 0x0000, MMUTABLEBASE);
-        ra += 0x00100000; // 4KB
+        ra += 0x00100000; // 1MB
         virt_addr += 0x00100000;
-        if(ra >= (higher_half_kernel_end)) {
+        if(virt_addr >= (higher_half_kernel_end)) {
             break;
         }
     }

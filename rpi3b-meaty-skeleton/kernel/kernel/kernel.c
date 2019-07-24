@@ -66,15 +66,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_init();
 	printf("\n-----------------Kernel Started Dude--------------------\n");
-	
-	// interrupts_init();
-
-	// timer_init();
-	// mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 	printf("\n First Level Table Base : 0x%x \n", &__first_lvl_tbl_base);
 	printf("\n Second Level Table Base : 0x%x \n", &__second_lvl_tbl_base);
 	printf("\n Second Level Table End : 0x%x \n", &__second_lvl_tbl_end);
+	mem_init();
+	printf("\n Num of free Pages: %d \n", get_num_of_free_pages());
+	// interrupts_init();
+
+	// timer_init();
+	// mem_init();
+
 	
 	while (1)
 	{

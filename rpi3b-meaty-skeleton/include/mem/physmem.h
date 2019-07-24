@@ -13,6 +13,13 @@ typedef struct
     uint32_t reserved : 30;
 } page_flags_t;
 
+typedef struct {
+    uint32_t *arm_mem_base_ptr;
+    uint32_t arm_mem_in_bytes;
+    uint32_t *vc_mem_base_ptr;
+    uint32_t vc_mem_in_bytes;
+} memory_stats;
+
 typedef struct page
 {
     uint32_t vaddr_mapped; // The virtual address that maps to this page

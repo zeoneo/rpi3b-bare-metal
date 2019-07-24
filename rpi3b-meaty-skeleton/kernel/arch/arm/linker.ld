@@ -27,8 +27,9 @@ SECTIONS
     /* Kernel sections are placed after this */
     . = . + virt_start;
 
-	.text : AT(__code_start - virt_start) { 
+	.text : AT(__code_start - virt_start) {
         __code_start = .;
+        *(.text.exception*)
         *(.text*)
     }
 	.rodata : { *(.rodata) }
@@ -60,7 +61,11 @@ SECTIONS
     __second_lvl_tbl_base = .;
     . = . + 0x00100000; /* 1MB for 2nd level page tables */
     __second_lvl_tbl_end = .;
-    . = ALIGN(0x00100000); 
+    
+    /* Reserve 16 MB for Mem Manager Data Structre*/
+    . = . + 0x001000000;
+
+    /* Align 1MB so that we can do easy section mapping */
+    . = ALIGN(0x00100000);
     __kernel_end = .;
-    /* PROVIDE(__kernel_end = .); */
 }

@@ -4,7 +4,7 @@
 // Make _start global.
 .globl _start
 .global _get_stack_pointer
-.global _exception_table
+.global __code_start
 .global _enable_interrupts
 
 .equ ARM_MODE_USR, 0x10;                                ;@ CPU in USR mode .. Normal User mode
@@ -96,8 +96,11 @@ _start:
     ;@ SP is initialized here bcoz I have poor asm skills and I need to call C funtion "initialize_virtual_memory" which might use stack pointer
     ldr r8, =_clear_bss
 
-    ldr r0, =__kernel_end
+    ldr r0, =__code_start
     
+    ;@ MRC p15, 0, <Rt>, c12, c0, 0 ; Read VBAR into Rt 
+    MCR p15, 0, r0, c12, c0, 0 ;@ Write Rt to VBAR
+
     bl initialize_virtual_memory
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD2
@@ -108,6 +111,8 @@ _start:
     mov r0,#0xD3
     msr cpsr_c,r0
     ldr sp, =__svc_stack_base
+
+
 
     bx r8 ;@jump clear bss
 
