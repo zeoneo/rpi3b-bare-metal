@@ -1,10 +1,12 @@
 #include <stdint.h>
+#include "boot-uart.h"
 
 extern uint32_t __code_start;
 extern uint32_t __text_boot_end_aligned;
 extern uint32_t __first_lvl_tbl_base;
 extern uint32_t __second_lvl_tbl_base;
 extern uint32_t __kernel_end;
+extern uint32_t __virt_start;
 
 extern void start_mmu(uint32_t mmu_base, uint32_t flags);
 extern void BOOT_PUT32(uint32_t address, uint32_t value);
@@ -15,24 +17,37 @@ uint32_t mmu_page ( uint32_t vadd, uint32_t padd, uint32_t flags, uint32_t first
 
 void __attribute__((section (".text.boot"))) initialize_virtual_memory(void)
 {
+    boot_uart_init();
 
-    uint32_t MMUTABLEBASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__first_lvl_tbl_base - (uint32_t)&__code_start;
-    uint32_t SECOND_TBL_BASE = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__second_lvl_tbl_base - (uint32_t)&__code_start;
-    
+    uint32_t text_boot_end_aligned, first_lvl_tbl_base, second_lvl_tbl_base, virt_start, code_start, kernel_end;
+    __asm__ volatile("ldr %[result], =__text_boot_end_aligned" : [result] "=r" (text_boot_end_aligned));
+    __asm__ volatile("ldr %[result], =__first_lvl_tbl_base" : [result] "=r" (first_lvl_tbl_base));
+    __asm__ volatile("ldr %[result], =__second_lvl_tbl_base" : [result] "=r" (second_lvl_tbl_base));
+    __asm__ volatile("ldr %[result], =__code_start" : [result] "=r" (code_start));
+    __asm__ volatile("ldr %[result], =__kernel_end" : [result] "=r" (kernel_end));
+    __asm__ volatile("ldr %[result], =__virt_start" : [result] "=r" (virt_start));
+
+    boot_hexstrings(text_boot_end_aligned);
+    boot_hexstrings(first_lvl_tbl_base);
+    boot_hexstrings(second_lvl_tbl_base);
+    boot_hexstrings(code_start);
+    boot_hexstrings(kernel_end);
+
+    uint32_t MMUTABLEBASE = text_boot_end_aligned + first_lvl_tbl_base - code_start;
+    uint32_t SECOND_TBL_BASE = text_boot_end_aligned + second_lvl_tbl_base - code_start;
+
     // Identity Map boot.text section 
     // TODO: Convert this to loop instead of hardcoding addresses.
     mmu_page(0x8000, 0x8000, 0x0000, MMUTABLEBASE, SECOND_TBL_BASE);
 
     // Map Higher half kernel
-    uint32_t ra = (uint32_t)&__text_boot_end_aligned;
-    uint32_t higher_half_kernel_end = (uint32_t)&__text_boot_end_aligned + (uint32_t)&__kernel_end - (uint32_t)&__code_start;
-    uint32_t virt_addr = 0x80000000;
-    higher_half_kernel_end = 0x81200000;// (uint32_t)&__kernel_end;
+    uint32_t phys_addr = text_boot_end_aligned;
+    uint32_t virt_addr = virt_start;
     while(1) {
-        mmu_section(virt_addr, ra, 0x0000, MMUTABLEBASE);
-        ra += 0x00100000; // 1MB
+        mmu_section(virt_addr, phys_addr, 0x0000, MMUTABLEBASE);
+        phys_addr += 0x00100000; // 1MB
         virt_addr += 0x00100000;
-        if(virt_addr >= (higher_half_kernel_end)) {
+        if(virt_addr >= (kernel_end)) {
             break;
         }
     }
@@ -70,6 +85,9 @@ uint32_t  __attribute__((section (".text.boot"))) mmu_section(uint32_t vadd, uin
 
     //hexstrings(rb); hexstring(rc);
     // printf("\n entryAddr: 0x%x, entry value:0x%x \n", table1EntryAddress, tableEntry);
+    boot_uart_putc('s');
+    boot_hexstrings(table1EntryAddress);
+    boot_uart_putc('\n');
     BOOT_PUT32(table1EntryAddress, tableEntry);
     return (0);
 }
@@ -87,6 +105,11 @@ uint32_t __attribute__((section (".text.boot"))) mmu_page ( uint32_t vadd, uint3
     ra=(vadd>>12)&0xFF;
     rb=(second_lvl_base&0xFFFFFC00)|(ra<<2);
     rc=(padd&0xFFFFF000)|(0xFF0)|flags|2;
+    boot_uart_putc('r');
+    boot_hexstrings(first_lvl_base);
+    boot_uart_putc('p');
+    boot_hexstrings(second_lvl_base);
+    boot_uart_putc('\n');
     BOOT_PUT32(rb,rc); //second level descriptor
     return(0);
 }

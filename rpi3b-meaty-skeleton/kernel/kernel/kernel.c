@@ -18,6 +18,9 @@
 #include <graphics/opengl_es2.h>
 
 extern uint32_t __kernel_end;
+extern uint32_t __text_boot_start;
+extern uint32_t __text_boot_end;
+extern uint32_t __text_boot_end_aligned;
 extern uint32_t __first_lvl_tbl_base;
 extern uint32_t __second_lvl_tbl_base;
 extern uint32_t __second_lvl_tbl_end;
@@ -66,6 +69,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_init();
 	printf("\n-----------------Kernel Started Dude--------------------\n");
+	hexstrings((uint32_t)&__text_boot_start);
+	printf("\n __text_boot_end: 0x%x \n", &__text_boot_end);
+	printf("\n __text_boot_end_aligned: 0x%x \n", &__text_boot_end_aligned);
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 	printf("\n First Level Table Base : 0x%x \n", &__first_lvl_tbl_base);
 	printf("\n Second Level Table Base : 0x%x \n", &__second_lvl_tbl_base);

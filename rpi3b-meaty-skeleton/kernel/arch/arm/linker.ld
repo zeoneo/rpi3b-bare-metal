@@ -7,27 +7,29 @@ load_start = 0x8000;
  *
  *  Address where kernel will be linked
  *  We will initialize paging and map the kernel physical address to
- *  virt_start address. And then jump to kernel code.
+ *  __virt_start address. And then jump to kernel code.
 */
-virt_start = 0x80000000; /* 2GB */
+__virt_start = 0x80000000; /* 2GB */
 
 SECTIONS
 {
     /* Starts at LOADER_ADDR. */
     . = 0x8000;
     __start = .;
-    __text_boot_start = .;
+    
     .text.boot :
     {
-        KEEP(*(.text.boot))
-    }
-    __text_boot_end = .;
+        __text_boot_start = .;
+        KEEP(*(*boot));
+            __text_boot_end = .;
     . = ALIGN(4096);
     __text_boot_end_aligned = .;
-    /* Kernel sections are placed after this */
-    . = . + virt_start;
+    }
 
-	.text : AT(__code_start - virt_start) {
+    /* Kernel sections are placed after this */
+    . = . + __virt_start;
+
+	.text : AT(__code_start - __virt_start) {
         __code_start = .;
         *(.text.exception*)
         *(.text*)

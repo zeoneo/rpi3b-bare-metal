@@ -6,6 +6,8 @@
 .global _get_stack_pointer
 .global __code_start
 .global _enable_interrupts
+.global boot_uart_init
+.global boot_hexstrings
 
 .equ ARM_MODE_USR, 0x10;                                ;@ CPU in USR mode .. Normal User mode
 .equ ARM_MODE_FIQ, 0x11;                                ;@ CPU in FIQ mode .. FIQ Processing
@@ -101,6 +103,9 @@ _start:
     ;@ MRC p15, 0, <Rt>, c12, c0, 0 ; Read VBAR into Rt 
     MCR p15, 0, r0, c12, c0, 0 ;@ Write Rt to VBAR
 
+    bl boot_uart_init
+    ldr r0, =__text_boot_start
+    bl boot_hexstrings
     bl initialize_virtual_memory
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     mov r0,#0xD2
