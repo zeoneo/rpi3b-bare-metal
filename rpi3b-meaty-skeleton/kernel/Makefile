@@ -20,12 +20,14 @@ DEVICEDIR=device
 FSDIR=fs
 GRAPHICSDIR=graphics
 KLIBDIR=klib
+SYSCALLDIR=syscall
 
 include $(ARCHDIR)/make.config
 include $(MEMDIR)/make.config
 include $(DEVICEDIR)/make.config
 include $(FSDIR)/make.config
 include $(KLIBDIR)/make.config
+include $(SYSCALLDIR)/make.config
 
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
@@ -39,6 +41,7 @@ $(KERNEL_MEM_OBJS) \
 $(KERNEL_DEVICE_OBJS) \
 $(KERNEL_FS_OBJS) \
 $(K_LIB_OBJS) \
+$(KERNEL_SYSCALL_OBJS) \
 kernel/kernel.o
 
 OBJS= $(KERNEL_OBJS)

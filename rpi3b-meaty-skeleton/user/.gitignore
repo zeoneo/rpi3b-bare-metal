@@ -1,0 +1,7 @@
+*.a
+*.d
+*.o
+*.map
+*.list
+*.elf
+*.romfs

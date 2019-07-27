@@ -61,6 +61,8 @@ extern uint32_t __second_lvl_tbl_end;
 
 // static RENDER_STRUCT scene = { 0 };
 
+#include <initrd.h>
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	// Declare as unused

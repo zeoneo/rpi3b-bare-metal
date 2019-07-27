@@ -30,6 +30,7 @@ string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
+stdio/printf.o \
 
 
 HOSTEDOBJS=\
