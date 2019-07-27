@@ -1,8 +1,9 @@
 #include <string.h>
 
-size_t strlen(const char* str) {
+size_t strlen(const void* str) {
 	size_t len = 0;
-	while (str[len])
+	const uint8_t * s = (uint8_t *)str;
+	while (s[len])
 		len++;
 	return len;
 }

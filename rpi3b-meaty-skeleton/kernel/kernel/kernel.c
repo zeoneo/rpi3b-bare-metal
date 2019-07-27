@@ -8,6 +8,8 @@
 #include <device/dma.h>
 #include <device/usbd.h>
 #include <fs/fat.h>
+#include <fs/ramdisk.h>
+#include <fs/files.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
@@ -85,6 +87,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printk("\n Num of free Pages: %d \n", get_num_of_free_pages());
 
 	printk("\n-----------------Kernel Init Completed--------------------\n");
+	initialize_ramdisk(initrd_image, sizeof(initrd_image));
+	mount((uint8_t *)"/dev/ramdisk", (uint8_t *)"/", (uint8_t *)"romfs", 0, NULL);
 	while (1)
 	{
 	}
