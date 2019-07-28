@@ -11,6 +11,8 @@ extern "C"
 #include <stddef.h>
 
 void* memset(void* bufptr, uint8_t value, size_t size);
+int memcmp(const void* aptr, const void* bptr, size_t size);
+void* memcpy(void* restrict dstptr, const void* restrict srcptr, size_t size);
 
 #ifdef __cplusplus
 }

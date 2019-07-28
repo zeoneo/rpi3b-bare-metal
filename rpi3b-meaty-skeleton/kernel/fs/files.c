@@ -3,6 +3,7 @@
 #include<fs/files.h>
 #include<errors.h>
 #include<string.h>
+#include<stdlib.h>
 
 static int32_t root_dir=0;
 
@@ -49,11 +50,10 @@ int32_t fd_allocate(uint32_t inode) {
 
 
 /* Split a filename into the path part and the actual name part */
-static const uint8_t *split_filename(const uint8_t *start_ptr, uint8_t *name,
+static const char *split_filename(const char *start_ptr, char *name,
 			int len) {
-
-	const uint8_t *ptr=start_ptr;
-	uint8_t *out=name;
+	const char *ptr=start_ptr;
+	char *out=name;
 	int length=0;
 
 	while(1) {
@@ -80,19 +80,17 @@ static const uint8_t *split_filename(const uint8_t *start_ptr, uint8_t *name,
 	return ptr;
 }
 
-int32_t get_inode(const uint8_t *pathname) {
-
+int32_t get_inode(const char *pathname) {
 	int32_t inode;
-	uint8_t name[MAX_FILENAME_SIZE];
-	const uint8_t *ptr=pathname;
+	char name[MAX_FILENAME_SIZE];
+	const char *ptr=pathname;
 	int32_t dir_inode;
 
 	/* start at root directory */
 	if (*ptr=='/') {
 		dir_inode=root_dir;
 		ptr++;
-	}
-	else {
+	} else {
         dir_inode = 0;
 		// dir_inode=current_proc[get_cpu()]->current_dir;
 	}
@@ -102,26 +100,20 @@ int32_t get_inode(const uint8_t *pathname) {
 	}
 
 	while(1) {
-		{
-			printk("get_inode: about to split %s\n",ptr);
+		printk("get_inode: about to split %s\n",ptr);
+		ptr= split_filename(ptr, name, MAX_FILENAME_SIZE);
+		if (ptr==NULL) {
+			break;
 		}
-
-		ptr=split_filename(ptr,name,MAX_FILENAME_SIZE);
-
-		{
-			printk("get_inode: di=%x path_part %s\n",
-							dir_inode,name);
-		}
-
-		if (ptr==NULL) break;
+		printk("get_inode: di=%d path_part %s\n", dir_inode,name);
 		dir_inode=romfs_get_inode(dir_inode,name);
 	}
 
+	printk("get_inode: di=%d path_part %s\n", dir_inode,name);
 	inode=romfs_get_inode(dir_inode,name);
 	if (inode<0) {
 		printk("get_inode: error opening %s\n",name);
 	}
-
 	return inode;
 }
 
@@ -136,7 +128,7 @@ int32_t close(uint32_t fd) {
 }
 
 
-int32_t open(const uint8_t *pathname, uint32_t flags, uint32_t mode) {
+int32_t open(const char *pathname, uint32_t flags, uint32_t mode) {
 
 	int32_t result;
 	int32_t inode;
@@ -193,7 +185,7 @@ int32_t write(uint32_t fd, void *buf, uint32_t count) {
 
 	if (fd==2) {
 		int i;
-		uint8_t *string = (uint8_t *)buf;
+		char *string = (char *)buf;
 		{
 			printk("Writing %d bytes, %d\n",count,string[count-1]);
 			for(i=0;i<count;i++) {
@@ -213,14 +205,11 @@ int32_t write(uint32_t fd, void *buf, uint32_t count) {
 	return result;
 }
 
-int32_t stat(const uint8_t *pathname, struct stat *buf) {
+int32_t stat(const char *pathname, struct stat *buf) {
 
 	int32_t inode;
 	int32_t result;
-
-	{
-		printk("### Trying to stat %s\n",pathname);
-	}
+	printk("### Trying to stat %s\n",pathname);
 
 	inode=get_inode(pathname);
 	if (inode<0) {
@@ -234,21 +223,26 @@ int32_t stat(const uint8_t *pathname, struct stat *buf) {
 
 struct superblock_t superblock_table[8];
 
-int32_t mount(const uint8_t *source, const uint8_t *target,
-	const uint8_t *filesystemtype, uint32_t mountflags,
+int32_t mount(const char *source, const char *target,
+	const char *filesystemtype, uint32_t mountflags,
 	const void *data) {
 
 	int32_t result=0;
     printk(" source: %x target:%x mflags: %x, data: %x \n", source, target, mountflags, data);
-	if (!strncmp(filesystemtype,(uint8_t *)"romfs",5)) {
+	if (!strncmp(filesystemtype, "romfs", 5)) {
 		result=romfs_mount(&superblock_table[0]);
 		if (result>=0) {
 			root_dir=result;
 			result=0;
 		}
-	}
-	else {
-		result=-ENODEV;
+	} else {
+		printk("romfs comparison \n");
+		result=romfs_mount(&superblock_table[0]);
+		if (result>=0) {
+			root_dir=result;
+			result=0;
+		}
+		// result=-ENODEV;
 	}
 
 	return result;
@@ -296,7 +290,7 @@ int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count) {
 }
 
 /* Change current working directory */
-int32_t chdir(const uint8_t *path) {
+int32_t chdir(const char *path) {
 
 	int32_t inode,result;
 
@@ -324,7 +318,7 @@ int32_t chdir(const uint8_t *path) {
 
 
 /* Get name of current working directory */
-uint8_t *getcwd(uint8_t *buf, size_t size) {
+char *getcwd(char *buf, size_t size) {
 
 	struct stat stat_buf;
 
@@ -342,7 +336,7 @@ uint8_t *getcwd(uint8_t *buf, size_t size) {
 
 }
 
-int32_t statfs(const uint8_t *path, struct statfs *buf) {
+int32_t statfs(const char *path, struct statfs *buf) {
 	/* FIXME: lookup path */
     printk("path : %x", path);
 	return romfs_statfs(&superblock_table[0],buf);

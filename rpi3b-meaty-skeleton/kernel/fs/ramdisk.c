@@ -1,4 +1,5 @@
 #include<string.h>
+#include<stdlib.h>
 #include<fs/ramdisk.h>
 #include<klib/printk.h>
 
@@ -15,7 +16,7 @@ uint32_t initialize_ramdisk(const uint8_t *initrd_base, uint32_t initrd_size) {
 	return 0;
 }
 
-int32_t ramdisk_read(uint32_t offset, uint32_t length, char *dest) {
+int32_t ramdisk_read(uint32_t offset, uint32_t length, uint8_t *dest) {
 	/* Make sure we are in range */
 	if (offset+length>ramdisk_info.length) {
 			printk("ramdisk: access out of range %d > %d\n",

@@ -5,6 +5,7 @@
 #include <kernel/rpi-mailbox.h>
 #include <kernel/rpi-mailbox-interface.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* Make sure the property tag buffer is aligned to a 16-byte boundary because
    we only have 28-bits available in the property interface protocol to pass

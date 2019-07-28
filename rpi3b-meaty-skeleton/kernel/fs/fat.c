@@ -201,7 +201,7 @@ uint32_t get_file_size(uint8_t *absolute_file_name)
     return find_file_in_directory(current_sd_partition.rootCluster, absolute_file_name, 1);
 }
 
-uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
+static uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
 {
     uint8_t count = 0;
     uint8_t *src_ptr = &absolute_file_name[0];

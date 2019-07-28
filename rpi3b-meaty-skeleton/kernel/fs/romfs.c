@@ -21,9 +21,8 @@ static int32_t romfs_read_noinc(void *buffer, uint32_t offset, uint32_t size) {
 }
 
 /* romfs strings are nul-terminated and come in 16-byte chunks */
-static int32_t romfs_read_string(int32_t offset, uint8_t *buffer, int32_t size) {
-
-	uint8_t temp_buffer[16];
+static int32_t romfs_read_string(int32_t offset, char *buffer, int32_t size) {
+	char temp_buffer[16];
 	int32_t our_offset=offset;
 	int32_t max_stringsize=size;
 	int32_t max_length;
@@ -47,6 +46,7 @@ static int32_t romfs_read_string(int32_t offset, uint8_t *buffer, int32_t size) 
 			else {
 				max_length=max_stringsize;
 			}
+		
 			strncat(buffer,temp_buffer,max_length);
 		}
 
@@ -61,8 +61,7 @@ static int32_t romfs_read_string(int32_t offset, uint8_t *buffer, int32_t size) 
 
 /* romfs strings are nul-terminated and come in 16-byte chunks */
 static int32_t romfs_string_length(int32_t offset) {
-
-	uint8_t temp_buffer[16];
+	char temp_buffer[16];
 	int32_t our_offset=offset;
 	int32_t max_length=0;
 
@@ -230,16 +229,13 @@ retry_inode:
 }
 
 /* We cheat and just use the file header offset as the inode */
-int32_t romfs_get_inode(int32_t dir_inode, const uint8_t *name) {
+int32_t romfs_get_inode(int32_t dir_inode, const char *name) {
 
 	int temp_int;
 	int32_t inode=0,next=0,spec=0;
-	uint32_t offset=dir_inode; /* file_headers_start; */
-	uint8_t filename[MAX_FILENAME_SIZE];
-
-	{
-		printk("romfs_get_inode: Trying to get inode for file %s\n",name);
-	}
+	uint32_t offset = dir_inode; /* file_headers_start; */
+	char filename[MAX_FILENAME_SIZE];
+	printk("romfs_get_inode: Trying to get inode for file %s\n",name);
 
 	/* Check to make sure our dir_inode is in fact a dir_inode */
 
@@ -249,10 +245,7 @@ int32_t romfs_get_inode(int32_t dir_inode, const uint8_t *name) {
 	spec=ntohl(temp_int);
 
 	if ( (next&0x7)!=1) {
-		{
-			printk("romfs_get_inode: inode %x (%x) is not a dir\n",
-				next,dir_inode);
-		}
+		printk("romfs_get_inode: inode %x (%x) is not a dir\n", next,dir_inode);
 		return -1;
 	}
 
@@ -269,8 +262,8 @@ int32_t romfs_get_inode(int32_t dir_inode, const uint8_t *name) {
 		/* Get current filename, which is in chunks of 16 bytes */
 		offset+=16;
 
-		romfs_read_string(offset,filename,MAX_FILENAME_SIZE);
-		printk("romfs_get_inode: %s is %s? %x\n",name,filename,inode);
+		romfs_read_string(offset, filename, MAX_FILENAME_SIZE);
+		printk("romfs_get_inode: %s is %s %d \n",name, filename, inode);
 
 		/* Match filename */
 		if (!strncmp(name,filename,MAX_FILENAME_SIZE)) {
@@ -348,7 +341,7 @@ int32_t romfs_mount(struct superblock_t *superblock) {
 	/* Read volume name */
 	/* FIXME: We ignore anything more than 16-bytes */
 	/* We really don't care about volume name */
-	result=romfs_read_string(offset,header.volume_name,16);
+	result=romfs_read_string(offset, header.volume_name, 16);
 	offset+=result;
 	{
 		printk("\tVolume: %s, file_headers start at %x\n",

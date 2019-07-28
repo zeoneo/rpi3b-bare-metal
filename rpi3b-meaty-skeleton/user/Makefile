@@ -32,13 +32,13 @@ install: initrd_image
 
 initrd_image: hello.elf
 	mkdir -p image
-	mkdir -p image/bin
+	mkdir -p image/bin/prak/kernel/home/folder
 	mkdir -p image/home
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
-	cp  hello.elf ./image/bin
-	$(GENROMFS) -f initrd.romfs -d image -V VMWos
+	cp hello.elf ./image/bin/prak/kernel/home/folder
+	$(GENROMFS) -f initrd.romfs -d image -V Neonix
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
 	echo "};" >> initrd.h

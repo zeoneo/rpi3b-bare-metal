@@ -10,13 +10,11 @@ extern "C"
 #include <stddef.h>
 #include <stdint.h>
 
+int32_t strncmp(const void* dstptr, const void *srcptr, size_t size);
 size_t strlen(const void* str);
-int memcmp(const void* aptr, const void* bptr, size_t size);
-void* memcpy(void* restrict dstptr, const void* restrict srcptr, size_t size);
 void *strncpy(void* restrict dstptr, const void* restrict srcptr, size_t size);
-int32_t strncmp(const uint8_t* dstptr, const uint8_t *srcptr, size_t size);
-uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n);
-int32_t strlcpy(uint8_t *dest, const uint8_t *src, uint32_t n);
+void *strncat(void *dest, const void *src, uint32_t n);
+uint32_t strlcpy(char *dest, const char *src, uint32_t n);
 
 #ifdef __cplusplus
 }

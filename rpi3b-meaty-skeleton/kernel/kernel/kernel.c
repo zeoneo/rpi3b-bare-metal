@@ -10,6 +10,7 @@
 #include <fs/fat.h>
 #include <fs/ramdisk.h>
 #include <fs/files.h>
+#include <fs/romfs_new.h>
 #include <kernel/rpi-armtimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <kernel/systimer.h>
@@ -88,7 +89,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	printk("\n-----------------Kernel Init Completed--------------------\n");
 	initialize_ramdisk(initrd_image, sizeof(initrd_image));
-	mount((uint8_t *)"/dev/ramdisk", (uint8_t *)"/", (uint8_t *)"romfs", 0, NULL);
+	printk("INODE : %x \n", mount("/dev/ramdisk", "/", "romfs", 0, NULL));
+	printk(" Inode NUmber %x \n", get_inode_for("/bin/prak/kernel/home/folder/hello.elf"));
 	while (1)
 	{
 	}

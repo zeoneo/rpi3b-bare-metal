@@ -60,25 +60,25 @@ struct vmwos_dirent {
 	uint32_t        d_ino;
 	uint32_t        d_off;
 	uint32_t        d_reclen;
-	uint8_t         d_name[];
+	char         d_name[];
 };
 
 
 int32_t close(uint32_t fd);
-int32_t open(const uint8_t *pathname, uint32_t flags, uint32_t mode);
+int32_t open(const char *pathname, uint32_t flags, uint32_t mode);
 int32_t read(uint32_t fd, void *buf, uint32_t count);
 int32_t write(uint32_t fd, void *buf, uint32_t count);
-int32_t stat(const uint8_t *pathname, struct stat *buf);
-int32_t statfs(const uint8_t *path, struct statfs *buf);
-int32_t mount(const uint8_t *source, const uint8_t *target, const uint8_t *filesystemtype, uint32_t mountflags, const void *data);
+int32_t stat(const char *pathname, struct stat *buf);
+int32_t statfs(const char *path, struct statfs *buf);
+int32_t mount(const char *source, const char *target, const char *filesystemtype, uint32_t mountflags, const void *data);
 int32_t getdents(uint32_t fd, struct vmwos_dirent *dirp, uint32_t count);
 
 void fd_table_init(void);
 
-int32_t get_inode(const uint8_t *pathname);
+int32_t get_inode(const char *pathname);
 
-int32_t chdir(const uint8_t *pathname);
-uint8_t *getcwd(uint8_t *buf, size_t size);
+int32_t chdir(const char *pathname);
+char *getcwd(char *buf, size_t size);
 
 
 #ifdef __cplusplus

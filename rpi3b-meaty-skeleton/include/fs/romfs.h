@@ -10,10 +10,10 @@ extern "C"
 #include<fs/files.h>
 
 struct romfs_header_t {
-	uint8_t magic[8];
+	char magic[8];
 	uint32_t size;
 	uint32_t checksum;
-	uint8_t volume_name[17];
+	char volume_name[17];
 	uint32_t first_offset;
 };
 
@@ -28,15 +28,12 @@ struct romfs_file_header_t {
 	uint32_t data_start;
 };
 
-int32_t open_romfs_file(uint8_t *name,
-		struct romfs_file_header_t *file);
-int32_t romfs_get_inode(int32_t dir_inode, const uint8_t *name);
-int32_t romfs_read_file(uint32_t inode, uint32_t offset,
-			void *buf,uint32_t count);
+int32_t open_romfs_file(char *name, struct romfs_file_header_t *file);
+int32_t romfs_get_inode(int32_t dir_inode, const char *name);
+int32_t romfs_read_file(uint32_t inode, uint32_t offset, void *buf,uint32_t count);
 int32_t romfs_mount(struct superblock_t *superblock);
 int32_t romfs_stat(int32_t inode, struct stat *buf);
-int32_t romfs_getdents(uint32_t dir_inode,
-		uint32_t *current_inode, void *buf,uint32_t size);
+int32_t romfs_getdents(uint32_t dir_inode, uint32_t *current_inode, void *buf,uint32_t size);
 int32_t romfs_statfs(struct superblock_t *superblock,struct statfs *buf);
 
 #define ROMFS_TYPE_HARDLINK	0
