@@ -90,7 +90,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printk("\n-----------------Kernel Init Completed--------------------\n");
 	initialize_ramdisk(initrd_image, sizeof(initrd_image));
 	printk("INODE : %x \n", mount("/dev/ramdisk", "/", "romfs", 0, NULL));
-	printk(" Inode NUmber %x \n", get_inode_for("/bin/prak/kernel/home/folder/hello.elf"));
+	printk(" Inode NUmber %x \n", get_inode_for("/src/hello.c"));
 	while (1)
 	{
 	}

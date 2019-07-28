@@ -37,7 +37,9 @@ initrd_image: hello.elf
 	mkdir -p image/home/ansis
 	mkdir -p image/proc
 	mkdir -p image/etc
+	mkdir -p image/src
 	cp hello.elf ./image/bin/prak/kernel/home/folder
+	cp hello.c ./image/src
 	$(GENROMFS) -f initrd.romfs -d image -V Neonix
 	echo "unsigned char initrd_image[]={" > initrd.h
 	xxd -i < initrd.romfs >> initrd.h
