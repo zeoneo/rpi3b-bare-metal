@@ -62,6 +62,13 @@ char *file_name, uint32_t *data_offset, uint32_t *file_size) {
     return 0;
 }
 
+void read_file_content(file_info_t file_info, uint32_t offset, uint32_t size, uint8_t *buffer) {
+    if(!file_info.inode) {
+        return;
+    }
+    ramdisk_read((uint32_t)file_info.file_base_ptr + offset, size, buffer);
+}
+
 static uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
 {
     uint8_t count = 0;
@@ -86,19 +93,18 @@ void print_file_x(uint32_t inode, uint32_t data_offset, uint32_t file_size) {
     }
 }
 
-uint32_t get_inode_for(char *file_path) {
+void get_inode_for(char *file_path, file_info_t *file_info) {
     printk("Reading inode for file: %s \n", file_path);
     uint32_t length = strlen(file_path);
     if(length == 0x0) {
         printk("Length: 0 \n");
-        return 0;
+        return;
     } else if (length == 0x01 && *file_path == '/') {
         printk("Root dir: 0 \n");
-        return root_dir_inode;
-    }
-    if(file_path[0] != '/') {
+        return;
+    } else if(file_path[0] != '/') {
         printk("Provide absolute file path");
-        return 0;
+        return;
     }
 
     uint32_t next_inode = root_dir_inode;
@@ -112,19 +118,21 @@ uint32_t get_inode_for(char *file_path) {
         next_name_count = get_next_dir_name((uint8_t *)&file_path[next_index],(uint8_t *) &next_file_name[0]);
         next_index += next_name_count + 1;
         if(next_name_count == 0) {
-            printk("Data offset: %x file_size %d \n", data_offset, file_size);
-            print_file_x(last_inode, data_offset, file_size);
-            return last_inode;
+            // printk("Data offset: %x file_size %d \n", data_offset, file_size);
+            // print_file_x(last_inode, data_offset, file_size);
+            file_info->inode = last_inode;
+            file_info->file_size = file_size;
+            file_info->file_base_ptr = (void *)data_offset;
+            return;
         }
         uint32_t inode = get_matching_file(next_inode, next_file_name, &data_offset, &file_size);
         if(inode == 0) {
             // printk("-------------------Inode zero for: %s ", next_file_name);
-            return 0;
+            return;
         }
         last_inode = inode;
         next_inode = get_first_file_inode(inode);
     };
-    return 0;
 }
 
 uint32_t get_file_size_for(uint32_t inode) {

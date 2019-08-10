@@ -51,4 +51,13 @@ SECTIONS
 	. = ALIGN(4096); /* align to page size */
 	__bss_end = .;
 	__end = .;
+
+	/DISCARD/ :
+   {
+        *(.comment)
+        *(.gnu*)
+		*(.debug*)
+        *(.note*)
+        *(.eh_frame*)
+   }
 }

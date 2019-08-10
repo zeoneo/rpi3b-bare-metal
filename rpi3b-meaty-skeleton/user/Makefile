@@ -32,9 +32,8 @@ install: initrd_image
 
 initrd_image: hello.elf
 	mkdir -p image
-	mkdir -p image/bin/prak/kernel/home/folder
 	mkdir -p image/home
-	mkdir -p image/home/ansis
+	mkdir -p image/bin
 	mkdir -p image/proc
 	mkdir -p image/etc
 	mkdir -p image/src

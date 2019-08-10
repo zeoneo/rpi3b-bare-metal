@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <klib/printk.h>
-
+#include <klib/elf_loader.h>
 #include <device/keyboard.h>
 #include <device/mouse.h>
 #include <device/uart0.h>
@@ -91,7 +91,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	initialize_ramdisk(initrd_image, sizeof(initrd_image));
 	printk("INODE : %x \n", mount("/dev/ramdisk", "/", "romfs", 0, NULL));
 	// printk(" Inode NUmber %x \n", get_inode_for("/src/hello.c"));
-	// printk(" Inode NUmber %x \n", get_inode_for("/src/user.t"));
+	file_info_t file_info = {0};
+	get_inode_for("/bin/hello.elf", &file_info);
+	printk("inode: %d file_size:%d, file_base: 0x%x \n", file_info.inode, file_info.file_size, file_info.file_base_ptr);
+	load_elf(&file_info);
 	while (1)
 	{
 	}
