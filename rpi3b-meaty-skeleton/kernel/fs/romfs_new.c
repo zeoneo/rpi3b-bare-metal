@@ -30,31 +30,22 @@ char *file_name, uint32_t *data_offset, uint32_t *file_size) {
     uint32_t next_inode = current_inode;
     uint32_t file_size_=0;
     while(1) {
-        uint8_t next_file_name[256] = { '\0' }; //TODO: Optimize this
+        uint8_t next_file_name[17] = { '\0' }; //TODO: Optimize this
 
         uint32_t next_file_offset = 0;
         uint8_t fname_index = 16;
         if(next_inode == 0 ) {
             return 0;
         }
-        while(1) {
-            char filename_inrom[18] = { '\0' };
-            //Read whole file name
-            ramdisk_read(next_inode + fname_index, 17, (uint8_t *)&filename_inrom[0]);
-            strncat(next_file_name + fname_index - 16, filename_inrom, 16);
-            if(filename_inrom[16] == '\0') {
-                next_file_name[fname_index] = '\0';
-                break;
-            }
-            fname_index += 16;
-        }
+        ramdisk_read(next_inode + fname_index, 17, (uint8_t *)&next_file_name[0]);
+
         file_size_=0;
         ramdisk_read(next_inode + 8, 4, (uint8_t *)&file_size_);
         *file_size = ntohl(file_size_);
         uint8_t length = strlen(&next_file_name[0]);
         if(strncmp(&next_file_name[0], file_name, length)) {
             length += 1; // accomodate \0;
-            printk("Name mached: %s inode: %x len: %d \n",next_file_name, next_inode, length);
+            // printk("Name mached: %s inode: %x len: %d \n",next_file_name, next_inode, length);
             uint32_t x = length % 16;
             if(x != 0) {
                 *data_offset = next_inode + 16 + (length - x) + 16;
@@ -75,15 +66,16 @@ static uint8_t get_next_dir_name(uint8_t *absolute_file_name, uint8_t *dest)
 {
     uint8_t count = 0;
     uint8_t *src_ptr = &absolute_file_name[0];
-    while (*src_ptr != '\0' && *src_ptr != '/')
+    while (*src_ptr != '\0' && *src_ptr != '/' && *src_ptr >= 0x23 && *src_ptr <= 0x7e )
     {
         dest[count++] = *src_ptr;
         src_ptr++;
     }
+    
     return count;
 }
 
-static void print_file_x(uint32_t inode, uint32_t data_offset, uint32_t file_size) {
+void print_file_x(uint32_t inode, uint32_t data_offset, uint32_t file_size) {
     uint32_t index = inode;
     index  = 0;
     while(index < file_size) {
@@ -126,7 +118,7 @@ uint32_t get_inode_for(char *file_path) {
         }
         uint32_t inode = get_matching_file(next_inode, next_file_name, &data_offset, &file_size);
         if(inode == 0) {
-            printk("Inode zero for: %s ", next_file_name);
+            // printk("-------------------Inode zero for: %s ", next_file_name);
             return 0;
         }
         last_inode = inode;

@@ -80,7 +80,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	interrupts_init();
 	timer_init();
 	printk("Timer Ticks Now: %d \n", timer_getTickCount32());
-	timer_set(3000);
+	// timer_set(3000);
 
 	// printk("Timer Ticks Now: %d \n", timer_getTickCount32());
 	virt_mem_init();
@@ -90,7 +90,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printk("\n-----------------Kernel Init Completed--------------------\n");
 	initialize_ramdisk(initrd_image, sizeof(initrd_image));
 	printk("INODE : %x \n", mount("/dev/ramdisk", "/", "romfs", 0, NULL));
-	printk(" Inode NUmber %x \n", get_inode_for("/src/hello.c"));
+	// printk(" Inode NUmber %x \n", get_inode_for("/src/hello.c"));
+	// printk(" Inode NUmber %x \n", get_inode_for("/src/user.t"));
 	while (1)
 	{
 	}
