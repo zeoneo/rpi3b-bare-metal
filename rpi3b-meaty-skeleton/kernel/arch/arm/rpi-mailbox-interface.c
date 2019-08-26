@@ -157,6 +157,7 @@ void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...)
         }
         break;
 
+    case TAG_SET_GPIO_STATE:
     case TAG_SET_POWER_STATE:
         pt[pt_index++] = 8;
         pt[pt_index++] = 0;

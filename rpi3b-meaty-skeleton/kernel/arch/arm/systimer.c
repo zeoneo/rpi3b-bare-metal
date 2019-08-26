@@ -1,28 +1,36 @@
 #include <kernel/systimer.h>
 #include <kernel/rpi-interrupts.h>
 #include <device/uart0.h>
+#include <device/gpio.h>
 #include <plibc/stdio.h>
 
 static timer_registers_t *timer_regs; // = (timer_registers_t *)SYSTEM_TIMER_BASE;
+static uint32_t act_led_status = 0;
 
 extern void dmb(void);
-// static void timer_irq_handler(void)
-// {
-//     uart_puts("\n *** timer irq handler called");
-//     timer_set(34500000);
-// }
+static void timer_irq_handler(void)
+{
+    set_activity_led(act_led_status);
+    if(act_led_status) {
+        act_led_status = 0;
+    } else {
+        act_led_status = 1;
+    }
+    // printf("\n *** timer irq handler called : status: %d", act_led_status);
+    timer_set(500000);
+}
 
-// static void timer_irq_clearer(void)
-// {
-//     timer_regs->control.timer1_matched = 1;
-//     uart_puts("\n *** timer irq clearer called");
-// }
+static void timer_irq_clearer(void)
+{
+    timer_regs->control.timer1_matched = 1;
+    // uart_puts("\n *** timer irq clearer called");
+}
 
 void timer_init(void)
 {
     timer_regs = (timer_registers_t *)SYSTEM_TIMER_BASE;
     printf("timer_regs:%x", timer_regs);
-    // register_irq_handler(RPI_BASIC_ARM_TIMER_IRQ, timer_irq_handler, timer_irq_clearer);
+    register_irq_handler(RPI_BASIC_ARM_TIMER_IRQ, timer_irq_handler, timer_irq_clearer);
 }
 
 void timer_set(uint32_t usecs)
