@@ -22,8 +22,8 @@ struct __attribute__((packed, aligned(4))) mbr
     uint16_t signature;                     // 0xaa55
 };
 
-// uint8_t file_to_search[] = "/SpaceCraft/Runner/color_0.jpg";
-uint8_t file_to_search[] = "/memRegionInsert.c";
+uint8_t file_to_search[] = "/SpaceCraft/Runner/color_0.jpg";
+// uint8_t file_to_search[] = "/config.txt";
 
 // uint8_t file_to_search[] = "/overlays/allo-piano-dac-plus-pcm512x-audio.dtbo";
 
@@ -182,10 +182,10 @@ bool initialize_fat()
 void readFat(uint32_t clusterNumber);
 void print_root_directory_info()
 {
-    // uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
-    // print_directory_contents(root_directory_cluster_number);
+    uint32_t root_directory_cluster_number = current_sd_partition.rootCluster;
+    print_directory_contents(root_directory_cluster_number);
     // printf("Files first Cluster: 0x%x \n", get_file_size(&file_to_search[0]));
-    read_file(&file_to_search[0]);
+    // read_file(&file_to_search[0]);
     // print_fat_sector_content(0xbd);
     // readFat(0x10a5);
 }

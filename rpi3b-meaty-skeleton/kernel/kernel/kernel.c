@@ -2,10 +2,12 @@
 #include <stdint.h>
 #include <plibc/stdio.h>
 
+#include <device/wifi.h>
 #include <device/gpio.h>
 #include <device/keyboard.h>
 #include <device/mouse.h>
 #include <device/uart0.h>
+#include <device/mini-uart.h>
 #include <device/dma.h>
 #include <device/usbd.h>
 #include <fs/fat.h>
@@ -63,15 +65,27 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void)r1;
 	(void)atags;
 
-	printf("\n-----------------Kernel Started Dude........................\n");
 	uart_init();
+	// mini_uart_init();
+	
+	// printf("\n-----------------Kernel Started Dude........................\n");
 	interrupts_init();
 
 	timer_init();
 	// This will flash activity led
 	timer_set(500000);
 	// mem_init();
-	printf("\n Kernel End: 0x%x \n", &__kernel_end);
+	// printf("\n Kernel End: 0x%x \n", &__kernel_end);
+
+	
+	// uart_puts(" Hello From UART0 \n");
+	// mini_uart_puts(" Hello From MINI UART \n");
+
+	// select_alt_func(14, Alt0);
+	// select_alt_func(15, Alt0);
+	// uart_puts(" Hello From UART0 \n");
+	// mini_uart_puts(" Hello From MINI UART \n");
+	enable_wifi();
 	// initialize_virtual_memory();
 	// uart_puts("\n Hello virtual memory world 123 \n ");
 
@@ -85,12 +99,13 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// uint32_t mouse_address = MouseGetAddress(0);
 
 	
-	// if(initialize_fat()) {
-	// 	printf("-------Successfully Initialized FAT----------\n");
-	// 	// print_root_directory_info();
-	// } else {
-	// 	printf("-------Failed to initialize FAT----------\n");
-	// }
+	if(initialize_fat()) {
+		printf("-------Successfully Initialized FAT----------\n");
+		print_root_directory_info();
+		printf("File size: %d ", get_file_size((uint8_t *)"/kernel8-32.img"));
+	} else {
+		printf("-------Failed to initialize FAT----------\n");
+	}
 	
 	// if(init_v3d()) {
 	// 	printf("-------Successfully Initialized QPU----------\n");

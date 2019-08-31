@@ -7,10 +7,62 @@ extern "C"
 #endif
 
 #include<stdbool.h>
+#include<device/emmc.h>
+
 
 /*--------------------------------------------------------------------------}
 {						   SD CARD COMMAND RECORD						    }
 {--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------}
+{						SD CARD COMMAND INDEX DEFINITIONS				    }
+{--------------------------------------------------------------------------*/
+
+typedef enum {
+  IX_GO_IDLE_STATE    = 0,
+  IX_ALL_SEND_CID     = 1,
+  IX_SEND_REL_ADDR    = 2,
+  IX_SET_DSR          = 3,
+  IX_SWITCH_FUNC      = 4,
+  IX_IO_SEND_OP_COND  = 5,
+  IX_CARD_SELECT      = 6,
+  IX_SEND_IF_COND     = 7,
+  IX_SEND_CSD         = 8,
+  IX_SEND_CID         = 9,
+  IX_VOLTAGE_SWITCH   = 10,
+  IX_STOP_TRANS       = 11,
+  IX_SEND_STATUS      = 12,
+  IX_GO_INACTIVE      = 13,
+  IX_SET_BLOCKLEN     = 14,
+  IX_READ_SINGLE      = 15,
+  IX_READ_MULTI       = 16,
+  IX_SEND_TUNING      = 17,
+  IX_SPEED_CLASS      = 18,
+  IX_SET_BLOCKCNT     = 19,
+  IX_WRITE_SINGLE     = 20,
+  IX_WRITE_MULTI      = 21,
+  IX_PROGRAM_CSD      = 22,
+  IX_SET_WRITE_PR     = 23,
+  IX_CLR_WRITE_PR     = 24,
+  IX_SND_WRITE_PR     = 25,
+  IX_ERASE_WR_ST      = 26,
+  IX_ERASE_WR_END     = 27,
+  IX_ERASE            = 28,
+  IX_LOCK_UNLOCK      = 29,
+  IX_APP_CMD          = 30,
+  IX_APP_CMD_RCA      = 31,
+  IX_GEN_CMD          = 32,
+
+// Commands hereafter require APP_CMD.
+  IX_SET_BUS_WIDTH    = 33,
+  IX_SD_STATUS        = 34,
+  IX_SEND_NUM_WRBL    = 35,
+  IX_SEND_NUM_ERS     = 36,
+  IX_APP_SEND_OP_COND = 37,
+  IX_SET_CLR_DET      = 38,
+  IX_SEND_SCR         = 39
+} cmd_index_t;
+
+
 /*--------------------------------------------------------------------------}
 {      EMMC CMDTM register - BCM2835.PDF Manual Section 5 pages 69-70       }
 {--------------------------------------------------------------------------*/
@@ -48,36 +100,12 @@ struct __attribute__((__packed__, aligned(4))) regCMDTM {
     };
 };
 
-typedef struct EMMCCommand
-{
-	const char cmd_name[16];
-	struct regCMDTM code;
-	struct __attribute__((__packed__)) {
-		unsigned use_rca : 1;										// @0		Command uses rca										
-		unsigned reserved : 15;										// @1-15	Write as zero read as don't care
-		uint16_t delay;												// @16-31	Delay to apply after command
-	};
-} EMMCCommand;
-
-typedef enum {
-	SD_OK				= 0,							// NO error
-	SD_ERROR			= 1,							// General non specific SD error
-	SD_TIMEOUT			= 2,							// SD Timeout error
-	SD_BUSY				= 3,							// SD Card is busy
-	SD_NO_RESP			= 5,							// SD Card did not respond
-	SD_ERROR_RESET		= 6,							// SD Card did not reset
-	SD_ERROR_CLOCK		= 7,							// SD Card clock change failed
-	SD_ERROR_VOLTAGE	= 8,							// SD Card does not support requested voltage
-	SD_ERROR_APP_CMD	= 9,							// SD Card app command failed						
-	SD_CARD_ABSENT		= 10,							// SD Card not present
-	SD_READ_ERROR		= 11,
-	SD_MOUNT_FAIL		= 12,
-} sd_result;
-
 void print_sdio_info(void);
-sd_result initialize_sdio(void);
-sd_result sdio_send_command(EMMCCommand* cmd, uint32_t arg, uint32_t *response);
-sd_result sdio_data_transfer(uint8_t *buf, uint32_t length, bool write);
+SDRESULT initialize_sdio(void);
+SDRESULT sdio_send_command(cmd_index_t cmd_index, uint32_t arg, uint32_t *response);
+SDRESULT sdio_data_transfer(uint8_t *buf, uint32_t length, bool write);
+SDRESULT sd_send_command ( int index );
+
 
 #ifdef __cplusplus
 }

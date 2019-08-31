@@ -337,6 +337,74 @@ struct __attribute__((__packed__, aligned(4))) regSLOTISR_VER {
 #define ACMD41_ARG_SC        (ACMD41_VOLTAGE)   //(ACMD41_VOLTAGE|ACMD41_S18R)
 
 
+typedef struct EMMCCommand
+{
+	const char cmd_name[16];
+	struct regCMDTM code;
+	struct __attribute__((__packed__)) {
+		unsigned use_rca : 1;										// @0		Command uses rca										
+		unsigned reserved : 15;										// @1-15	Write as zero read as don't care
+		uint16_t delay;												// @16-31	Delay to apply after command
+	};
+} EMMCCommand;
+
+#define IX_APP_CMD_START 32  // Used to detect which command needs app command
+
+/*--------------------------------------------------------------------------}
+{							  SD CARD COMMAND TABLE						    }
+{--------------------------------------------------------------------------*/
+static EMMCCommand sdCommandTable[IX_SEND_SCR + 1] =  {
+	[IX_GO_IDLE_STATE] =	{ "GO_IDLE_STATE", .code.CMD_INDEX = 0x00, .code.CMD_RSPNS_TYPE = CMD_NO_RESP        , .use_rca = 0 , .delay = 0},
+	[IX_ALL_SEND_CID] =		{ "ALL_SEND_CID" , .code.CMD_INDEX = 0x02, .code.CMD_RSPNS_TYPE = CMD_136BIT_RESP    , .use_rca = 0 , .delay = 0},
+	[IX_SEND_REL_ADDR] =	{ "SEND_REL_ADDR", .code.CMD_INDEX = 0x03, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SET_DSR] =			{ "SET_DSR"      , .code.CMD_INDEX = 0x04, .code.CMD_RSPNS_TYPE = CMD_NO_RESP        , .use_rca = 0 , .delay = 0},
+    [IX_IO_SEND_OP_COND] =	{ "IO_SEND_OP_COND", .code.CMD_INDEX = 0x05, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP   , .use_rca = 0 , .delay = 0},
+	[IX_SWITCH_FUNC] =		{ "SWITCH_FUNC"  , .code.CMD_INDEX = 0x06, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_CARD_SELECT] =		{ "CARD_SELECT"  , .code.CMD_INDEX = 0x07, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 1 , .delay = 0},
+	[IX_SEND_IF_COND] = 	{ "SEND_IF_COND" , .code.CMD_INDEX = 0x08, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 100},
+	[IX_SEND_CSD] =			{ "SEND_CSD"     , .code.CMD_INDEX = 0x09, .code.CMD_RSPNS_TYPE = CMD_136BIT_RESP    , .use_rca = 1 , .delay = 0},
+	[IX_SEND_CID] =			{ "SEND_CID"     , .code.CMD_INDEX = 0x0A, .code.CMD_RSPNS_TYPE = CMD_136BIT_RESP    , .use_rca = 1 , .delay = 0},
+	[IX_VOLTAGE_SWITCH] =	{ "VOLT_SWITCH"  , .code.CMD_INDEX = 0x0B, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_STOP_TRANS] =		{ "STOP_TRANS"   , .code.CMD_INDEX = 0x0C, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 0 , .delay = 0},
+	[IX_SEND_STATUS] =		{ "SEND_STATUS"  , .code.CMD_INDEX = 0x0D, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 1 , .delay = 0},
+	[IX_GO_INACTIVE] =		{ "GO_INACTIVE"  , .code.CMD_INDEX = 0x0F, .code.CMD_RSPNS_TYPE = CMD_NO_RESP        , .use_rca = 1 , .delay = 0},
+	[IX_SET_BLOCKLEN] =		{ "SET_BLOCKLEN" , .code.CMD_INDEX = 0x10, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_READ_SINGLE] =		{ "READ_SINGLE"  , .code.CMD_INDEX = 0x11, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , 
+	                                           .code.CMD_ISDATA = 1  , .code.TM_DAT_DIR = 1,					   .use_rca = 0 , .delay = 0},
+	[IX_READ_MULTI] =		{ "READ_MULTI"   , .code.CMD_INDEX = 0x12, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , 
+											   .code.CMD_ISDATA = 1 ,  .code.TM_DAT_DIR = 1,
+											   .code.TM_BLKCNT_EN =1 , .code.TM_MULTI_BLOCK = 1,                   .use_rca = 0 , .delay = 0},
+	[IX_SEND_TUNING] =		{ "SEND_TUNING"  , .code.CMD_INDEX = 0x13, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SPEED_CLASS] =		{ "SPEED_CLASS"  , .code.CMD_INDEX = 0x14, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 0 , .delay = 0},
+	[IX_SET_BLOCKCNT] =		{ "SET_BLOCKCNT" , .code.CMD_INDEX = 0x17, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_WRITE_SINGLE] =		{ "WRITE_SINGLE" , .code.CMD_INDEX = 0x18, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , 
+											   .code.CMD_ISDATA = 1  ,											   .use_rca = 0 , .delay = 0},
+	[IX_WRITE_MULTI] =		{ "WRITE_MULTI"  , .code.CMD_INDEX = 0x19, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , 
+											   .code.CMD_ISDATA = 1  ,  
+											   .code.TM_BLKCNT_EN = 1, .code.TM_MULTI_BLOCK = 1,				   .use_rca = 0 , .delay = 0},
+	[IX_PROGRAM_CSD] =		{ "PROGRAM_CSD"  , .code.CMD_INDEX = 0x1B, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SET_WRITE_PR] =		{ "SET_WRITE_PR" , .code.CMD_INDEX = 0x1C, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 0 , .delay = 0},
+	[IX_CLR_WRITE_PR] =		{ "CLR_WRITE_PR" , .code.CMD_INDEX = 0x1D, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 0 , .delay = 0},
+	[IX_SND_WRITE_PR] =		{ "SND_WRITE_PR" , .code.CMD_INDEX = 0x1E, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_ERASE_WR_ST] =		{ "ERASE_WR_ST"  , .code.CMD_INDEX = 0x20, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_ERASE_WR_END] =		{ "ERASE_WR_END" , .code.CMD_INDEX = 0x21, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_ERASE] =			{ "ERASE"        , .code.CMD_INDEX = 0x26, .code.CMD_RSPNS_TYPE = CMD_BUSY48BIT_RESP , .use_rca = 0 , .delay = 0},
+	[IX_LOCK_UNLOCK] =		{ "LOCK_UNLOCK"  , .code.CMD_INDEX = 0x2A, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_APP_CMD] =			{ "APP_CMD"      , .code.CMD_INDEX = 0x37, .code.CMD_RSPNS_TYPE = CMD_NO_RESP        , .use_rca = 0 , .delay = 100},
+	[IX_APP_CMD_RCA] =		{ "APP_CMD"      , .code.CMD_INDEX = 0x37, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 1 , .delay = 0},
+	[IX_GEN_CMD] =			{ "GEN_CMD"      , .code.CMD_INDEX = 0x38, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+
+	// APP commands must be prefixed by an APP_CMD.
+	[IX_SET_BUS_WIDTH] =	{ "SET_BUS_WIDTH", .code.CMD_INDEX = 0x06, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SD_STATUS] =		{ "SD_STATUS"    , .code.CMD_INDEX = 0x0D, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 1 , .delay = 0},
+	[IX_SEND_NUM_WRBL] =	{ "SEND_NUM_WRBL", .code.CMD_INDEX = 0x16, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SEND_NUM_ERS] =		{ "SEND_NUM_ERS" , .code.CMD_INDEX = 0x17, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_APP_SEND_OP_COND] =	{ "SD_SENDOPCOND", .code.CMD_INDEX = 0x29, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 1000},
+	[IX_SET_CLR_DET] =		{ "SET_CLR_DET"  , .code.CMD_INDEX = 0x2A, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , .use_rca = 0 , .delay = 0},
+	[IX_SEND_SCR] =			{ "SEND_SCR"     , .code.CMD_INDEX = 0x33, .code.CMD_RSPNS_TYPE = CMD_48BIT_RESP     , 
+											   .code.CMD_ISDATA = 1  , .code.TM_DAT_DIR = 1,					   .use_rca = 0 , .delay = 0},
+};
+
 typedef struct Ctlr Ctlr;
 
 struct Ctlr {
@@ -354,9 +422,18 @@ enum {
 };
 
 
+typedef struct SDDescriptor {
+	uint64_t CardCapacity;						// Card capacity expanded .. calculated from card details
+	uint32_t rca;								// Card rca
+	uint32_t status;							// Card last status
+	EMMCCommand* lastCmd;
+} SDDescriptor;
 
+/*--------------------------------------------------------------------------}
+{					    CURRENT SD CARD DATA STORAGE					    }
+{--------------------------------------------------------------------------*/
+static SDDescriptor sdCard = { 0 };
 static Ctlr emmc = {0};
-
 static uint_fast8_t fls_uint32_t (uint32_t x) 
 {
     uint_fast8_t r = 32;											// Start at 32
@@ -410,7 +487,7 @@ static uint32_t sdGetClockDivider (uint32_t freq)
     return divisor;													// Return divisor that would be required
 }
 
-static sd_result sdSetClock (uint32_t freq)
+static SDRESULT sdSetClock (uint32_t freq)
 {
     uint64_t td = 0;												// Zero time difference
     uint64_t start_time = 0;										// Zero start time
@@ -459,8 +536,8 @@ static sd_result sdSetClock (uint32_t freq)
     return SD_OK;													// Clock frequency set worked
 }
 
-static sd_result reset_sdio(void) {
-sd_result resp;
+static SDRESULT reset_sdio(void) {
+    SDRESULT resp;
     uint64_t td = 0;												// Zero time difference
     uint64_t start_time = 0;	
 
@@ -505,10 +582,16 @@ sd_result resp;
     EMMC_IRPT_EN->Raw32   = 0xffffffff;
     EMMC_IRPT_MASK->Raw32 = 0xffffffff;
 
+	/* Reset our card structure entries */
+	sdCard.rca = 0;													// Zero rca
+	sdCard.lastCmd = 0;												// Zero lastCmd
+	sdCard.status = 0;												// Zero status
+
+    printf("Reset completed successfully. \n");
     return SD_OK;
 }
 
-static sd_result sdio_wait_for_command(void) 
+static SDRESULT sdio_wait_for_command(void) 
 {
     uint64_t td = 0;												// Zero time difference
     uint64_t start_time = 0;										// Zero start time
@@ -526,10 +609,11 @@ static sd_result sdio_wait_for_command(void)
             (unsigned int)*EMMC_RESP0);								// Log any error if requested
         return SD_BUSY;												// return SD_BUSY
     }
+    printf("EMMC_STATUS : %x \n", EMMC_STATUS->CMD_INHIBIT);
     return SD_OK;													// return SD_OK
 }
 
-static sd_result sdio_wait_for_data (void) 
+static SDRESULT sdio_wait_for_data (void) 
 {
     uint64_t td = 0;												// Zero time difference
     uint64_t start_time = 0;										// Zero start time
@@ -550,7 +634,7 @@ static sd_result sdio_wait_for_data (void)
     return SD_OK;													// return SD_OK
 }
 
-static sd_result sdio_wait_for_interrupt (uint32_t mask ) 
+static SDRESULT sdio_wait_for_interrupt (uint32_t mask ) 
 {
     uint64_t td = 0;												// Zero time difference
     uint64_t start_time = 0;										// Zero start time
@@ -564,9 +648,9 @@ static sd_result sdio_wait_for_interrupt (uint32_t mask )
         (ival & INT_CMD_TIMEOUT) ||									// Command timeout occurred 
         (ival & INT_DATA_TIMEOUT) )									// Data timeout occurred
     {
-        printf("EMMC: Wait for interrupt %08x timeout: %08x %08x %08x\n", 
+        printf("EMMC: Wait for interrupt %08x timeout: %08x %08x %08x %d\n", 
             (unsigned int)mask, (unsigned int)EMMC_STATUS->Raw32, 
-            (unsigned int)ival, (unsigned int)*EMMC_RESP0);			// Log any error if requested
+            (unsigned int)ival, (unsigned int)*EMMC_RESP0, EMMC_STATUS->CMD_INHIBIT);			// Log any error if requested
 
         // Clear the interrupt register completely.
         EMMC_INTERRUPT->Raw32 = ival;								// Clear any interrupt that occured
@@ -589,6 +673,29 @@ static sd_result sdio_wait_for_interrupt (uint32_t mask )
     return SD_OK;													// Return SD_OK
 }
 
+#define ST_APP_CMD           0x00000020
+SDRESULT sd_send_command ( int index )
+{
+	// Issue APP_CMD if needed.
+	SDRESULT resp;
+	// if ( index >= IX_APP_CMD_START && (resp = sd_send_app_command()) )
+	// 	return sdDebugResponse(resp);
+
+	// Get the command and set RCA if required.
+	EMMCCommand* cmd = &sdCommandTable[index];
+	uint32_t arg = 0;
+	if( cmd->use_rca == 1 ) arg = sdCard.rca;
+
+    uint32_t response[4] = {0};
+	if( (resp = sdio_send_command(index, arg, &response[0])) ) return resp;
+
+	// Check that APP_CMD was correctly interpreted.
+	// if( index >= IX_APP_CMD_START && sdCard.rca && !(sdCard.status & ST_APP_CMD) )
+	// 	return SD_ERROR_APP_CMD;
+
+	return resp;
+}
+
 /**
  * Public APIs
  **/
@@ -598,68 +705,114 @@ void print_sdio_info(void) {
     EMMC_SLOTISR_VER->SDVERSION);
 }
 
-sd_result initialize_sdio(void) {
-    sd_result response;
+SDRESULT initialize_sdio(void) {
+    SDRESULT response;
     response = reset_sdio();
+    if(response != SD_OK) {
+        printf(" Error while reseting sdio %d \n", response);
+    }
     // Use for sdio lines
     EMMC_CONTROL0->HCTL_DWIDTH = 1;
     return response;
 }
 
 #define R1_ERRORS_MASK       0xfff9c004
-sd_result sdio_send_command(EMMCCommand* cmd, uint32_t arg, uint32_t *response)
+SDRESULT sdio_send_command(cmd_index_t cmd_index, uint32_t arg, uint32_t *response)
 {
-    sd_result res;
+    SDRESULT res;
+    EMMCCommand *cmd = &sdCommandTable[cmd_index];
 
-    /* Check for command in progress */
-    if ( sdio_wait_for_command() != SD_OK ) return SD_BUSY;				// Check command wait
+	/* Check for command in progress */
+	if ( sdio_wait_for_command() != SD_OK ) return SD_BUSY;				// Check command wait
 
-    /* Clear interrupt flags.  This is done by setting the ones that are currently set */
-    EMMC_INTERRUPT->Raw32 = EMMC_INTERRUPT->Raw32;					// Clear interrupts
+	// LOG_DEBUG("EMMC: Sending command %s code %08x arg %08x\n",
+	// 	cmd->cmd_name, (unsigned int)cmd->code.CMD_INDEX, (unsigned int)arg);
+	// sdCard.lastCmd = cmd;
 
-    /* Set the argument and the command code, Some commands require a delay before reading the response */
-    *EMMC_ARG1 = arg;												// Set argument to SD card
-    *EMMC_CMDTM = cmd->code;										// Send command to SD card								
-    if ( cmd->delay ) MicroDelay(cmd->delay);						// Wait for required delay
+	/* Clear interrupt flags.  This is done by setting the ones that are currently set */
+	EMMC_INTERRUPT->Raw32 = EMMC_INTERRUPT->Raw32;					// Clear interrupts
 
-    /* Wait until command complete interrupt */
-    if ( (res = sdio_wait_for_interrupt(INT_CMD_DONE))) return res;		// In non zero return result 
+	/* Set the argument and the command code, Some commands require a delay before reading the response */
+	*EMMC_ARG1 = arg;												// Set argument to SD card
+	*EMMC_CMDTM = cmd->code;										// Send command to SD card								
+	if ( cmd->delay ) MicroDelay(cmd->delay);						// Wait for required delay
 
-    /* Get response from RESP0 */
-    uint32_t resp0 = *EMMC_RESP0;									// Fetch SD card response 0 to command
+	/* Wait until command complete interrupt */
+	if ( (res = sdio_wait_for_interrupt(INT_CMD_DONE))) return res;		// In non zero return result 
 
-    /* Handle response types for command */
-    switch ( cmd->code.CMD_RSPNS_TYPE) {
-        // no response
-        case CMD_NO_RESP:
-            response[0] = 0;
-            return SD_OK;											// Return okay then
+	/* Get response from RESP0 */
+	uint32_t resp0 = *EMMC_RESP0;									// Fetch SD card response 0 to command
 
-        // RESP0 contains card status, no other data from the RESP* registers.
-        // Return value non-zero if any error flag in the status value.
-        case CMD_48BIT_RESP:
-        case CMD_BUSY48BIT_RESP:
+	/* Handle response types for command */
+	switch ( cmd->code.CMD_RSPNS_TYPE) {
+		// no response
+		case CMD_NO_RESP:
+			return SD_OK;											// Return okay then
+
+		case CMD_BUSY48BIT_RESP:
+			sdCard.status = resp0;
             response[0] = resp0;
-            return resp0 & R1_ERRORS_MASK;
+			// Store the card state.  Note that this is the state the card was in before the
+			// command was accepted, not the new state.
+			//sdCard.cardState = (resp0 & ST_CARD_STATE) >> R1_CARD_STATE_SHIFT;
+			return resp0 & R1_ERRORS_MASK;
 
-        // RESP0..3 contains 128 bit CID or CSD shifted down by 8 bits as no CRC
-        // Note: highest bits are in RESP3.
-        case CMD_136BIT_RESP:		
-            response[3] = resp0;
-            response[2] = *EMMC_RESP1;
-            response[1] = *EMMC_RESP2;
-            response[0] = *EMMC_RESP3;
-            return SD_OK;
+		// RESP0 contains card status, no other data from the RESP* registers.
+		// Return value non-zero if any error flag in the status value.
+		case CMD_48BIT_RESP:
+			switch (cmd->code.CMD_INDEX) {
+				case 0x03:											// SEND_REL_ADDR command
+					// RESP0 contains RCA and status bits 23,22,19,12:0
+					sdCard.rca = resp0 & 0xffff0000;				// RCA[31:16] of response
+					sdCard.status = ((resp0 & 0x00001fff)) |		// 12:0 map directly to status 12:0
+						((resp0 & 0x00002000) << 6) |				// 13 maps to status 19 ERROR
+						((resp0 & 0x00004000) << 8) |				// 14 maps to status 22 ILLEGAL_COMMAND
+						((resp0 & 0x00008000) << 8);				// 15 maps to status 23 COM_CRC_ERROR
+					// Store the card state.  Note that this is the state the card was in before the
+					// command was accepted, not the new state.
+					// sdCard.cardState = (resp0 & ST_CARD_STATE) >> R1_CARD_STATE_SHIFT;
+					return sdCard.status & R1_ERRORS_MASK;
+                case 0x05:
+                    response[0] = resp0;
+                    return SD_OK;
+				case 0x08:											// SEND_IF_COND command
+					// RESP0 contains voltage acceptance and check pattern, which should match
+					// the argument.
+					sdCard.status = 0;
+					return resp0 == arg ? SD_OK : SD_ERROR;
+					// RESP0 contains OCR register
+					// TODO: What is the correct time to wait for this?
+				case 0x29:											// SD_SENDOPCOND command
+					return SD_OK;
+				default:
+					sdCard.status = resp0;
+					// Store the card state.  Note that this is the state the card was in before the
+					// command was accepted, not the new state.
+					//sdCard.cardState = (resp0 & ST_CARD_STATE) >> R1_CARD_STATE_SHIFT;
+					return resp0 & R1_ERRORS_MASK;
+			}
+		// RESP0..3 contains 128 bit CID or CSD shifted down by 8 bits as no CRC
+		// Note: highest bits are in RESP3.
+		case CMD_136BIT_RESP:		
+			sdCard.status = 0;
+			if (cmd->code.CMD_INDEX != 0x09) {
+                response[3] = resp0;
+				response[2] = *EMMC_RESP1;
+				response[1] = *EMMC_RESP2;
+				response[0] = *EMMC_RESP3;
+			}
+			return SD_OK;
     }
-    return SD_ERROR;
+
+	return SD_ERROR;
 }
 
-sd_result sdio_data_transfer(uint8_t *buffer, uint32_t length, bool write)
+SDRESULT sdio_data_transfer(uint8_t *buffer, uint32_t length, bool write)
 {
 
     // Work out the status, interrupt and command values for the transfer.
     int readyInt = write ? INT_WRITE_RDY : INT_READ_RDY;
-    sd_result resp;
+    SDRESULT resp;
 
     // Ensure any data operation has completed before doing the transfer.
     if (sdio_wait_for_data()) {
