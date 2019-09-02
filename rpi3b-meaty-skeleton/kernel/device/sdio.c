@@ -609,7 +609,7 @@ static SDRESULT sdio_wait_for_command(void)
             (unsigned int)*EMMC_RESP0);								// Log any error if requested
         return SD_BUSY;												// return SD_BUSY
     }
-    printf("EMMC_STATUS : %x \n", EMMC_STATUS->CMD_INHIBIT);
+    // printf("EMMC_STATUS : %x \n", EMMC_STATUS->CMD_INHIBIT);
     return SD_OK;													// return SD_OK
 }
 
@@ -760,10 +760,13 @@ SDRESULT sdio_send_command(cmd_index_t cmd_index, uint32_t arg, uint32_t *respon
 		// RESP0 contains card status, no other data from the RESP* registers.
 		// Return value non-zero if any error flag in the status value.
 		case CMD_48BIT_RESP:
+            printf("NEW 48 Bit response %x %x %x %x \n", resp0,  *EMMC_RESP1, *EMMC_RESP2, *EMMC_RESP3);
+            response[0] = resp0;
 			switch (cmd->code.CMD_INDEX) {
 				case 0x03:											// SEND_REL_ADDR command
 					// RESP0 contains RCA and status bits 23,22,19,12:0
 					sdCard.rca = resp0 & 0xffff0000;				// RCA[31:16] of response
+                    printf("RCA: %x ", sdCard.rca);
 					sdCard.status = ((resp0 & 0x00001fff)) |		// 12:0 map directly to status 12:0
 						((resp0 & 0x00002000) << 6) |				// 13 maps to status 19 ERROR
 						((resp0 & 0x00004000) << 8) |				// 14 maps to status 22 ILLEGAL_COMMAND

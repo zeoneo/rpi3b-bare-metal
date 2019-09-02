@@ -177,6 +177,7 @@ void reset_cmd_circuit()
         printf("after 1 \n");
 	}
 }
+
 uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
 {
 	volatile uint32_t *r;
@@ -211,7 +212,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
 	if((i = (r[Interrupt] & ~Cardintr)) != 0)
     {
 		if(i != Cardinsert) {
-            printf("emmc: before command, intr was %ux\n", i);
+            printf("emmc: before command, intr was %x\n", i);
         }
 		WR(Interrupt, i);
 	}
@@ -248,7 +249,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
 	case Resp48:
 	case Resp48busy:
 		resp[0] = r[Resp0];
-        printf("48 Bit response: %x %x %x \n", r[Resp0], *EMMC_RESP0, resp[0]);
+        printf("OLD 48 Bit response: %x %x %x %x \n", r[Resp0], r[Resp1], r[Resp2], r[Resp3]);
 		break;
 	case Respnone:
 		resp[0] = 0;
@@ -267,3 +268,34 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
 	}
 	return 0;
 }
+
+uint32_t sdio_read(uint32_t fn, uint32_t addr) {
+	uint32_t resp[4]={0};
+	uint32_t r;
+	// 0 << 31 signifies the read
+	r = emmccmd(IORWdirect, (0<<31) | ((fn&7)<<28) | ((addr&0x1FFFF)<<9), &resp[0]);
+	if(r & 0xCF00){
+		printf("ether4330: sdiord(%x, %x) fail: %2.2ux %2.2ux\n", fn, addr, (r>>8)&0xFF, r&0xFF);
+	}
+	return r & 0xFF;
+}
+
+void sdio_write(uint32_t fn, uint32_t addr, uint32_t data) {
+	uint32_t r;
+	uint32_t retry;
+	uint32_t resp[4]={0};
+	r = 0;
+	for(retry = 0; retry < 10; retry++){
+		// 1 << 31 signifies the write
+		r = emmccmd(IORWdirect, (1<<31)|((fn&7)<<28)|((addr&0x1FFFF)<<9)|(data&0xFF), &resp[0]);
+		if((r & 0xCF00) == 0)
+			return;
+	}
+	printf("Err: ether4330: sdiowr(%x, %x, %x) fail: %2.2ux %2.2ux\n", fn, addr, data, (r>>8)&0xFF, r&0xFF);
+}
+
+void sdio_set(uint32_t fn, uint32_t addr, uint32_t bits)
+{
+	sdio_write(fn, addr, sdio_read(fn, addr) | bits);
+}
+
