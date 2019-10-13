@@ -152,5 +152,14 @@ struct DmaChannelHeader
 #define GPIO_CLR_OFFSET 0x28
 #define PHYSICAL_GPIO_BUS (0x7E000000 + GPIO_REGISTER_BASE)
 
+typedef enum
+{
+    DEV_TO_MEM = 0, /* device to memory */
+    MEM_TO_DEV = 1, /* memory to device */
+    MEM_TO_MEM = 2, /* memory to memory */
+} DMA_DIR;
+int dma_start(int chan, int dev, DMA_DIR dir, void *src, void *dst, int len);
+int dma_wait(int chan);
+
 void show_dma_demo();
 #endif
