@@ -26,7 +26,7 @@ enum{
 	ARMcr4		= 0x83E,
 
 	Fn0	= 0,
-	Fn1 	= 1,
+	Fn1 = 1,
 	Fn2	= 2,
 	Fbr1	= 0x100,
 	Fbr2	= 0x200,

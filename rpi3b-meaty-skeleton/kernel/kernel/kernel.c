@@ -68,14 +68,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_init();
 	// mini_uart_init();
 	
-	// printf("\n-----------------Kernel Started Dude........................\n");
+	printf("\n-----------------Kernel Started Dude........................\n");
 	interrupts_init();
 
 	timer_init();
 	// This will flash activity led
 	timer_set(500000);
 	// mem_init();
-	// printf("\n Kernel End: 0x%x \n", &__kernel_end);
+	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 
 	
 	// uart_puts(" Hello From UART0 \n");
