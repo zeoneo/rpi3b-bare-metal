@@ -105,7 +105,7 @@ static clearer_callback_t dma_clearer[13] = {
 
 static void dma_irq_handler(void)
 {
-    printf("\nDMA irq handler called. This should be called after clearer. \n");
+    // printf("\nDMA irq handler called. This should be called after clearer. \n");
 }
 
 static void dma_init()
@@ -227,8 +227,8 @@ int dma_start(int chan, int dev, DMA_DIR dir, void *src, void *dst, int len)
     void *p = mem_allocate(2 * CB_ALIGN);
     struct bcm2835_dma_cb *cb1 = (struct bcm2835_dma_cb *)(((uint32_t)p + CB_ALIGN) & ~CB_ALIGN_MASK);
 
-    printf(" orginal addrs: %x  modified :%x limit %x \n", p, cb1, (uint32_t)p + 32);
-    cb1->info = BCM2835_DMA_S_INC | BCM2835_DMA_D_INC | BCM2835_DMA_INT_EN;
+    // printf(" orginal addrs: %x  modified :%x limit %x \n", p, cb1, (uint32_t)p + 32);
+    cb1->info = BCM2835_DMA_S_INC | BCM2835_DMA_D_INC | BCM2835_DMA_INT_EN | dev<<16;
     cb1->src = src_addr;
     cb1->dst = dest_addr;
     cb1->length = len;
@@ -253,7 +253,13 @@ int dma_start(int chan, int dev, DMA_DIR dir, void *src, void *dst, int len)
 
 int dma_wait(int chan)
 {
-    while (dma_in_progress[chan] == 1)
-        ;
+    while (dma_in_progress[chan] == 1){}
+    uint32_t *dmaBaseMem = (void *)DMA_BASE;
+    volatile struct DmaChannelHeader *dmaHeader = (volatile struct DmaChannelHeader *)(dmaBaseMem + (DMACH(chan)) / 4); //dmaBaseMem is a uint32_t ptr, so divide by 4 before adding byte offset
+    uint32_t error = (dmaHeader->CS) & BCM2835_DMA_ERR;
+    // if(error) {
+        printf("DMA OPS: Channel status: %x error: %x \n", dmaHeader->CS, error);
+    // }
+
     return 0;
 }

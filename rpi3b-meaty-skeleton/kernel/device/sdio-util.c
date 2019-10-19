@@ -10,6 +10,7 @@
 #define Mhz 1000000
 enum
 {
+    DmaChanEmmc = 4, // dma channel 
     Extfreq = 100 * Mhz, /* guess external clock frequency if */
                          /* not available from vcore */
     Initfreq = 400000,   /* initialisation frequency for MMC */
@@ -162,7 +163,7 @@ void reset_cmd_circuit()
     volatile uint32_t *r = (uint32_t *)EMMCREGS;
     if (r[Status] & Cmdinhibit)
     {
-        printf("emmccmd: need to reset Cmdinhibit intr %ux stat %ux\n", r[Interrupt], r[Status]);
+        printf("emmccmd: need to reset Cmdinhibit intr %x stat %x\n", r[Interrupt], r[Status]);
         write_reg(Control1, r[Control1] | Srstcmd);
         while (r[Control1] & Srstcmd)
             ;
@@ -185,7 +186,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
 
     if (r[Status] & Cmdinhibit)
     {
-        printf("emmccmd: need to reset Cmdinhibit intr %ux stat %ux\n", r[Interrupt], r[Status]);
+        printf("emmccmd: need to reset Cmdinhibit intr %x stat %x\n", r[Interrupt], r[Status]);
         write_reg(Control1, r[Control1] | Srstcmd);
         while (r[Control1] & Srstcmd)
             ;
@@ -196,7 +197,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
     }
     if ((r[Status] & Datinhibit) && ((c & Isdata) || (c & Respmask) == Resp48busy))
     {
-        printf("emmccmd: need to reset Datinhibit intr %ux stat %ux\n", r[Interrupt], r[Status]);
+        printf("emmccmd: need to reset Datinhibit intr %x stat %x\n", r[Interrupt], r[Status]);
         write_reg(Control1, r[Control1] | Srstdata);
         while (r[Control1] & Srstdata)
             ;
@@ -231,7 +232,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
     {
         if ((i & ~(Err | Cardintr)) != Ctoerr)
         {
-            printf("emmc: cmd %ux arg %ux error intr %ux stat %ux\n", c, arg, i, r[Status]);
+            printf("emmc: cmd %x arg %x error intr %x stat %x\n", c, arg, i, r[Status]);
         }
 
         write_reg(Interrupt, i);
@@ -256,7 +257,13 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
     case Resp48:
     case Resp48busy:
         resp[0] = r[Resp0];
-        printf("OLD 48 Bit response: %x %x %x %x \n", r[Resp0], r[Resp1], r[Resp2], r[Resp3]);
+        // printf("OLD 48 Bit response: %x %x %x %x \n", r[Resp0], r[Resp1], r[Resp2], r[Resp3]);
+        uint32_t status = ((resp[0] & 0x00001fff)) |		// 12:0 map directly to status 12:0
+						((resp[0] & 0x00002000) << 6) |				// 13 maps to status 19 ERROR
+						((resp[0] & 0x00004000) << 8) |				// 14 maps to status 22 ILLEGAL_COMMAND
+						((resp[0] & 0x00008000) << 8);				// 15 maps to status 23 COM_CRC_ERROR
+					// Store the card state.  Note that this is the state the card was in before the
+        printf("OLD 48 Bit response: %x %x %x %x status: %x \n", r[Resp0], r[Resp1], r[Resp2], r[Resp3], status);
         break;
     case Respnone:
         resp[0] = 0;
@@ -270,7 +277,7 @@ uint32_t emmccmd(uint32_t cmd, uint32_t arg, uint32_t *resp)
         if ((i & Datadone) == 0)
             printf("emmcio: no Datadone after CMD%d\n", cmd);
         if (i & Err)
-            printf("emmcio: CMD%d error interrupt %ux\n",
+            printf("emmcio: CMD%d error interrupt %x\n",
                    cmd, r[Interrupt]);
         write_reg(Interrupt, i);
     }
@@ -301,7 +308,8 @@ uint32_t sdio_read(uint32_t fn, uint32_t addr)
     {
         printf("ether4330: sdiord(%x, %x) fail: %2.2ux %2.2ux\n", fn, addr, (resp[0] >> 8) & 0xFF, resp[0] & 0xFF);
     }
-    return resp[0] & 0xFF;
+    printf(" read response : resp[3] : %x, resp[2]:%x resp[1]:%x, resp[0]:%x \n", resp[3], resp[2], resp[1], resp[0]);
+    return resp[0];
 }
 
 void sdio_write(uint32_t fn, uint32_t addr, uint32_t data)
@@ -330,6 +338,15 @@ void sdio_set(uint32_t fn, uint32_t addr, uint32_t bits)
         ;       \
     else
 
+static uint32_t datadone()
+{
+	uint32_t i;
+
+	uint32_t *r = (uint32_t*)EMMCREGS;
+	i = r[Interrupt];
+	return i & (Datadone|Err);
+}
+
 static void iosetup(uint32_t write, void *buf, uint32_t bsize, uint32_t bcount)
 {
     USED(write)
@@ -344,43 +361,35 @@ static void do_io(uint32_t write, uint8_t *buf, uint32_t len)
 
     if (write)
     {
-        dma_start(4, 11, MEM_TO_DEV, buf, &r[Data], len);
+        dma_start(DmaChanEmmc, 11, MEM_TO_DEV, buf, &r[Data], len);
     }
     else
     {
-        dma_start(4, 11, DEV_TO_MEM, &r[Data], buf, len);
+        dma_start(DmaChanEmmc, 11, DEV_TO_MEM, &r[Data], buf, len);
     }
-    dma_wait(4);
+    dma_wait(DmaChanEmmc);
 
-    // if (dmawait(DmaChanEmmc) < 0)
-    // {
-    //     printf("Error in dma wait");
-    //     // error(Eio);
-    //     return
-    // }
-
-    // if (!write)
-    // {
-    //     cachedinvse(buf, len);
-    // }
+    printf("Aftre DMA Ops. \n");
 
     write_reg(Irpten, r[Irpten] | Datadone | Err);
 
-    // TODO check if data done datadone
     MicroDelay(3000);
+    printf("SDIO Status: %x \n", datadone());
 
     i = r[Interrupt] & ~Cardintr;
     if ((i & Datadone) == 0)
     {
-        printf("emmcio: %d timeout intr %ux stat %ux\n", write, i, r[Status]);
+        printf("ERROR: emmcio: %d timeout intr %x stat %x\n", write, i, r[Status]);
         write_reg(Interrupt, i);
         // error(Eio);
+        return;
     }
     if (i & Err)
     {
-        printf("emmcio: %d error intr %ux stat %ux\n",
+        printf("ERROR: emmcio: %d error intr %x stat %x\n",
                write, r[Interrupt], r[Status]);
         write_reg(Interrupt, i);
+        return;
         // error(Eio);
     }
     if (i)
@@ -430,7 +439,7 @@ void sdio_rw_ext(uint32_t fn, uint32_t write, void *a, uint32_t len, uint32_t ad
 
         do_io(write, a, m);
         len -= m;
-        a = (char *)a + m;
+        a = (uint8_t *)a + m;
         if (incr)
         {
             addr += m;

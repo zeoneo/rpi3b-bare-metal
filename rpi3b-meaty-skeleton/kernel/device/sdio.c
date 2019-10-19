@@ -760,7 +760,7 @@ SDRESULT sdio_send_command(cmd_index_t cmd_index, uint32_t arg, uint32_t *respon
 		// RESP0 contains card status, no other data from the RESP* registers.
 		// Return value non-zero if any error flag in the status value.
 		case CMD_48BIT_RESP:
-            printf("NEW 48 Bit response %x %x %x %x \n", resp0,  *EMMC_RESP1, *EMMC_RESP2, *EMMC_RESP3);
+            // printf("NEW 48 Bit response %x %x %x %x \n", resp0,  *EMMC_RESP1, *EMMC_RESP2, *EMMC_RESP3);
             response[0] = resp0;
 			switch (cmd->code.CMD_INDEX) {
 				case 0x03:											// SEND_REL_ADDR command
