@@ -79,14 +79,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 
 	mem_alloc_init((uint32_t)&__kernel_end, 0x100000 * 16); // 16 MB
-
-	void *p = mem_allocate(16);
-	printf("%x p \n", p);
-	mem_deallocate(p);
-
-	p = mem_allocate(64);
-	printf("%x p \n", p);
-	mem_deallocate(p);
 	// uart_puts(" Hello From UART0 \n");
 	// mini_uart_puts(" Hello From MINI UART \n");
 

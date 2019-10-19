@@ -1,13 +1,16 @@
 #include <device/dma.h>
-#include <device/uart0.h>
 #include <plibc/stdio.h>
 #include <kernel/rpi-interrupts.h>
 #include <mem/kernel_alloc.h>
+#include <kernel/systimer.h>
 
 extern int dma_src_page_1;
 extern int dma_dest_page_1;
 extern int dma_dest_page_2;
 extern int dma_cb_page;
+
+#define CB_ALIGN 32
+#define CB_ALIGN_MASK (CB_ALIGN - 1)
 
 extern void PUT32(uint32_t addr, uint32_t value);
 
@@ -217,7 +220,14 @@ int dma_start(int chan, int dev, DMA_DIR dir, void *src, void *dst, int len)
     default:
         break;
     }
-    struct bcm2835_dma_cb *cb1 = (struct bcm2835_dma_cb *)&dma_cb_page;
+
+    // Control Block's needs 32 Byte alignment (256 Bits as mentioned in Manual)
+    // So we allocate 64 Bytes because even if I allocate memory at 32 Bytes alignment
+    // memory allocator header info like size, and magic comes first which will break the alignment.
+    void *p = mem_allocate(2 * CB_ALIGN);
+    struct bcm2835_dma_cb *cb1 = (struct bcm2835_dma_cb *)(((uint32_t)p + CB_ALIGN) & ~CB_ALIGN_MASK);
+
+    printf(" orginal addrs: %x  modified :%x limit %x \n", p, cb1, (uint32_t)p + 32);
     cb1->info = BCM2835_DMA_S_INC | BCM2835_DMA_D_INC | BCM2835_DMA_INT_EN;
     cb1->src = src_addr;
     cb1->dst = dest_addr;
@@ -230,20 +240,14 @@ int dma_start(int chan, int dev, DMA_DIR dir, void *src, void *dst, int len)
     volatile struct DmaChannelHeader *dmaHeader = (volatile struct DmaChannelHeader *)(dmaBaseMem + (DMACH(chan)) / 4); //dmaBaseMem is a uint32_t ptr, so divide by 4 before adding byte offset
     dmaHeader->CS = BCM2835_DMA_RESET;
 
-    unsigned int a1 = 55000;
-    while (a1 > 0)
-    {
-        a1--;
-    }
+    MicroDelay(2);
+
     dmaHeader->DEBUG = BCM2835_DMA_DEBUG_READ_ERR | BCM2835_DMA_DEBUG_FIFO_ERR | BCM2835_DMA_DEBUG_LAST_NOT_SET_ERR; // clear debug error flags
-    dmaHeader->CONBLK_AD = (uint32_t)PMEM_TO_DMA((uint32_t)&dma_cb_page);                                            //we have to point it to the PHYSICAL address of the control block (cb1)
+    dmaHeader->CONBLK_AD = (uint32_t)PMEM_TO_DMA((uint32_t)cb1);                                                     //we have to point it to the PHYSICAL address of the control block (cb1)
     dmaHeader->CS = BCM2835_DMA_ACTIVE;                                                                              //set active bit, but everything else is 0.
 
-    unsigned int a = 55000;
-    while (a > 0)
-    {
-        a--;
-    }
+    MicroDelay(2);
+    mem_deallocate(p);
     return 0;
 }
 

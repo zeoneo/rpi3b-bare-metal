@@ -85,7 +85,7 @@ void *mem_allocate(uint32_t size)
     {
         pBlockHeader = (struct alloc_header *)s_pNextBlock;
 
-        unsigned char *pNextBlock = s_pNextBlock;
+        uint8_t *pNextBlock = s_pNextBlock;
         pNextBlock += (sizeof(struct alloc_header) + size + BLOCK_ALIGN - 1) & ~ALIGN_MASK;
 
         if (pNextBlock <= s_pNextBlock // may have wrapped
