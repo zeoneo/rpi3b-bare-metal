@@ -16,6 +16,7 @@
 #include <kernel/systimer.h>
 #include <mem/physmem.h>
 #include <mem/virtmem.h>
+#include <mem/kernel_alloc.h>
 #include <graphics/v3d.h>
 #include <graphics/pi_console.h>
 #include <graphics/opengl_es.h>
@@ -31,7 +32,7 @@ extern uint32_t __kernel_end;
 // } colour_t;
 // volatile int calculate_frame_count = 1;
 
-// #define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0])) 
+// #define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
 
 // #define COLOUR_DELTA    0.05
 
@@ -67,7 +68,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_init();
 	// mini_uart_init();
-	
+
 	printf("\n-----------------Kernel Started Dude........................\n");
 	interrupts_init();
 
@@ -77,7 +78,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// mem_init();
 	printf("\n Kernel End: 0x%x \n", &__kernel_end);
 
-	
+	mem_alloc_init((uint32_t)&__kernel_end, 0x100000 * 16); // 16 MB
+
+	void *p = mem_allocate(16);
+	printf("%x p \n", p);
+	mem_deallocate(p);
+
+	p = mem_allocate(64);
+	printf("%x p \n", p);
+	mem_deallocate(p);
 	// uart_puts(" Hello From UART0 \n");
 	// mini_uart_puts(" Hello From MINI UART \n");
 
@@ -98,7 +107,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// uint32_t count = MouseCount();
 	// uint32_t mouse_address = MouseGetAddress(0);
 
-	
 	// if(initialize_fat()) {
 	// 	printf("-------Successfully Initialized FAT----------\n");
 	// 	print_root_directory_info();
@@ -106,7 +114,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// } else {
 	// 	printf("-------Failed to initialize FAT----------\n");
 	// }
-	
+
 	// if(init_v3d()) {
 	// 	printf("-------Successfully Initialized QPU----------\n");
 	// 	uint32_t width =0, height =0, depth = 0, pitch =0;
@@ -180,9 +188,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// 	printf("-------Failed to initialize QPU----------\n");
 	// }
 
-	
 	while (1)
 	{
 	}
 }
-

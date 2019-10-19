@@ -2,6 +2,7 @@
 #include <device/uart0.h>
 #include <plibc/stdio.h>
 #include <kernel/rpi-interrupts.h>
+#include <mem/kernel_alloc.h>
 
 extern int dma_src_page_1;
 extern int dma_dest_page_1;
@@ -149,7 +150,6 @@ void show_dma_demo()
 {
 
     dma_init();
-
     char data_array[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'Z', 'I', 'J', 'K', '\0'};
 
     int data_length = sizeof(data_array) / sizeof(char);
