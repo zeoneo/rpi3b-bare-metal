@@ -75,7 +75,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// initialize_virtual_memory();
 	// uart_puts("\n Hello virtual memory world 123 \n ");
 
-	// show_dma_demo();
 	// udelay(4579 * 1000 * 10);
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 
@@ -92,6 +91,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// }
 
 	mem_alloc_init((uint32_t)&__kernel_end, 0x100000 * 16); // 16 MB
+	show_dma_demo();
 
 	if (init_v3d())
 	{
