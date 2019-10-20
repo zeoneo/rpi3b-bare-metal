@@ -90,7 +90,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// uart_puts("\n Hello virtual memory world 123 \n ");
 
 	show_dma_demo();
-	enable_wifi();
+	// enable_wifi();
 	// udelay(4579 * 1000 * 10);
 	// printf("\n 64 bit: %lx", 0x1234567812340000);
 

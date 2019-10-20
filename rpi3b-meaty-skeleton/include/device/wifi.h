@@ -6,15 +6,15 @@ extern "C"
 {
 #endif
 
-#include <device/sdio.h>
+#include <stdint.h>
 
-#define HOWMANY(x, y)	(((x)+((y)-1))/(y))
-#define ROUNDUP(x, y)	(HOWMANY((x), (y))*(y))	/* ceiling */
-#define ROUNDDN(x, y)	(((x)/(y))*(y))		/* floor */
-#define	ROUND(s, sz)	(((s)+(sz-1))&~(sz-1))
-#define	PGROUND(s)	ROUNDUP(s, BY2PG)
-#define MIN(a, b)	((a) < (b)? (a): (b))
-#define MAX(a, b)	((a) > (b)? (a): (b))
+#define HOWMANY(x, y) (((x) + ((y)-1)) / (y))
+#define ROUNDUP(x, y) (HOWMANY((x), (y)) * (y)) /* ceiling */
+#define ROUNDDN(x, y) (((x) / (y)) * (y))		/* floor */
+#define ROUND(s, sz) (((s) + (sz - 1)) & ~(sz - 1))
+#define PGROUND(s) ROUNDUP(s, BY2PG)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 	typedef struct Ctrl
 	{
@@ -129,7 +129,7 @@ extern "C"
 	};
 
 	void enable_wifi(void);
-	uint32_t sdio_cmd(cmd_index_t cmd_index, uint32_t arg);
+	// uint32_t sdio_cmd(cmd_index_t cmd_index, uint32_t arg);
 
 #ifdef __cplusplus
 }

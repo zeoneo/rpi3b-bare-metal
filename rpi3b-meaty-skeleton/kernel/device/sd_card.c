@@ -1,4 +1,4 @@
-#include<device/emmc.h>
+#include<device/sd_card.h>
 #include<plibc/stdio.h>
 #include<kernel/rpi-base.h>
 #include<kernel/systimer.h>
