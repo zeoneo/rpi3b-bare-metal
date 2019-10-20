@@ -96,13 +96,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// uint32_t count = MouseCount();
 	// uint32_t mouse_address = MouseGetAddress(0);
 
-	// if(initialize_fat()) {
-	// 	printf("-------Successfully Initialized FAT----------\n");
-	// 	print_root_directory_info();
-	// 	printf("File size: %d ", get_file_size((uint8_t *)"/kernel8-32.img"));
-	// } else {
-	// 	printf("-------Failed to initialize FAT----------\n");
-	// }
+	if (initialize_fat())
+	{
+		printf("-------Successfully Initialized FAT----------\n");
+		print_root_directory_info();
+		printf("File size: %d ", get_file_size((uint8_t *)"/kernel8-32.img"));
+	}
+	else
+	{
+		printf("-------Failed to initialize FAT----------\n");
+	}
 
 	// if(init_v3d()) {
 	// 	printf("-------Successfully Initialized QPU----------\n");

@@ -2,12 +2,15 @@
 #ifndef RPI_MAILBOX_INTERFACE_H
 #define RPI_MAILBOX_INTERFACE_H
 
+#include <stdint.h>
+
 /**
     @brief An enum of the RPI->Videocore firmware mailbox property interface
     properties. Further details are available from
     https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 */
-typedef enum {
+typedef enum
+{
     /* Videocore */
     TAG_GET_FIRMWARE_VERSION = 0x1,
 
@@ -41,6 +44,19 @@ typedef enum {
     TAG_GET_TURBO = 0x30009,
     TAG_SET_TURBO = 0x38009,
 
+    TAG_EXECUTE_QPU = 0x00030011, // Execute code on QPU
+    TAG_ENABLE_QPU = 0x00030012, // QPU enable
+
+    /* Memory commands */
+    TAG_ALLOCATE_MEMORY = 0x0003000C, // Allocate Memory
+    TAG_LOCK_MEMORY = 0x0003000D, // Lock memory
+    TAG_UNLOCK_MEMORY = 0x0003000E, // Unlock memory
+    TAG_RELEASE_MEMORY = 0x0003000F, // Release Memory
+    
+    TAG_EXECUTE_CODE = 0x30010,
+    TAG_GET_DISPMANX_MEM_HANDLE = 0x30014,
+    TAG_GET_EDID_BLOCK = 0x30020,
+
     /* Voltage */
     TAG_GET_VOLTAGE = 0x30003,
     TAG_SET_VOLTAGE = 0x38003,
@@ -48,14 +64,19 @@ typedef enum {
     TAG_GET_MIN_VOLTAGE = 0x30008,
     TAG_GET_TEMPERATURE = 0x30006,
     TAG_GET_MAX_TEMPERATURE = 0x3000A,
-    TAG_ALLOCATE_MEMORY = 0x3000C,
-    TAG_LOCK_MEMORY = 0x3000D,
-    TAG_UNLOCK_MEMORY = 0x3000E,
-    TAG_RELEASE_MEMORY = 0x3000F,
-    TAG_EXECUTE_CODE = 0x30010,
-    TAG_GET_DISPMANX_MEM_HANDLE = 0x30014,
-    TAG_GET_EDID_BLOCK = 0x30020,
 
+    /* GPIO */
+	TAG_GET_DOMAIN_STATE = 0x30030,
+	TAG_GET_GPIO_STATE = 0x30041,
+	TAG_SET_GPIO_STATE = 0x38041,
+
+	TAG_GET_GPIO_CONFIG = 0x30043,
+	TAG_SET_GPIO_CONFIG = 0x38043,
+
+	TAG_SET_CUSTOMER_OTP = 0x38021,
+	TAG_SET_DOMAIN_STATE = 0x38030,
+	TAG_SET_SDHOST_CLOCK = 0x38042,
+    
     /* Framebuffer */
     TAG_ALLOCATE_BUFFER = 0x40001,
     TAG_RELEASE_BUFFER = 0x48001,
@@ -88,38 +109,41 @@ typedef enum {
     TAG_SET_CURSOR_INFO = 0x8011,
     TAG_SET_CURSOR_STATE = 0x8010
 
-    } rpi_mailbox_tag_t;
+} rpi_mailbox_tag_t;
 
-
-typedef enum {
+typedef enum
+{
     TAG_STATE_REQUEST = 0,
     TAG_STATE_RESPONSE = 1,
-    } rpi_tag_state_t;
+} rpi_tag_state_t;
 
-
-typedef enum {
+typedef enum
+{
     PT_OSIZE = 0,
     PT_OREQUEST_OR_RESPONSE = 1,
-    } rpi_tag_buffer_offset_t;
+} rpi_tag_buffer_offset_t;
 
-typedef enum {
+typedef enum
+{
     T_OIDENT = 0,
     T_OVALUE_SIZE = 1,
     T_ORESPONSE = 2,
     T_OVALUE = 3,
-    } rpi_tag_offset_t;
+} rpi_tag_offset_t;
 
-typedef struct {
-    int tag;
-    int byte_length;
+typedef struct
+{
+    int32_t tag;
+    int32_t byte_length;
     union {
-        int value_32;
-        unsigned char buffer_8[256];
-        int buffer_32[64];
+        int32_t value_32;
+        uint8_t buffer_8[256];
+        int32_t buffer_32[64];
     } data;
-    } rpi_mailbox_property_t;
+} rpi_mailbox_property_t;
 
-typedef enum {
+typedef enum
+{
     TAG_CLOCK_RESERVED = 0,
     TAG_CLOCK_EMMC,
     TAG_CLOCK_UART,
@@ -131,11 +155,11 @@ typedef enum {
     TAG_CLOCK_SDRAM,
     TAG_CLOCK_PIXEL,
     TAG_CLOCK_PWM,
-    } rpi_tag_clock_id_t;
+} rpi_tag_clock_id_t;
 
-extern void RPI_PropertyInit( void );
-extern void RPI_PropertyAddTag( rpi_mailbox_tag_t tag, ... );
-extern int RPI_PropertyProcess( void );
-extern rpi_mailbox_property_t* RPI_PropertyGet( rpi_mailbox_tag_t tag );
+extern void RPI_PropertyInit(void);
+extern void RPI_PropertyAddTag(rpi_mailbox_tag_t tag, ...);
+extern int32_t RPI_PropertyProcess(void);
+extern rpi_mailbox_property_t *RPI_PropertyGet(rpi_mailbox_tag_t tag);
 
 #endif

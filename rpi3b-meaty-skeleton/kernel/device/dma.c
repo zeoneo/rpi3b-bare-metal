@@ -4,6 +4,9 @@
 #include <mem/kernel_alloc.h>
 #include <kernel/systimer.h>
 
+//Refer
+//https://github.com/raspberrypi/linux/blob/rpi-3.6.y/arch/arm/mach-bcm2708/dma.c
+
 extern int dma_src_page_1;
 extern int dma_dest_page_1;
 extern int dma_dest_page_2;

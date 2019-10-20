@@ -1,6 +1,6 @@
 #include <string.h>
 #include <fs/fat.h>
-#include <device/emmc.h>
+#include <device/sdhost.h>
 #include <plibc/stdio.h>
 
 struct __attribute__((packed, aligned(2))) partition_info
@@ -272,7 +272,7 @@ uint32_t search_directory_cluster_contents(uint32_t directory_first_sector, uint
 
     while (sector_number < last_clust_root_dir_sector)
     {
-        uint32_t first_cluster = search_entries_in_sector(sector_number, &buffer[0], &next_dir_name[0], next_index) ;
+        uint32_t first_cluster = search_entries_in_sector(sector_number, &buffer[0], &next_dir_name[0], next_index);
         if (first_cluster != 0)
         {
             return first_cluster;
@@ -410,8 +410,10 @@ void print_file_cluster_contents(uint32_t directory_first_sector)
             return;
         }
         uint32_t index = 0;
-        while(index < 512) {
-            if(buffer[index] == '\0') {
+        while (index < 512)
+        {
+            if (buffer[index] == '\0')
+            {
                 is_done = true;
                 break;
             }
