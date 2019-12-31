@@ -21,13 +21,13 @@ I am going to attempt bare metal programming on Raspberry Pi 3 B.
 ### For complete OS (using local compiler)
 - Change directory to `rpi3b-meaty-skeleton`
 - Invoke `./build.sh`
-- Fine binary in kernel folder.
+- Find binary in kernel folder.
 
 ### For complete OS (using DOCKER IMAGE)
 - Get docker desktop for your host operating system
 - Change directory to `rpi3b-meaty-skeleton`
 - Invoke `./docker-build.sh`
-- Fine binary in kernel folder.
+- Find binary in kernel folder.
 
 
 
@@ -35,4 +35,3 @@ I am going to attempt bare metal programming on Raspberry Pi 3 B.
 
 It's important to check files in Disk Image folder. Disk Image is ideal setup for lessons to work.
 
-## https://github.com/hermanhermitage/videocoreiv
